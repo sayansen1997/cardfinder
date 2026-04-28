@@ -37,7 +37,9 @@
       "Bash(psql -U postgres -d cardfiner -c ' *)",
       "Bash(curl -s -X POST http://localhost:5000/api/users/demo-register -H 'Content-Type: application/json' -d '{\"name\":\"Ahmed\",\"email\":\"demo@cardfinder.ae\",\"income_range\":\"AED 5,000 – 10,000\",\"nationality\":\"India\"}')",
       "Bash(curl -s -X POST http://localhost:5000/api/admin/login -H 'Content-Type: application/json' -d '{\"email\":\"admin@cardfinder.ae\",\"password\":\"admin123\"}')",
-      "Bash(curl -s -X POST http://localhost:5000/api/compare -H \"Content-Type: application/json\" -d \"{\\\\\"card_ids\\\\\":[1,2],\\\\\"spending\\\\\":{\\\\\"Groceries\\\\\":1600,\\\\\"Dining\\\\\":600}}\")"
+      "Bash(curl -s -X POST http://localhost:5000/api/compare -H \"Content-Type: application/json\" -d \"{\\\\\"card_ids\\\\\":[1,2],\\\\\"spending\\\\\":{\\\\\"Groceries\\\\\":1600,\\\\\"Dining\\\\\":600}}\")",
+      "Bash(git rm *)",
+      "Bash(git add *)"
     ]
   }
 }
