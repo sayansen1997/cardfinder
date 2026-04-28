@@ -1,15 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
-function EagleLogo() {
-  return (
-    <svg width="30" height="24" viewBox="0 0 34 28" fill="none" aria-hidden="true">
-      <path
-        d="M17 0 L7 9 H1 L7 15 L1 22 L11 18 L15 28 L17 24 L19 28 L23 18 L33 22 L27 15 L33 9 H27 Z"
-        fill="#C9920A"
-      />
-    </svg>
-  );
-}
 
 function getAdminInitial() {
   const token = localStorage.getItem('adminToken');
@@ -36,10 +26,7 @@ export default function AdminNavbar() {
   return (
     <nav className="adm-navbar">
       <Link to="/admin/cards" className="adm-navbar-logo">
-        <EagleLogo />
-        <span className="adm-navbar-logo-text">
-          CARD&nbsp;<span className="adm-gold-text">FINDER</span>
-        </span>
+        <img src="/card-finder_logo.svg" alt="Card Finder" style={{ height: '36px', width: 'auto' }} />
       </Link>
 
       <div className="adm-navbar-center">
