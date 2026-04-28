@@ -109,7 +109,7 @@
 
 /* ——— HERO ——— */
 .cf-hero {
-  background: var(--cf-dark);
+  background: linear-gradient(107deg, #001C42 3.39%, #011E45 47.7%, #292E2B 96.49%);
   padding: 96px 0 120px;
   text-align: center;
 }
@@ -367,7 +367,7 @@
 
 /* ——— CALCULATOR CTA BANNER ——— */
 .cf-calc-banner {
-  background: var(--cf-dark);
+  background: #F3F4F5;
   padding: 48px 0;
   text-align: center;
 }
@@ -375,7 +375,7 @@
 .cf-calc-banner h3 {
   font-size: 22px;
   font-weight: 700;
-  color: white;
+  color: #0D1B2A;
   margin: 0 0 20px;
   font-family: inherit;
 }
