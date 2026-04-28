@@ -1,0 +1,1396 @@
+/* Card Finder – Homepage Styles */
+
+:root {
+  --cf-dark: #0D1B2A;
+  --cf-dark-lighter: #142333;
+  --cf-deep-dark: #01142E;
+  --cf-gold: #C9920A;
+  --cf-gold-hover: #E0A50B;
+  --cf-light: #F3F4F5;
+  --cf-white: #FFFFFF;
+  --cf-container: 1200px;
+}
+
+.cf-page {
+  width: 100%;
+  overflow-x: hidden;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #333;
+  background: var(--cf-white);
+}
+
+.cf-page h1,
+.cf-page h2,
+.cf-page h3,
+.cf-page h4,
+.cf-page h5,
+.cf-page h6 {
+  font-family: 'Manrope', sans-serif;
+}
+
+/* Container */
+.cf-container {
+  max-width: var(--cf-container);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ——— NAVBAR ——— */
+.cf-navbar {
+  background: var(--cf-dark);
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cf-navbar-inner {
+  max-width: var(--cf-container);
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cf-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: white;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 2.5px;
+}
+
+.cf-logo-gold {
+  color: var(--cf-gold);
+}
+
+.cf-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.cf-nav-links a {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.cf-nav-links a:hover {
+  color: white;
+}
+
+.cf-btn-login {
+  padding: 8px 22px;
+  background: transparent;
+  border: 1.5px solid var(--cf-gold);
+  color: var(--cf-gold);
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.cf-btn-login:hover {
+  background: var(--cf-gold);
+  color: white;
+}
+
+/* ——— HERO ——— */
+.cf-hero {
+  background: var(--cf-dark);
+  padding: 96px 0 120px;
+  text-align: center;
+}
+
+.cf-hero-inner {
+  max-width: 840px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.cf-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  background: rgba(201, 146, 10, 0.12);
+  border: 1px solid rgba(201, 146, 10, 0.35);
+  border-radius: 20px;
+  color: var(--cf-gold);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+}
+
+.cf-hero h1 {
+  font-size: 52px;
+  font-weight: 800;
+  color: white;
+  line-height: 1.15;
+  margin: 0 0 24px;
+  letter-spacing: -1px;
+  font-family: inherit;
+}
+
+.cf-hero h1 .gold {
+  color: var(--cf-gold);
+}
+
+.cf-hero-sub {
+  font-size: 17px;
+  color: rgba(255, 255, 255, 0.68);
+  line-height: 1.65;
+  margin: 0 auto 48px;
+  max-width: 580px;
+}
+
+.cf-hero-ctas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* Shared buttons */
+.cf-btn-outline {
+  padding: 13px 28px;
+  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  color: white;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.cf-btn-outline:hover {
+  border-color: white;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.cf-btn-gold {
+  padding: 13px 28px;
+  background: var(--cf-gold);
+  border: none;
+  color: white;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-family: inherit;
+}
+
+.cf-btn-gold:hover {
+  background: var(--cf-gold-hover);
+}
+
+/* ——— SECTION HEADER ——— */
+.cf-section-header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.cf-section-header h2 {
+  font-size: 38px;
+  font-weight: 800;
+  color: var(--cf-dark);
+  margin: 0 0 12px;
+  letter-spacing: -0.5px;
+  font-family: inherit;
+}
+
+.cf-section-header p {
+  font-size: 16px;
+  color: #555;
+  max-width: 580px;
+  margin: 0 auto;
+  line-height: 1.65;
+}
+
+/* ——— CURATED SECTION ——— */
+.cf-curated {
+  background: var(--cf-light);
+  padding: 80px 0;
+}
+
+.cf-curated-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.cf-category-sidebar {
+  background: white;
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.cf-cat-btn {
+  width: 100%;
+  text-align: left;
+  padding: 11px 14px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.cf-cat-btn:hover {
+  background: #f5f5f5;
+  color: var(--cf-dark);
+}
+
+.cf-cat-btn.active {
+  background: var(--cf-dark);
+  color: white;
+  font-weight: 600;
+}
+
+.cf-card-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.cf-card-tile {
+  background: white;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.cf-card-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.1);
+}
+
+.cf-card-art {
+  width: 100%;
+  height: 76px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 800;
+  color: white;
+  letter-spacing: 2px;
+}
+
+.cf-card-tile-bank {
+  font-size: 11px;
+  color: #999;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.cf-card-tile h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--cf-dark);
+  margin: 0 0 12px;
+  line-height: 1.35;
+  font-family: inherit;
+}
+
+.cf-card-tile ul {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+}
+
+.cf-card-tile ul li {
+  font-size: 12.5px;
+  color: #555;
+  padding: 3px 0 3px 16px;
+  position: relative;
+  line-height: 1.4;
+}
+
+.cf-card-tile ul li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--cf-gold);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.cf-btn-select {
+  width: 100%;
+  padding: 9px;
+  background: transparent;
+  border: 1.5px solid var(--cf-dark);
+  border-radius: 6px;
+  color: var(--cf-dark);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.cf-btn-select:hover {
+  background: var(--cf-dark);
+  color: white;
+}
+
+/* ——— CALCULATOR CTA BANNER ——— */
+.cf-calc-banner {
+  background: var(--cf-dark);
+  padding: 48px 0;
+  text-align: center;
+}
+
+.cf-calc-banner h3 {
+  font-size: 22px;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 20px;
+  font-family: inherit;
+}
+
+/* ——— CALCULATOR SECTION ——— */
+.cf-calculator {
+  background: #01142E;
+  padding: 80px 0;
+}
+
+.cf-calc-panel {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  padding: 40px;
+  border: 1px solid #eee;
+}
+
+.cf-calc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 52px;
+}
+
+.cf-calc-column > h3 {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--cf-dark);
+  margin: 0 0 6px;
+  font-family: inherit;
+}
+
+.cf-calc-column .helper {
+  font-size: 13px;
+  color: #999;
+  margin: 0 0 20px;
+}
+
+.cf-income-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f9f9f9;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 4px 14px;
+  margin-bottom: 14px;
+}
+
+.cf-income-input-wrap > span {
+  font-size: 14px;
+  font-weight: 600;
+  color: #aaa;
+}
+
+.cf-income-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--cf-dark);
+  outline: none;
+  padding: 8px 0;
+  font-family: inherit;
+  width: 0;
+}
+
+.cf-bracket-btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.cf-bracket-btn {
+  padding: 6px 14px;
+  background: #f2f2f2;
+  border: 1.5px solid transparent;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.cf-bracket-btn:hover {
+  background: #e8e8e8;
+}
+
+.cf-bracket-btn.active {
+  background: var(--cf-dark);
+  color: white;
+  border-color: var(--cf-dark);
+}
+
+.cf-auto-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #555;
+  cursor: pointer;
+  user-select: none;
+}
+
+.cf-auto-toggle input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--cf-gold);
+  cursor: pointer;
+}
+
+.cf-spending-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cf-spending-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cf-spending-label {
+  min-width: 96px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+}
+
+.cf-spending-slider {
+  flex: 1;
+}
+
+/* Gold slider — applied alongside cf-spending-slider */
+input[type='range'].gold-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  width: 100%;
+  background: linear-gradient(to right, #C9920A 0%, #334155 0%);
+}
+input[type='range'].gold-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #C9920A;
+  cursor: pointer;
+  box-shadow: 0 0 4px rgba(201, 146, 10, 0.5);
+}
+input[type='range'].gold-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #C9920A;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 4px rgba(201, 146, 10, 0.5);
+}
+
+/* Cat slider — white-bordered gold thumb */
+input[type='range'].cat-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  width: 100%;
+  background: linear-gradient(to right, #C9920A 0%, #E2E8F0 0%);
+}
+input[type='range'].cat-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #C9920A;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 0 4px rgba(201, 146, 10, 0.4);
+}
+input[type='range'].cat-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #C9920A;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 0 4px rgba(201, 146, 10, 0.4);
+}
+
+/* ——— CATEGORY GRID (new calculator layout) ——— */
+.cf-cat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.cf-cat-item {
+  background: white;
+  border-radius: 10px;
+  padding: 12px;
+  border: 1px solid #e8e8e8;
+}
+
+.cf-cat-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.cf-cat-icon {
+  font-size: 16px;
+  width: 22px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.cf-cat-label {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  color: #444;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cf-cat-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: #f4f4f4;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 2px 6px;
+  flex-shrink: 0;
+}
+
+.cf-cat-input-wrap > span {
+  font-size: 9.5px;
+  color: #aaa;
+  font-weight: 600;
+}
+
+.cf-cat-input {
+  width: 46px;
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--cf-dark);
+  outline: none;
+  font-family: inherit;
+}
+
+.cf-totals-card {
+  background: white;
+  border-radius: 10px;
+  padding: 14px 18px;
+  border: 1px solid #e8e8e8;
+}
+
+.cf-calc-error {
+  color: #ef4444;
+  font-size: 13px;
+  text-align: center;
+  margin: 12px 0 0;
+}
+
+.cf-spending-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 5px 8px;
+  min-width: 92px;
+}
+
+.cf-spending-input-wrap > span {
+  font-size: 11px;
+  color: #aaa;
+  font-weight: 600;
+}
+
+.cf-spending-input {
+  width: 56px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cf-dark);
+  outline: none;
+  font-family: inherit;
+}
+
+.cf-totals {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.cf-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.cf-total-row .t-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.cf-total-row .t-value {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--cf-dark);
+}
+
+.cf-btn-calculate {
+  width: 100%;
+  padding: 16px;
+  background: var(--cf-dark);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 32px;
+  font-family: inherit;
+}
+
+.cf-btn-calculate:hover:not(:disabled) {
+  background: var(--cf-dark-lighter);
+}
+
+.cf-btn-calculate:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* ——— TOP RESULTS ——— */
+.cf-results {
+  background: #01142E;
+  padding: 80px 0;
+}
+
+.cf-results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.cf-results-header h2 {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--cf-dark);
+  margin: 0;
+  font-family: inherit;
+}
+
+.cf-results-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.cf-btn-secondary {
+  padding: 9px 20px;
+  background: transparent;
+  border: 1.5px solid #ccc;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.cf-btn-secondary:hover {
+  border-color: var(--cf-dark);
+  color: var(--cf-dark);
+}
+
+.cf-result-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.cf-result-card {
+  background: white;
+  border-radius: 16px;
+  padding: 28px 24px 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+  border: 2px solid transparent;
+  position: relative;
+  margin-top: 16px;
+}
+
+.cf-result-card.featured {
+  border-color: var(--cf-gold);
+  box-shadow: 0 8px 32px rgba(201, 146, 10, 0.18);
+}
+
+.cf-rank-badge {
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--cf-dark);
+  color: white;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cf-result-card.featured .cf-rank-badge {
+  background: var(--cf-gold);
+}
+
+.cf-result-card-art {
+  width: 100%;
+  height: 68px;
+  border-radius: 8px;
+  margin: 8px 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 800;
+  color: white;
+  letter-spacing: 1px;
+}
+
+.cf-result-card h4 {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--cf-dark);
+  margin: 0 0 3px;
+  line-height: 1.35;
+  font-family: inherit;
+}
+
+.cf-result-bank {
+  font-size: 11.5px;
+  color: #999;
+  margin-bottom: 14px;
+}
+
+.cf-savings-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #aaa;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.cf-savings-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: #16a34a;
+  margin-bottom: 14px;
+}
+
+.cf-result-meta {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.cf-meta-item {
+  flex: 1;
+}
+
+.cf-meta-item .meta-label {
+  font-size: 10px;
+  color: #aaa;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.cf-meta-item .meta-value {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--cf-dark);
+}
+
+.cf-result-rates {
+  margin-bottom: 14px;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 10px;
+}
+
+.cf-result-rate-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  padding: 3px 0;
+}
+
+.cf-result-rate-row .rate-cat {
+  color: #666;
+}
+
+.cf-result-rate-row .rate-pct {
+  font-weight: 700;
+  color: var(--cf-gold);
+}
+
+.cf-btn-apply {
+  width: 100%;
+  padding: 11px;
+  background: var(--cf-gold);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-bottom: 10px;
+  font-family: inherit;
+}
+
+.cf-btn-apply:hover {
+  background: var(--cf-gold-hover);
+}
+
+.cf-how-calc {
+  background: none;
+  border: none;
+  color: var(--cf-gold);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  font-family: inherit;
+  display: block;
+}
+
+.cf-breakdown {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f8f8f8;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.cf-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+  color: #666;
+}
+
+.cf-breakdown-total {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0 2px;
+  margin-top: 6px;
+  border-top: 1px solid #e8e8e8;
+  font-weight: 700;
+  color: var(--cf-dark);
+  font-size: 12.5px;
+}
+
+.cf-btn-compare-cards {
+  display: block;
+  margin: 0 auto;
+  padding: 13px 44px;
+  background: transparent;
+  border: 2px solid var(--cf-dark);
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--cf-dark);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.cf-btn-compare-cards:hover {
+  background: var(--cf-dark);
+  color: white;
+}
+
+/* ——— CARD RANKING TABLE ——— */
+.cf-ranking {
+  background: #01142E;
+  padding: 80px 0;
+}
+
+.cf-ranking-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.cf-ranking-header h2 {
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--cf-dark);
+  margin: 0;
+  font-family: inherit;
+}
+
+.cf-aecb-link {
+  color: var(--cf-gold);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.cf-aecb-link:hover {
+  text-decoration: underline;
+}
+
+.cf-table-wrap {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.06);
+}
+
+.cf-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.cf-table thead {
+  background: var(--cf-dark);
+}
+
+.cf-table thead th {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.65);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.cf-table tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.12s;
+}
+
+.cf-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.cf-table tbody tr:hover {
+  background: #fafafa;
+}
+
+.cf-table tbody td {
+  padding: 16px;
+  font-size: 14px;
+  color: #333;
+  vertical-align: middle;
+}
+
+.cf-row-border-cashback { border-left: 4px solid var(--cf-gold); }
+.cf-row-border-travel   { border-left: 4px solid #2563EB; }
+.cf-row-border-premium  { border-left: 4px solid #7C3AED; }
+
+.cf-table-rank {
+  font-weight: 700;
+  color: #bbb;
+  font-size: 16px;
+}
+
+.cf-table-card-name {
+  font-weight: 700;
+  color: var(--cf-dark);
+  font-size: 13.5px;
+}
+
+.cf-table-bank {
+  font-size: 11.5px;
+  color: #999;
+}
+
+.cf-type-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.cf-type-cashback { background: rgba(201, 146, 10, 0.1); color: #8A6200; }
+.cf-type-travel   { background: rgba(37, 99, 235, 0.1);  color: #1D4ED8; }
+.cf-type-premium  { background: rgba(124, 58, 237, 0.1); color: #6D28D9; }
+
+.cf-net-earnings {
+  font-weight: 800;
+  color: #16a34a;
+  font-size: 15px;
+}
+
+.cf-annual-fee { font-weight: 600; }
+.cf-fee-free   { color: #16a34a !important; }
+
+.cf-btn-table-compare {
+  padding: 7px 16px;
+  background: transparent;
+  border: 1.5px solid #ddd;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #555;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.cf-btn-table-compare:hover {
+  border-color: var(--cf-dark);
+  color: var(--cf-dark);
+  background: #f5f5f5;
+}
+
+/* ——— WHY SECTION ——— */
+.cf-why {
+  background: #F3F4F5;
+  padding: 80px 0;
+}
+
+.cf-why h2 {
+  font-size: 38px;
+  font-weight: 800;
+  color: #0D1B2A;
+  margin: 0 0 48px;
+  text-align: center;
+  letter-spacing: -0.5px;
+}
+
+.cf-why-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+}
+
+.cf-why-item {
+  text-align: center;
+}
+
+.cf-why-icon {
+  width: 64px;
+  height: 64px;
+  background: #0D1B2A;
+  border: none;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 26px;
+}
+
+.cf-why-item h3 {
+  font-size: 17px;
+  font-weight: 700;
+  color: #0D1B2A;
+  margin: 0 0 10px;
+}
+
+.cf-why-item p {
+  font-size: 14px;
+  color: #4B5563;
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* ——— FOOTER ——— */
+.cf-footer {
+  background: #F3F4F5;
+  border-top: 1px solid #E5E7EB;
+  padding: 30px 0;
+}
+
+.cf-footer-inner {
+  max-width: var(--cf-container);
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.cf-footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.cf-footer-logo span {
+  color: #0D1B2A;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 2px;
+}
+
+.cf-footer-links {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.cf-footer-links a {
+  color: #374151;
+  text-decoration: none;
+  font-size: 13px;
+  transition: color 0.2s;
+}
+
+.cf-footer-links a:hover {
+  color: #0D1B2A;
+}
+
+.cf-footer-copy {
+  font-size: 12.5px;
+  color: #6B7280;
+}
+
+/* ——— LOADING ——— */
+.cf-loading {
+  padding: 60px;
+  text-align: center;
+  color: #aaa;
+  font-size: 14px;
+}
+
+.cf-spinner {
+  display: block;
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e8e8e8;
+  border-top-color: var(--cf-gold);
+  border-radius: 50%;
+  animation: cf-spin 0.8s linear infinite;
+  margin: 0 auto 12px;
+}
+
+@keyframes cf-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ——— RESPONSIVE ——— */
+@media (max-width: 1024px) {
+  .cf-hero h1         { font-size: 40px; }
+  .cf-curated-layout  { grid-template-columns: 1fr; }
+  .cf-card-tiles      { grid-template-columns: repeat(2, 1fr); }
+  .cf-calc-grid       { grid-template-columns: 1fr; gap: 32px; }
+  .cf-result-cards    { grid-template-columns: repeat(2, 1fr); }
+  .cf-why-grid        { grid-template-columns: 1fr; gap: 28px; }
+  .cf-section-header h2 { font-size: 30px; }
+}
+
+@media (max-width: 768px) {
+  .cf-hero              { padding: 60px 0 80px; }
+  .cf-hero h1           { font-size: 28px; }
+  .cf-hero-sub          { font-size: 15px; }
+  .cf-hero-ctas         { flex-direction: column; align-items: stretch; }
+  .cf-btn-outline,
+  .cf-btn-gold          { text-align: center; justify-content: center; }
+  .cf-card-tiles        { grid-template-columns: 1fr; }
+  .cf-result-cards      { grid-template-columns: 1fr; }
+  .cf-results-header    { flex-direction: column; align-items: flex-start; }
+  .cf-ranking-header    { flex-direction: column; align-items: flex-start; }
+  .cf-why h2            { font-size: 26px; }
+  .cf-footer-inner      { flex-direction: column; align-items: center; text-align: center; }
+  .cf-nav-links         { gap: 14px; }
+  .cf-calc-panel        { padding: 20px; }
+  .cf-table thead th:nth-child(n+5):not(:last-child) { display: none; }
+  .cf-table tbody td:nth-child(n+5):not(:last-child) { display: none; }
+  .cf-spending-row      { flex-wrap: wrap; }
+  .cf-spending-slider   { width: 100%; flex: none; order: 3; }
+}
+
+/* ======================================================
+   SECTION-SPECIFIC OVERRIDES
+   ====================================================== */
+
+/* Left-align headers in Curated and Calculator sections */
+.cf-curated .cf-section-header,
+.cf-calculator .cf-section-header {
+  text-align: left;
+}
+.cf-curated .cf-section-header p,
+.cf-calculator .cf-section-header p {
+  margin: 0;
+  max-width: none;
+}
+
+/* ——— Calculator dark background overrides ——— */
+.cf-calculator .cf-section-header h2 { color: white; }
+.cf-calculator .cf-section-header p  { color: rgba(255, 255, 255, 0.6); }
+
+.cf-calc-panel {
+  background: #F3F4F5;
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+}
+
+.cf-bracket-btn.active {
+  background: transparent;
+  border-color: var(--cf-gold);
+  color: var(--cf-gold);
+}
+
+.cf-btn-calculate             { background: var(--cf-gold); }
+.cf-btn-calculate:hover:not(:disabled) { background: var(--cf-gold-hover); }
+
+/* ——— Top Results dark background overrides ——— */
+.cf-results .cf-results-header h2 { color: white; }
+
+.cf-results .cf-btn-secondary {
+  border-color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.8);
+}
+.cf-results .cf-btn-secondary:hover {
+  border-color: white;
+  color: white;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.cf-results .cf-btn-compare-cards {
+  border-color: rgba(255, 255, 255, 0.4);
+  color: white;
+}
+.cf-results .cf-btn-compare-cards:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: white;
+}
+
+/* ——— Card Ranking dark background overrides ——— */
+.cf-ranking .cf-ranking-header h2 { color: white; }
+
+.cf-ranking .cf-table-wrap {
+  background: transparent;
+  box-shadow: none;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.cf-table tbody tr:nth-child(odd)  { background: #01142E; }
+.cf-table tbody tr:nth-child(even) { background: #051C3A; }
+.cf-table tbody tr:hover           { background: #071F40 !important; }
+.cf-table tbody tr                 { border-bottom-color: rgba(255, 255, 255, 0.06); }
+.cf-table tbody td                 { color: #E2E8F0; }
+.cf-table-rank                     { color: rgba(255, 255, 255, 0.35); }
+.cf-table-card-name                { color: white; }
+.cf-table-bank                     { color: #94A3B8; }
+.cf-net-earnings                   { color: #4ADE80; }
+.cf-fee-free                       { color: #4ADE80 !important; }
+
+.cf-type-cashback                  { background: var(--cf-gold); color: white; }
+
+.cf-btn-table-compare {
+  border-color: var(--cf-gold);
+  color: var(--cf-gold);
+}
+.cf-btn-table-compare:hover {
+  background: var(--cf-gold);
+  color: white;
+  border-color: var(--cf-gold);
+}
+
+.cf-ranking .cf-loading { color: rgba(255, 255, 255, 0.6); }
+.cf-ranking .cf-spinner {
+  border-color: rgba(255, 255, 255, 0.1);
+  border-top-color: var(--cf-gold);
+}

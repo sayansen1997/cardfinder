@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm init *)",
+      "Bash(npm install *)",
+      "Bash(npm create *)",
+      "Bash(node index.js)",
+      "Bash(curl -s http://localhost:5000/health)",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)",
+      "Bash(node -e \"require\\('./db'\\); console.log\\('db module loads ok'\\)\")",
+      "Bash(curl -s http://localhost:5000/api/categories)",
+      "Bash(curl -s -X POST http://localhost:5000/api/calculate -H 'Content-Type: application/json' -d '{\"spending\":{\"groceries\":1600,\"dining\":600,\"travel\":400,\"fuel\":500,\"shopping\":1000,\"utilities\":1000,\"car_rental\":500}}')",
+      "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\);process.stdin.on\\('end',\\(\\)=>{const r=JSON.parse\\(d\\);r.forEach\\(c=>console.log\\(c.name+': '+c.net_annual_savings\\)\\)}\\)\")",
+      "Bash(curl -s http://localhost:5173/)",
+      "Bash(curl -s http://localhost:5174/)",
+      "Bash(psql -U postgres -d cardfiner -c \"\\\\d categories\")",
+      "Bash(node -e ' *)",
+      "Bash(node *)",
+      "Bash(pkill -f \"node index.js\")",
+      "Bash(curl -s http://localhost:5000/api/income-brackets)",
+      "Bash(curl -s -X POST http://localhost:5000/api/calculate -H \"Content-Type: application/json\" -d '{\"monthly_income\":25000,\"spending\":{\"groceries\":1600,\"dining\":600,\"travel\":400,\"fuel\":500,\"shopping\":1000,\"utilities\":1000,\"car_rental\":500}}')",
+      "Bash(curl -sv http://localhost:5000/api/income-brackets)",
+      "Bash(taskkill //F //IM node.exe)",
+      "Bash(npx vite *)",
+      "Bash(PGPASSWORD=hi2u_Postgres psql -U postgres -d cardfiner -c \"CREATE TABLE IF NOT EXISTS user_profiles \\(id SERIAL PRIMARY KEY, income_range TEXT NOT NULL, nationality TEXT NOT NULL, created_at TIMESTAMPTZ DEFAULT NOW\\(\\)\\);\")",
+      "Bash(PGPASSWORD=hi2u_Postgres psql -U postgres -d cardfiner -c \"\\\\d audit_log\")",
+      "Bash(PGPASSWORD=hi2u_Postgres psql -U postgres -d cardfiner -c \"SELECT COUNT\\(*\\) FROM audit_log;\")",
+      "Bash(PGPASSWORD=hi2u_Postgres psql -U postgres -d cardfiner -c \"SELECT COUNT\\(*\\) FROM cards;\")",
+      "Bash(PGPASSWORD=hi2u_Postgres psql -U postgres -d cardfiner -c \"\\\\d cards\")",
+      "Bash(PGPASSWORD=hi2u_Postgres psql -U postgres -d cardfiner -c \"SELECT id, name, bank FROM cards LIMIT 6;\")",
+      "Bash(PGPASSWORD=hi2u_Postgres psql -U postgres -d cardfiner -c \"SELECT * FROM audit_log LIMIT 3;\")",
+      "Bash(PGPASSWORD=hi2u_Postgres psql -U postgres -d cardfiner -c \"\\\\d users\")",
+      "Bash(PGPASSWORD=hi2u_Postgres psql *)",
+      "Bash(curl -s http://localhost:5000/api/cards)",
+      "Bash(curl -s http://localhost:5000/api/admin/cards)",
+      "Bash(psql -U postgres -d cardfiner -c ' *)",
+      "Bash(curl -s -X POST http://localhost:5000/api/users/demo-register -H 'Content-Type: application/json' -d '{\"name\":\"Ahmed\",\"email\":\"demo@cardfinder.ae\",\"income_range\":\"AED 5,000 – 10,000\",\"nationality\":\"India\"}')",
+      "Bash(curl -s -X POST http://localhost:5000/api/admin/login -H 'Content-Type: application/json' -d '{\"email\":\"admin@cardfinder.ae\",\"password\":\"admin123\"}')",
+      "Bash(curl -s -X POST http://localhost:5000/api/compare -H \"Content-Type: application/json\" -d \"{\\\\\"card_ids\\\\\":[1,2],\\\\\"spending\\\\\":{\\\\\"Groceries\\\\\":1600,\\\\\"Dining\\\\\":600}}\")"
+    ]
+  }
+}

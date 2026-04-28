@@ -1,0 +1,245 @@
+/* ======================================================
+   DASHBOARD — db- prefix
+   ====================================================== */
+
+/* ——— Navbar ——— */
+
+.db-navbar {
+  background: #01142E;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.db-navbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 40px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.db-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.db-logo-text {
+  font-family: 'Manrope', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: white;
+}
+
+.db-logo-gold {
+  color: #C9920A;
+}
+
+.db-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.db-nav-link {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: white;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s;
+}
+
+.db-nav-btn {
+  /* reset extra button styles */
+  outline: none;
+}
+
+.db-nav-link:hover {
+  color: #C9920A;
+}
+
+.db-nav-link.active {
+  color: #C9920A;
+  font-weight: 500;
+}
+
+.db-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.db-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #C9920A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.db-logout-btn {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: white;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity 0.15s;
+}
+
+.db-logout-btn:hover {
+  opacity: 0.7;
+}
+
+/* ——— Welcome banner ——— */
+
+.db-banner {
+  background: #01142E;
+  padding: 40px 0 0;
+}
+
+.db-banner-inner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.db-welcome {
+  font-family: 'Manrope', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 8px;
+}
+
+.db-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 36px;
+  font-weight: 800;
+  color: white;
+  margin: 0 0 12px;
+  line-height: 1.2;
+}
+
+.db-subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  color: #94A3B8;
+  line-height: 1.6;
+  max-width: 580px;
+  margin: 0;
+}
+
+.db-view-cards-link {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #C9920A;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  white-space: nowrap;
+  margin-top: 8px;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.db-view-cards-link:hover {
+  opacity: 0.75;
+}
+
+/* ——— Page wrapper ——— */
+
+.db-page {
+  width: 100%;
+  overflow-x: hidden;
+  font-family: 'Inter', sans-serif;
+  background: white;
+}
+
+.db-page h1,
+.db-page h2,
+.db-page h3,
+.db-page h4,
+.db-page h5,
+.db-page h6 {
+  font-family: 'Manrope', sans-serif;
+}
+
+/* ——— Loading state ——— */
+
+.db-loading {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+}
+
+.db-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #E5E7EB;
+  border-top-color: #C9920A;
+  border-radius: 50%;
+  animation: db-spin 0.7s linear infinite;
+}
+
+@keyframes db-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ——— Responsive ——— */
+
+@media (max-width: 900px) {
+  .db-navbar-inner {
+    padding: 0 20px;
+  }
+
+  .db-nav-links {
+    gap: 18px;
+  }
+
+  .db-banner-inner {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .db-title {
+    font-size: 26px;
+  }
+
+  .db-welcome {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 600px) {
+  .db-nav-links {
+    display: none;
+  }
+}
