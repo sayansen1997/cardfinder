@@ -39,7 +39,7 @@
 
 /* ——— NAVBAR ——— */
 .cf-navbar {
-  background: var(--cf-dark);
+  background: #001C42;
   position: sticky;
   top: 0;
   z-index: 200;

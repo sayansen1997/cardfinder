@@ -39,7 +39,16 @@
       "Bash(curl -s -X POST http://localhost:5000/api/admin/login -H 'Content-Type: application/json' -d '{\"email\":\"admin@cardfinder.ae\",\"password\":\"admin123\"}')",
       "Bash(curl -s -X POST http://localhost:5000/api/compare -H \"Content-Type: application/json\" -d \"{\\\\\"card_ids\\\\\":[1,2],\\\\\"spending\\\\\":{\\\\\"Groceries\\\\\":1600,\\\\\"Dining\\\\\":600}}\")",
       "Bash(git rm *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(PGPASSWORD=hi2u_Postgres pg_dump -U postgres -d cardfiner --no-owner --no-acl -f /c/Users/sensa/cardfiner/cardfinder_export.sql)",
+      "Bash(railway --version)",
+      "Bash(PGPASSWORD=nYLthDJRRkBcaTiIwsmCMsbkkJGMVlIy psql -h postgres.railway.internal -p 5432 -U postgres -d railway -c \"\\\\conninfo\")",
+      "Bash(PGPASSWORD=hi2u_Postgres pg_dump -U postgres -d cardfiner --no-owner --no-acl)",
+      "Bash(PGPASSWORD=nYLthDJRRkBcaTiIwsmCMsbkkJGMVlIy psql *)",
+      "Bash(grep -E \"dotenv|express|pg$|cors|jsonwebtoken|bcryptjs\")",
+      "Bash(kill %1)"
     ]
   }
 }
