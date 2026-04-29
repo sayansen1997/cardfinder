@@ -49,18 +49,95 @@ export default function TopResults({ results, onRecalculate, onSave }) {
   return (
     <section className="cf-results" id="results-section">
       <div className="cf-container">
-        <div className="cf-results-header">
-          <h2>Your Top 3 Card Recommendations</h2>
-          <div className="cf-results-actions">
-            <button
-              className="cf-btn-secondary"
-              onClick={handleSave}
-              disabled={saveState === 'saving' || saveState === 'saved'}
-            >
-              {saveState === 'saving' ? 'Saving…' : saveState === 'saved' ? '✓ Saved!' : saveState === 'error' ? 'Try Again' : 'Save Results'}
-            </button>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          gap: '24px',
+          marginBottom: '32px',
+        }}>
+          {/* Left — label + heading + subtitle */}
+          <div>
+            <p style={{
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '11px',
+              fontWeight: 600,
+              color: '#C9920A',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              margin: '0 0 8px',
+            }}>
+              Your Result
+            </p>
+            <h2 style={{
+              fontFamily: 'Manrope, sans-serif',
+              fontSize: '32px',
+              fontWeight: 800,
+              color: 'white',
+              margin: '0 0 8px',
+            }}>
+              Your Top 3 Card Recommendations
+            </h2>
+            <p style={{
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '14px',
+              color: '#94A3B8',
+              lineHeight: 1.5,
+              margin: 0,
+            }}>
+              Based on your monthly spending profile, these cards offer the highest net value after fees.
+            </p>
+          </div>
+
+          {/* Right — action buttons + status */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={handleSave}
+                disabled={saveState === 'saving' || saveState === 'saved'}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  color: 'white',
+                  borderRadius: '8px',
+                  padding: '10px 20px',
+                  fontFamily: 'Inter, sans-serif',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  cursor: saveState === 'saving' || saveState === 'saved' ? 'default' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  opacity: saveState === 'saving' || saveState === 'saved' ? 0.7 : 1,
+                  transition: 'opacity 0.15s',
+                }}
+              >
+                {saveState === 'saving' ? 'Saving…' : saveState === 'saved' ? '✓ Saved!' : saveState === 'error' ? 'Try Again' : 'Save Results'}
+              </button>
+
+              <button
+                onClick={onRecalculate}
+                style={{
+                  background: '#C9920A',
+                  border: 'none',
+                  color: 'white',
+                  borderRadius: '8px',
+                  padding: '10px 20px',
+                  fontFamily: 'Inter, sans-serif',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                Recalculate
+              </button>
+            </div>
+
             {saveState === 'saved' && (
-              <span style={{ fontSize: '13px', color: '#16a34a' }}>
+              <span style={{ fontSize: '13px', color: '#4ade80' }}>
                 Results saved!{' '}
                 <button
                   style={{ background: 'none', border: 'none', color: '#C9920A', cursor: 'pointer', fontSize: '13px', fontWeight: 600, padding: 0 }}
@@ -71,11 +148,8 @@ export default function TopResults({ results, onRecalculate, onSave }) {
               </span>
             )}
             {saveState === 'error' && (
-              <span style={{ fontSize: '13px', color: '#DC2626' }}>Failed to save. Please try again.</span>
+              <span style={{ fontSize: '13px', color: '#f87171' }}>Failed to save. Please try again.</span>
             )}
-            <button className="cf-btn-secondary" onClick={onRecalculate}>
-              Recalculate
-            </button>
           </div>
         </div>
 
