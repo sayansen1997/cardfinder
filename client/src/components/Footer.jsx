@@ -4,17 +4,28 @@ export default function Footer() {
   return (
     <footer className="cf-footer">
       <div className="cf-footer-inner">
-        <Link to="/" className="cf-footer-logo">
-          <img src="/card-finder_logo.svg" alt="Card Finder" style={{ height: '36px', width: 'auto' }} />
-        </Link>
 
-        <div className="cf-footer-links">
-          <a href="#">Privacy Policy</a>
-          <a href="#">Terms of Use</a>
-          <a href="#">Contact</a>
+        {/* Left — copyright + disclaimers */}
+        <div className="cf-footer-left">
+          <p className="cf-footer-copy">© 2026 Card Finder.</p>
+          <p className="cf-footer-disclaimer">
+            All other product names, logos, brands or trademarks referred are the property of
+            their respective owners. Information presented has been collated from banks and
+            publicly available sources.
+          </p>
+          <p className="cf-footer-disclaimer" style={{ marginBottom: 0 }}>
+            The website acts as a technology / information platform and an information
+            aggregator. The website does not constitute professions financial advise.
+          </p>
         </div>
 
-        <span className="cf-footer-copy">© 2026 Card Finder</span>
+        {/* Right — nav links */}
+        <nav className="cf-footer-nav">
+          <Link to="/privacy">Privacy Policy</Link>
+          <Link to="/terms">Terms of Service</Link>
+          <Link to="/contact">Contact</Link>
+        </nav>
+
       </div>
     </footer>
   );
