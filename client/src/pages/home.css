@@ -396,8 +396,9 @@
 
 .cf-calc-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 52px;
+  grid-template-columns: 360px 1fr;
+  gap: 24px;
+  align-items: start;
 }
 
 .cf-calc-column > h3 {
@@ -426,21 +427,22 @@
 }
 
 .cf-income-input-wrap > span {
-  font-size: 14px;
-  font-weight: 600;
-  color: #aaa;
+  font-family: 'Inter', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #E5A00D;
 }
 
 .cf-income-input {
   flex: 1;
   border: none;
   background: transparent;
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 30px;
+  font-weight: 800;
   color: var(--cf-dark);
   outline: none;
   padding: 8px 0;
-  font-family: inherit;
+  font-family: 'Manrope', sans-serif;
   width: 0;
 }
 
