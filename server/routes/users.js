@@ -71,18 +71,50 @@ router.post('/complete-profile', async (req, res) => {
   }
 });
 
-// GET /me — returns user from DB
+// GET /me — returns user from DB with calculations count
 router.get('/me', userAuth, async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, name, email, income_range, nationality FROM users WHERE id = $1',
+      `SELECT u.id, u.name, u.email, u.income_range, u.nationality, u.created_at,
+        COUNT(uc.id)::int AS calculations_count
+       FROM users u
+       LEFT JOIN user_calculations uc ON uc.user_id = u.id
+       WHERE u.id = $1
+       GROUP BY u.id`,
       [req.user.id]
     );
     if (!result.rows.length) {
-      // Fallback: return JWT payload if user row not found
       return res.json({ name: req.user.name || 'there', email: req.user.email });
     }
     res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT /me — update income_range and nationality
+router.put('/me', userAuth, async (req, res) => {
+  console.log('PUT /me - user:', req.user);
+  console.log('PUT /me - body:', req.body);
+  const { income_range, nationality } = req.body;
+  try {
+    const result = await pool.query(
+      `UPDATE users SET income_range = $1, nationality = $2 WHERE id = $3
+       RETURNING id, name, email, income_range, nationality`,
+      [income_range, nationality, req.user.id]
+    );
+    if (!result.rows.length) return res.status(404).json({ error: 'User not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /me — delete account
+router.delete('/me', userAuth, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM users WHERE id = $1', [req.user.id]);
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

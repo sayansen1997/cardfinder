@@ -15,6 +15,7 @@ import SignUpStep1 from './pages/SignUpStep1';
 import SignUpStep2 from './pages/SignUpStep2';
 import Dashboard from './pages/Dashboard';
 import SavedCalculations from './pages/SavedCalculations';
+import Profile from './pages/Profile';
 import LoginPage from './pages/LoginPage';
 import ProtectedUserRoute from './components/ProtectedUserRoute';
 
@@ -27,7 +28,8 @@ function Layout() {
     !location.pathname.startsWith('/dashboard') &&
     location.pathname !== '/login' &&
     location.pathname !== '/compare' &&
-    location.pathname !== '/saved';
+    location.pathname !== '/saved' &&
+    location.pathname !== '/profile';
 
   return (
     <>
@@ -63,6 +65,16 @@ function Layout() {
           element={
             <ProtectedUserRoute>
               <SavedCalculations />
+            </ProtectedUserRoute>
+          }
+        />
+
+        {/* User — profile */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedUserRoute>
+              <Profile />
             </ProtectedUserRoute>
           }
         />
