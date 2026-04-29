@@ -5,7 +5,7 @@ import { calculateRankings } from '../utils/calculator';
 import CardTile from '../components/CardTile';
 import LeadForm from '../components/LeadForm';
 
-const API = 'http://localhost:5000/api';
+const API = '/api';
 
 export default function Results() {
   const [searchParams] = useSearchParams();

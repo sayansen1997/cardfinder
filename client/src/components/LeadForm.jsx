@@ -2,7 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const API = 'http://localhost:5000/api';
+const API = '/api';
 
 export default function LeadForm() {
   const [form, setForm] = useState({ email: '', income_range: '', nationality: '', consent: false });

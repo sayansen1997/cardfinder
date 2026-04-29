@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import CardTile from '../components/CardTile';
 
-const API = 'http://localhost:5000/api';
+const API = '/api';
 
 export default function CardListing() {
   const [cards, setCards] = useState([]);

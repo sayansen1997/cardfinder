@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const API = 'http://localhost:5000/api';
+const API = '/api';
 
 export default function AdminDashboard() {
   const [leads, setLeads] = useState([]);
