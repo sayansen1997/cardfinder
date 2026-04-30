@@ -3,6 +3,7 @@ import { useLocation, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import API_BASE from '../utils/api';
 import DashboardNavbar from '../components/DashboardNavbar';
+import CardImage from '../components/CardImage';
 import CardRankingTable from '../components/CardRankingTable';
 import Footer from '../components/Footer';
 import './compare.css';
@@ -185,11 +186,8 @@ export default function CompareCards() {
 
                 {card ? (
                   <>
-                    <div
-                      className="cc-thumb"
-                      style={{ background: gradient(i) }}
-                    >
-                      {abbr(card.name)}
+                    <div className="cc-thumb" style={{ overflow: 'hidden', padding: 0 }}>
+                      <CardImage card={card} height={80} />
                     </div>
                     <p className="cc-slot-name">{card.name}</p>
                     <p className="cc-slot-bank">{card.bank}</p>

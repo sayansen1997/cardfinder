@@ -48,7 +48,15 @@
       "Bash(PGPASSWORD=hi2u_Postgres pg_dump -U postgres -d cardfiner --no-owner --no-acl)",
       "Bash(PGPASSWORD=nYLthDJRRkBcaTiIwsmCMsbkkJGMVlIy psql *)",
       "Bash(grep -E \"dotenv|express|pg$|cors|jsonwebtoken|bcryptjs\")",
-      "Bash(kill %1)"
+      "Bash(kill %1)",
+      "Bash(grep -E \"\\\\.\\(jsx|js\\)$\")",
+      "Bash(curl -s http://localhost:5000/api/admin/cards/1 -H \"Authorization: Bearer test\")",
+      "Bash(netstat -ano)",
+      "Bash(curl -s 'http://localhost:5000/api/admin/cards?limit=1' -H 'Authorization: Bearer __TRACKED_VAR__')",
+      "Bash(curl *)",
+      "Bash(taskkill /PID 20048 /F)",
+      "PowerShell(Stop-Process *)",
+      "Read(//tmp/**)"
     ]
   }
 }

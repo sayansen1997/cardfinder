@@ -240,129 +240,19 @@
 }
 
 .cf-category-sidebar {
-  background: white;
+  background: #F3F4F5;
   border-radius: 12px;
   padding: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.cf-cat-btn {
-  width: 100%;
-  text-align: left;
-  padding: 11px 14px;
-  border: none;
-  background: transparent;
-  border-radius: 8px;
-  font-size: 13.5px;
-  font-weight: 500;
-  color: #555;
-  cursor: pointer;
-  transition: all 0.15s;
-  font-family: inherit;
-}
-
-.cf-cat-btn:hover {
-  background: #f5f5f5;
-  color: var(--cf-dark);
-}
-
-.cf-cat-btn.active {
-  background: var(--cf-dark);
-  color: white;
-  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .cf-card-tiles {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
-}
-
-.cf-card-tile {
-  background: white;
-  border-radius: 14px;
-  padding: 24px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.cf-card-tile:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.1);
-}
-
-.cf-card-art {
-  width: 100%;
-  height: 76px;
-  border-radius: 8px;
-  margin-bottom: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  font-weight: 800;
-  color: white;
-  letter-spacing: 2px;
-}
-
-.cf-card-tile-bank {
-  font-size: 11px;
-  color: #999;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-
-.cf-card-tile h4 {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--cf-dark);
-  margin: 0 0 12px;
-  line-height: 1.35;
-  font-family: inherit;
-}
-
-.cf-card-tile ul {
-  list-style: none;
-  margin: 0 0 16px;
-  padding: 0;
-}
-
-.cf-card-tile ul li {
-  font-size: 12.5px;
-  color: #555;
-  padding: 3px 0 3px 16px;
-  position: relative;
-  line-height: 1.4;
-}
-
-.cf-card-tile ul li::before {
-  content: '✓';
-  position: absolute;
-  left: 0;
-  color: var(--cf-gold);
-  font-weight: 700;
-  font-size: 12px;
-}
-
-.cf-btn-select {
-  width: 100%;
-  padding: 9px;
-  background: transparent;
-  border: 1.5px solid var(--cf-dark);
-  border-radius: 6px;
-  color: var(--cf-dark);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: inherit;
-}
-
-.cf-btn-select:hover {
-  background: var(--cf-dark);
-  color: white;
+  align-items: start;
 }
 
 /* ——— CALCULATOR CTA BANNER ——— */
@@ -1003,9 +893,9 @@ input[type='range'].cat-slider::-moz-range-thumb {
 
 .cf-ranking-header {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 28px;
+  margin-bottom: 0;
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -1019,7 +909,7 @@ input[type='range'].cat-slider::-moz-range-thumb {
 }
 
 .cf-aecb-link {
-  color: var(--cf-gold);
+  color: #FFBD49;
   text-decoration: none;
   font-size: 14px;
   font-weight: 600;
@@ -1365,36 +1255,6 @@ input[type='range'].cat-slider::-moz-range-thumb {
 
 /* ——— Card Ranking dark background overrides ——— */
 .cf-ranking .cf-ranking-header h2 { color: white; }
-
-.cf-ranking .cf-table-wrap {
-  background: transparent;
-  box-shadow: none;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.cf-table tbody tr:nth-child(odd)  { background: #01142E; }
-.cf-table tbody tr:nth-child(even) { background: #051C3A; }
-.cf-table tbody tr:hover           { background: #071F40 !important; }
-.cf-table tbody tr                 { border-bottom-color: rgba(255, 255, 255, 0.06); }
-.cf-table tbody td                 { color: #E2E8F0; }
-.cf-table-rank                     { color: rgba(255, 255, 255, 0.35); }
-.cf-table-card-name                { color: white; }
-.cf-table-bank                     { color: #94A3B8; }
-.cf-net-earnings                   { color: #4ADE80; }
-.cf-fee-free                       { color: #4ADE80 !important; }
-
-.cf-type-cashback                  { background: var(--cf-gold); color: white; }
-
-.cf-btn-table-compare {
-  border-color: var(--cf-gold);
-  color: var(--cf-gold);
-}
-.cf-btn-table-compare:hover {
-  background: var(--cf-gold);
-  color: white;
-  border-color: var(--cf-gold);
-}
 
 .cf-ranking .cf-loading { color: rgba(255, 255, 255, 0.6); }
 .cf-ranking .cf-spinner {

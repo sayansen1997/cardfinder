@@ -3,6 +3,7 @@ const router = express.Router();
 const pool = require('../db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { upload } = require('../config/cloudinary');
 
 const auth = (req, res, next) => {
   const token = req.headers['authorization']?.split(' ')[1];
@@ -119,6 +120,40 @@ router.get('/cards', auth, async (req, res) => {
   }
 });
 
+// GET /api/admin/cards/:id — full card with rates map
+router.get('/cards/:id', auth, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const cardResult = await pool.query('SELECT * FROM cards WHERE id = $1', [id]);
+    if (!cardResult.rows.length) {
+      return res.status(404).json({ error: 'Card not found' });
+    }
+
+    const ratesResult = await pool.query(
+      `SELECT cat.slug, cat.name, cat.icon, cr.cashback_rate, cr.monthly_cap
+       FROM card_rates cr
+       JOIN categories cat ON cat.id = cr.category_id
+       WHERE cr.card_id = $1`,
+      [id]
+    );
+
+    const rates = {};
+    ratesResult.rows.forEach((r) => {
+      rates[r.slug] = {
+        cashback_rate: r.cashback_rate,
+        monthly_cap: r.monthly_cap,
+        name: r.name,
+        icon: r.icon,
+      };
+    });
+
+    res.json({ ...cardResult.rows[0], rates });
+  } catch (err) {
+    console.error('Get card error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/admin/cards/:id/rates
 router.get('/cards/:id/rates', auth, async (req, res) => {
   try {
@@ -221,34 +256,39 @@ router.delete('/cards/:id', auth, async (req, res) => {
 });
 
 // POST /api/admin/cards
-router.post('/cards', auth, async (req, res) => {
+router.post('/cards', auth, upload.single('image'), async (req, res) => {
   const { name, bank, card_category, annual_fee, min_salary, key_benefits, rates } = req.body;
 
   if (!name || !bank) {
     return res.status(400).json({ error: 'name and bank are required' });
   }
 
-  // Convert newline-separated benefits to comma-separated string
+  const image_url = req.file ? req.file.path : null;
+
   const benefitsStr = (key_benefits || '')
     .split('\n')
     .map((s) => s.trim())
     .filter(Boolean)
     .join(', ');
 
+  const ratesObj = rates
+    ? (typeof rates === 'string' ? JSON.parse(rates) : rates)
+    : null;
+
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
     const cardRes = await client.query(
-      `INSERT INTO cards (name, bank, card_category, annual_fee, min_salary, key_benefits, status, created_at)
-       VALUES ($1,$2,$3,$4,$5,$6,'active',NOW()) RETURNING *`,
-      [name, bank, card_category || 'cashback', Number(annual_fee) || 0, Number(min_salary) || 0, benefitsStr || null]
+      `INSERT INTO cards (name, bank, card_category, annual_fee, min_salary, key_benefits, status, image_url, created_at)
+       VALUES ($1,$2,$3,$4,$5,$6,'active',$7,NOW()) RETURNING *`,
+      [name, bank, card_category || 'cashback', Number(annual_fee) || 0, Number(min_salary) || 0, benefitsStr || null, image_url]
     );
     const card = cardRes.rows[0];
 
-    if (rates && typeof rates === 'object') {
+    if (ratesObj && typeof ratesObj === 'object') {
       const catsRes = await client.query('SELECT id, name, slug FROM categories');
-      for (const [slug, rateVal] of Object.entries(rates)) {
+      for (const [slug, rateVal] of Object.entries(ratesObj)) {
         const cat = catsRes.rows.find((c) => c.slug === slug || c.name === slug);
         if (!cat) continue;
         const newRate = parseFloat(rateVal) || 0;
@@ -274,6 +314,65 @@ router.post('/cards', auth, async (req, res) => {
     res.status(500).json({ error: err.message });
   } finally {
     client.release();
+  }
+});
+
+// PUT /api/admin/cards/:id — edit full card details + optional new image
+router.put('/cards/:id', auth, upload.single('image'), async (req, res) => {
+  const { id } = req.params;
+  const {
+    name, bank, card_category, annual_fee, min_salary, max_cap,
+    status, apply_link, fee_notes, key_benefits, eligibility_notes,
+  } = req.body;
+
+  try {
+    const existing = await pool.query('SELECT image_url FROM cards WHERE id = $1', [id]);
+    if (!existing.rows.length) {
+      return res.status(404).json({ error: 'Card not found' });
+    }
+    const image_url = req.file ? req.file.path : existing.rows[0].image_url;
+
+    const benefitsStr = key_benefits != null
+      ? (key_benefits || '').split('\n').map((s) => s.trim()).filter(Boolean).join(', ')
+      : null;
+
+    await pool.query(
+      `UPDATE cards SET
+        name = COALESCE($1, name),
+        bank = COALESCE($2, bank),
+        card_category = COALESCE($3, card_category),
+        annual_fee = COALESCE($4, annual_fee),
+        min_salary = COALESCE($5, min_salary),
+        max_cap = $6,
+        status = COALESCE($7, status),
+        apply_link = $8,
+        fee_notes = $9,
+        key_benefits = $10,
+        eligibility_notes = $11,
+        image_url = $12,
+        updated_at = NOW()
+       WHERE id = $13`,
+      [
+        name || null,
+        bank || null,
+        card_category || null,
+        annual_fee ? Number(annual_fee) : null,
+        min_salary ? Number(min_salary) : null,
+        max_cap ? Number(max_cap) : null,
+        status || null,
+        apply_link || null,
+        fee_notes || null,
+        benefitsStr,
+        eligibility_notes || null,
+        image_url,
+        id,
+      ]
+    );
+
+    res.json({ success: true, image_url });
+  } catch (err) {
+    console.error('Update card error:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import CardImage from './CardImage';
 
 const LIFESTYLE_CATEGORIES = [
   { id: 'groceries',  label: 'Best for Groceries',      sortKey: 'groceries' },
@@ -70,15 +71,51 @@ export default function CuratedSection({ cards, loading }) {
 
         <div className="cf-curated-layout">
           <div className="cf-category-sidebar">
-            {LIFESTYLE_CATEGORIES.map((cat) => (
-              <button
-                key={cat.id}
-                className={`cf-cat-btn${activeCat.id === cat.id ? ' active' : ''}`}
-                onClick={() => setActiveCat(cat)}
-              >
-                {cat.label}
-              </button>
-            ))}
+            {LIFESTYLE_CATEGORIES.map((cat) => {
+              const isActive = activeCat.id === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCat(cat)}
+                  style={{
+                    width: '100%',
+                    background: isActive ? 'white' : 'transparent',
+                    border: 'none',
+                    borderLeft: isActive ? '4px solid #C9920A' : '4px solid transparent',
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    boxShadow: isActive ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: '14px',
+                    fontWeight: isActive ? 600 : 500,
+                    color: isActive ? '#0D1B2A' : '#4B5563',
+                    textAlign: 'left',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.background = 'white';
+                      e.currentTarget.style.borderLeft = '4px solid #C9920A';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.borderLeft = '4px solid transparent';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }
+                  }}
+                >
+                  <span>{cat.label}</span>
+                  {isActive && <span style={{ color: '#9CA3AF', fontSize: '14px' }}>›</span>}
+                </button>
+              );
+            })}
           </div>
 
           <div className="cf-card-tiles">
@@ -88,26 +125,133 @@ export default function CuratedSection({ cards, loading }) {
                 <p>Loading cards…</p>
               </div>
             ) : (
-              topCards.map((card, i) => (
-                <div key={card.id} className="cf-card-tile">
-                  <div
-                    className="cf-card-art"
-                    style={{ background: getGradient(i) }}
-                  >
-                    {card.bank
-                      .split(' ')
-                      .map((w) => w[0])
-                      .join('')
-                      .slice(0, 3)}
+              topCards.map((card) => (
+                <div
+                  key={card.id}
+                  style={{
+                    background: 'white',
+                    borderRadius: '12px',
+                    padding: '20px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '16px',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                    transition: 'all 0.2s ease',
+                    cursor: 'pointer',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-3px)';
+                    e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.08)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)';
+                  }}
+                >
+                  {/* Image wrapper */}
+                  <div style={{
+                    borderRadius: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                  }}>
+                    {card.image_url ? (
+                      <img
+                        src={card.image_url}
+                        alt={card.name}
+                        style={{
+                          width: '100%',
+                          objectFit: 'cover',
+                          borderRadius: '8px',
+                          display: 'block',
+                        }}
+                      />
+                    ) : (
+                      <CardImage card={card} height={140} />
+                    )}
                   </div>
-                  <div className="cf-card-tile-bank">{card.bank}</div>
-                  <h4>{card.name}</h4>
-                  <ul>
-                    {parseBenefits(card.key_benefits).map((benefit, j) => (
-                      <li key={j}>{benefit}</li>
+
+                  {/* Card name */}
+                  <h4 style={{
+                    fontFamily: 'Manrope, sans-serif',
+                    fontSize: '18px',
+                    fontStyle: 'normal',
+                    fontWeight: 700,
+                    lineHeight: '28px',
+                    color: '#001A3D',
+                    margin: 0,
+                  }}>
+                    {card.name}
+                  </h4>
+
+                  {/* Card category — below card name */}
+                  <div style={{
+                    color: '#E5A00D',
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: '12px',
+                    fontStyle: 'normal',
+                    fontWeight: 600,
+                    lineHeight: '16px',
+                    letterSpacing: '0.6px',
+                    textTransform: 'uppercase',
+                    marginTop: '-8px',
+                  }}>
+                    {card.card_category}
+                  </div>
+
+                  {/* Benefits list */}
+                  <ul style={{
+                    listStyle: 'none',
+                    padding: 0,
+                    margin: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}>
+                    {parseBenefits(card.key_benefits).slice(0, 3).map((benefit, j) => (
+                      <li key={j} style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '8px',
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: '14px',
+                        color: '#44474E',
+                        lineHeight: 1.5,
+                      }}>
+                        <span style={{ color: '#C9920A', fontWeight: 700, flexShrink: 0 }}>✓</span>
+                        <span>{benefit}</span>
+                      </li>
                     ))}
                   </ul>
-                  <button className="cf-btn-select">Select Card</button>
+
+                  {/* Select Card button */}
+                  <button
+                    style={{
+                      width: '100%',
+                      background: 'white',
+                      border: '1.5px solid #0D1B2A',
+                      borderRadius: '8px',
+                      padding: '12px',
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      color: '#0D1B2A',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#0D1B2A';
+                      e.currentTarget.style.color = 'white';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'white';
+                      e.currentTarget.style.color = '#0D1B2A';
+                    }}
+                  >
+                    Select Card
+                  </button>
                 </div>
               ))
             )}
