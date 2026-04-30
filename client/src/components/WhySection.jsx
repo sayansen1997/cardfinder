@@ -31,7 +31,7 @@ export default function WhySection() {
           {WHY_ITEMS.map((item) => (
             <div key={item.title} className="cf-why-item">
               <div className="cf-why-icon">
-                <img src={item.icon} alt={item.alt} style={{ width: '48px', height: '48px' }} />
+                <img src={item.icon} alt={item.alt} style={{ width: '56px', height: '56px' }} />
               </div>
               <h3>{item.title}</h3>
               <p>{item.desc}</p>

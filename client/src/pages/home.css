@@ -1057,11 +1057,11 @@ input[type='range'].cat-slider::-moz-range-thumb {
 }
 
 .cf-why-icon {
-  width: 64px;
-  height: 64px;
-  background: #0D1B2A;
+  width: 56px;
+  height: 56px;
+  background: transparent;
   border: none;
-  border-radius: 16px;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
