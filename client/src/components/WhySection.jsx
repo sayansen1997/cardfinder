@@ -3,13 +3,13 @@ const WHY_ITEMS = [
     icon: '/Mathematical_Accuracy.svg',
     alt: 'Mathematical Accuracy',
     title: 'Mathematical Accuracy',
-    desc: 'Our algorithm calculates exact cashback against your real spending — not marketing estimates. Every dirham is accounted for, including caps and tier thresholds.',
+    desc: 'Our algorithm calculates exact cashback against your real spending, not marketing estimates. Every dirham is accounted for, including caps and tier thresholds.',
   },
   {
     icon: '/Unbiased_Comparisons.svg',
     alt: 'Unbiased Comparisons',
     title: 'Unbiased Comparisons',
-    desc: 'Every active UAE card is ranked on the same formula with the same inputs. No sponsored rankings, no hidden affiliations — just the maths.',
+    desc: 'Every active UAE card is ranked on the same formula with the same inputs. No sponsored rankings, no hidden affiliations, just the maths.',
   },
   {
     icon: '/Instant_Eligibility.svg',
@@ -31,7 +31,7 @@ export default function WhySection() {
           {WHY_ITEMS.map((item) => (
             <div key={item.title} className="cf-why-item">
               <div className="cf-why-icon">
-                <img src={item.icon} alt={item.alt} style={{ width: '56px', height: '56px' }} />
+                <img src={item.icon} alt={item.alt} style={{ width: '65px', height: '65px' }} />
               </div>
               <h3>{item.title}</h3>
               <p>{item.desc}</p>

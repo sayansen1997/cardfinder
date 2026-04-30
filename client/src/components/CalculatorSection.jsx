@@ -120,7 +120,7 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
       <div className="cf-container">
         <div className="cf-section-header">
           <h2>Stop Guessing &amp; Start Saving</h2>
-          <p>Enter your monthly spending to find the credit card that earns you the most.</p>
+          <p>Don't let your rewards go to waste. Use our calculator to find credit cards in the UAE that actually pay you back based on your lifestyle.</p>
         </div>
 
         {initLoading ? (

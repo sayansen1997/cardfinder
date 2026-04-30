@@ -58,7 +58,7 @@ export default function CardRankingTable({ rankingData, loading }) {
               Full competitive landscape for your spending profile
             </p>
           </div>
-          <a href="#" className="cf-aecb-link">
+          <a href="https://etihadbureau.ae/Individual/CreditScore" target="_blank" rel="noopener noreferrer" className="cf-aecb-link">
             Check your AECB Credit Score →
           </a>
         </div>

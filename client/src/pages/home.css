@@ -126,32 +126,41 @@
   background: rgba(201, 146, 10, 0.12);
   border: 1px solid rgba(201, 146, 10, 0.35);
   border-radius: 20px;
-  color: var(--cf-gold);
-  font-size: 11px;
+  color: #FFDEAE;
+  font-size: 12px;
+  font-style: normal;
   font-weight: 700;
-  letter-spacing: 1.8px;
+  line-height: 16px;
+  letter-spacing: 1.2px;
   text-transform: uppercase;
+  text-align: center;
   margin-bottom: 28px;
 }
 
 .cf-hero h1 {
-  font-size: 52px;
+  font-size: 68px;
+  font-style: normal;
   font-weight: 800;
-  color: white;
-  line-height: 1.15;
+  color: #FFF;
+  line-height: 75px;
   margin: 0 0 24px;
-  letter-spacing: -1px;
-  font-family: inherit;
+  letter-spacing: -3.6px;
+  font-family: Manrope;
+  text-align: center;
 }
 
 .cf-hero h1 .gold {
-  color: var(--cf-gold);
+  color: #FFBA3E;
 }
 
 .cf-hero-sub {
-  font-size: 17px;
-  color: rgba(255, 255, 255, 0.68);
-  line-height: 1.65;
+  color: #D6C4AD;
+  text-align: center;
+  font-family: Inter;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 26px;
   margin: 0 auto 48px;
   max-width: 580px;
 }
@@ -252,13 +261,13 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
-  align-items: start;
+  align-items: stretch;
 }
 
 /* ——— CALCULATOR CTA BANNER ——— */
 .cf-calc-banner {
   background: #F3F4F5;
-  padding: 48px 0;
+  padding: 28px 0 48px;
   text-align: center;
 }
 

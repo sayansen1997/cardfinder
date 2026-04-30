@@ -125,7 +125,7 @@ const calculateHandler = async (req, res) => {
     }
 
     const { rows: cards } = await pool.query(
-      `SELECT c.id, c.name, c.bank, c.card_category, c.annual_fee, c.fee_notes, c.min_salary, c.image_url,
+      `SELECT c.id, c.name, c.bank, c.card_category, c.annual_fee, c.fee_notes, c.min_salary, c.image_url, c.apply_link,
           json_agg(
             json_build_object(
               'category_name', cat.name,
@@ -172,6 +172,7 @@ const calculateHandler = async (req, res) => {
         fee_notes: card.fee_notes,
         min_salary: card.min_salary,
         image_url: card.image_url,
+        apply_link: card.apply_link,
         net_annual_savings: netAnnualSavings,
         total_annual_cashback: totalAnnualCashback,
         cashback_breakdown: breakdown,
@@ -198,7 +199,7 @@ const compareHandler = async (req, res) => {
     }
 
     let query = `
-      SELECT c.id, c.name, c.bank, c.card_category, c.annual_fee, c.fee_notes, c.min_salary, c.key_benefits, c.image_url,
+      SELECT c.id, c.name, c.bank, c.card_category, c.annual_fee, c.fee_notes, c.min_salary, c.key_benefits, c.image_url, c.apply_link,
         json_agg(
           json_build_object(
             'category_name', cat.name,
@@ -258,6 +259,7 @@ const compareHandler = async (req, res) => {
         min_salary: card.min_salary,
         key_benefits: card.key_benefits,
         image_url: card.image_url,
+        apply_link: card.apply_link,
         net_annual_savings: parseFloat((totalCapped - annualFee).toFixed(2)),
         total_annual_cashback: parseFloat(totalCapped.toFixed(2)),
         uncapped_annual_cashback: parseFloat(totalUncapped.toFixed(2)),

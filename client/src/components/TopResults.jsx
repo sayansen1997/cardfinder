@@ -307,7 +307,17 @@ export default function TopResults({ results, onRecalculate, onSave }) {
 
                   {/* Apply Now */}
                   <button
-                    onClick={() => card.apply_link && window.open(card.apply_link, '_blank')}
+                    onClick={() => {
+                      if (card.apply_link) {
+                        let url = card.apply_link;
+                        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                          url = 'https://' + url;
+                        }
+                        window.open(url, '_blank', 'noopener,noreferrer');
+                      } else {
+                        alert('Apply link not available for this card');
+                      }
+                    }}
                     style={{
                       width: '100%',
                       background: buttonColor,

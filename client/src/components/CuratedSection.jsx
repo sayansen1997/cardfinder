@@ -135,6 +135,7 @@ export default function CuratedSection({ cards, loading }) {
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '16px',
+                    height: '100%',
                     boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
                     transition: 'all 0.2s ease',
                     cursor: 'pointer',
@@ -225,6 +226,8 @@ export default function CuratedSection({ cards, loading }) {
                       </li>
                     ))}
                   </ul>
+
+                  <div style={{ flex: 1 }} />
 
                   {/* Select Card button */}
                   <button
