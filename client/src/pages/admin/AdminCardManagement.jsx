@@ -717,6 +717,7 @@ export default function AdminCardManagement() {
               placeholder="Search card names, banks, or features..."
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
+              style={{ background: 'white', color: '#0D1B2A', colorScheme: 'light' }}
             />
           </div>
 
@@ -724,6 +725,7 @@ export default function AdminCardManagement() {
             className="adm-filter-select"
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
+            style={{ background: 'white', color: '#0D1B2A', colorScheme: 'light' }}
           >
             <option value="">All Categories</option>
             {categories.map((c) => (
@@ -735,6 +737,7 @@ export default function AdminCardManagement() {
             className="adm-filter-select"
             value={incomeFilter}
             onChange={(e) => setIncomeFilter(e.target.value)}
+            style={{ background: 'white', color: '#0D1B2A', colorScheme: 'light' }}
           >
             <option value="">Any Income Range</option>
             {brackets.map((b) => (

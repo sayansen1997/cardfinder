@@ -177,6 +177,7 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
                         setIncome(isNaN(num) ? 0 : num);
                         setActiveBracket(null);
                       }}
+                      style={{ background: 'white', colorScheme: 'light' }}
                     />
                   </div>
 
@@ -306,7 +307,9 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
                                 fontSize: '14px',
                                 fontWeight: 600,
                                 color: '#0D1B2A',
+                                background: 'white',
                                 outline: 'none',
+                                colorScheme: 'light',
                               }}
                               value={spending[cat.slug] ?? 0}
                               onChange={(e) => updateSpend(cat.slug, e.target.value)}
