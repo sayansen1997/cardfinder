@@ -162,10 +162,22 @@ export default function TopResults({ results, onRecalculate, onSave }) {
                 border: isTop ? '2px solid #C9920A' : '1px solid #E5E7EB',
               }}>
 
-                  {/* TOP PICK pill — inside, top-left, first card only */}
-                  {isTop && (
-                    <div style={{ alignSelf: 'flex-start', marginBottom: '12px' }}>
-                      <span style={{
+                  {/* Image block — grey container with TOP PICK overlay */}
+                  <div style={{
+                    background: '#F3F4F5',
+                    borderRadius: '10px',
+                    padding: '16px',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginBottom: '12px',
+                    position: 'relative',
+                  }}>
+                    {isTop && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '32px',
+                        left: '32px',
                         background: '#FEF3C7',
                         color: '#92400E',
                         fontFamily: 'Inter, sans-serif',
@@ -175,23 +187,12 @@ export default function TopResults({ results, onRecalculate, onSave }) {
                         letterSpacing: '0.05em',
                         padding: '4px 12px',
                         borderRadius: '999px',
+                        zIndex: 1,
                       }}>
                         Top Pick
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Image block — grey container with padding */}
-                  <div style={{
-                    background: '#F3F4F5',
-                    borderRadius: '10px',
-                    padding: '16px',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    marginBottom: '12px',
-                  }}>
-                    <CardImage card={card} height={120} />
+                      </div>
+                    )}
+                    <CardImage card={card} height="100%" />
                   </div>
 
                   {/* Card name + bank */}

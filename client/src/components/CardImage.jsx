@@ -8,6 +8,8 @@ const COLOR_MAP = {
 };
 
 export default function CardImage({ card, height = 140 }) {
+  const h = typeof height === 'number' ? `${height}px` : height;
+
   if (card.image_url) {
     return (
       <img
@@ -15,7 +17,7 @@ export default function CardImage({ card, height = 140 }) {
         alt={card.name}
         style={{
           width: '100%',
-          height: `${height}px`,
+          height: h,
           objectFit: 'cover',
           borderRadius: '8px',
           display: 'block',
@@ -33,7 +35,7 @@ export default function CardImage({ card, height = 140 }) {
     <div
       style={{
         width: '100%',
-        height: `${height}px`,
+        height: h,
         background: `linear-gradient(135deg, ${bankColor}, ${bankColor}dd)`,
         borderRadius: '8px',
         display: 'flex',
