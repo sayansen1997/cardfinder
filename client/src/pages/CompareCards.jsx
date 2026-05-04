@@ -282,7 +282,7 @@ export default function CompareCards() {
                   textTransform: 'uppercase',
                   marginTop: '-8px',
                 }}>
-                  {card?.card_category || ''}
+                  {card?.category_name || card?.card_category || ''}
                 </div>
 
                 {/* Swap Card + Top Pick row */}
@@ -423,7 +423,7 @@ export default function CompareCards() {
             <div className="cc-td-label">Card Category</div>
             {[0, 1, 2].map((i) => (
               <div key={i} className="cc-td">
-                {slots[i]?.card_category || '—'}
+                {slots[i]?.category_name || slots[i]?.card_category || '—'}
               </div>
             ))}
           </div>

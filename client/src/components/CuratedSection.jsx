@@ -199,7 +199,7 @@ export default function CuratedSection({ cards, loading }) {
                     textTransform: 'uppercase',
                     marginTop: '-8px',
                   }}>
-                    {card.card_category}
+                    {card.category_name || card.card_category}
                   </div>
 
                   {/* Benefits list */}

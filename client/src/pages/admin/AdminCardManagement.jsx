@@ -133,7 +133,7 @@ function EditCashbackModal({ card, categories, onClose, onSaved }) {
 
 // ——— Edit Card Modal ———
 
-function EditCardModal({ cardId, categories, onClose, onSaved }) {
+function EditCardModal({ cardId, categories, cardCategories, onClose, onSaved }) {
   const [form, setForm] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -294,8 +294,9 @@ function EditCardModal({ cardId, categories, onClose, onSaved }) {
               <label className="adm-form-label">Card Category</label>
               <select className="adm-form-input" value={form.card_category}
                 onChange={(e) => set('card_category', e.target.value)}>
-                {['cashback', 'travel', 'rewards', 'lifestyle', 'flexi'].map((t) => (
-                  <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                <option value="">Select category...</option>
+                {cardCategories.map((c) => (
+                  <option key={c.slug} value={c.slug}>{c.name}</option>
                 ))}
               </select>
             </div>
@@ -375,11 +376,11 @@ function EditCardModal({ cardId, categories, onClose, onSaved }) {
 
 // ——— Add New Card Modal ———
 
-function AddCardModal({ categories, cardTypes, onClose, onSaved }) {
+function AddCardModal({ categories, cardCategories, onClose, onSaved }) {
   const [form, setForm] = useState({
     name: '',
     bank: '',
-    card_category: cardTypes[0] || 'cashback',
+    card_category: '',
     annual_fee: '',
     min_salary: '',
     key_benefits: '',
@@ -501,8 +502,9 @@ function AddCardModal({ categories, cardTypes, onClose, onSaved }) {
                 value={form.card_category}
                 onChange={(e) => setForm((f) => ({ ...f, card_category: e.target.value }))}
               >
-                {cardTypes.map((t) => (
-                  <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                <option value="">Select category...</option>
+                {cardCategories.map((c) => (
+                  <option key={c.slug} value={c.slug}>{c.name}</option>
                 ))}
               </select>
             </div>
@@ -616,6 +618,7 @@ export default function AdminCardManagement() {
   const [categories, setCategories] = useState([]);
   const [brackets, setBrackets] = useState([]);
   const [cardTypes, setCardTypes] = useState(['cashback']);
+  const [cardCategories, setCardCategories] = useState([]);
 
   const [editingCardId, setEditingCardId] = useState(null);
   const [editCard, setEditCard] = useState(null);
@@ -645,10 +648,12 @@ export default function AdminCardManagement() {
       axios.get(`${API_BASE}/categories`),
       axios.get(`${API_BASE}/income-brackets`),
       adminAxios().get('/admin/card-types'),
-    ]).then(([catsRes, brksRes, typesRes]) => {
+      adminAxios().get('/admin/card-categories'),
+    ]).then(([catsRes, brksRes, typesRes, cardCatsRes]) => {
       setCategories(catsRes.data);
       setBrackets(brksRes.data);
       if (typesRes.data.length) setCardTypes(typesRes.data);
+      setCardCategories(cardCatsRes.data);
     }).catch((err) => {
       if (err.response?.status === 401) navigate('/admin/login');
     });
@@ -731,8 +736,8 @@ export default function AdminCardManagement() {
             style={{ background: 'white', color: '#0D1B2A', colorScheme: 'light' }}
           >
             <option value="">All Categories</option>
-            {categories.map((c) => (
-              <option key={c.slug} value={c.slug}>{c.label}</option>
+            {cardCategories.map((c) => (
+              <option key={c.slug} value={c.slug}>{c.name}</option>
             ))}
           </select>
 
@@ -804,8 +809,7 @@ export default function AdminCardManagement() {
                     </td>
                     <td>
                       <span className="adm-type-badge">
-                        {(card.card_category || 'cashback').charAt(0).toUpperCase() +
-                          (card.card_category || 'cashback').slice(1)}
+                        {card.category_name || (card.card_category || 'cashback').charAt(0).toUpperCase() + (card.card_category || 'cashback').slice(1)}
                       </span>
                     </td>
                     <td>{Number(card.annual_fee).toLocaleString()}</td>
@@ -876,6 +880,7 @@ export default function AdminCardManagement() {
         <EditCardModal
           cardId={editingCardId}
           categories={categories}
+          cardCategories={cardCategories}
           onClose={() => setEditingCardId(null)}
           onSaved={() => { setEditingCardId(null); fetchCards(page); }}
         />
@@ -893,7 +898,7 @@ export default function AdminCardManagement() {
       {showAdd && (
         <AddCardModal
           categories={categories}
-          cardTypes={cardTypes}
+          cardCategories={cardCategories}
           onClose={() => setShowAdd(false)}
           onSaved={handleAddSaved}
         />

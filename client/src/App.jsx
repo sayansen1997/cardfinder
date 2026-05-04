@@ -12,6 +12,7 @@ import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminCardManagement from './pages/admin/AdminCardManagement';
 import AdminAuditLog from './pages/admin/AdminAuditLog';
+import AdminCategories from './pages/admin/AdminCategories';
 import SignUpStep1 from './pages/SignUpStep1';
 import SignUpStep2 from './pages/SignUpStep2';
 import Dashboard from './pages/Dashboard';
@@ -90,6 +91,14 @@ function Layout() {
           element={
             <ProtectedAdminRoute>
               <AdminCardManagement />
+            </ProtectedAdminRoute>
+          }
+        />
+        <Route
+          path="/admin/categories"
+          element={
+            <ProtectedAdminRoute>
+              <AdminCategories />
             </ProtectedAdminRoute>
           }
         />

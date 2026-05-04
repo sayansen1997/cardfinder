@@ -37,6 +37,12 @@ export default function AdminNavbar() {
           Card Management
         </Link>
         <Link
+          to="/admin/categories"
+          className={`adm-navbar-link${isActive('/admin/categories') ? ' active' : ''}`}
+        >
+          Categories
+        </Link>
+        <Link
           to="/admin/audit"
           className={`adm-navbar-link${isActive('/admin/audit') ? ' active' : ''}`}
         >

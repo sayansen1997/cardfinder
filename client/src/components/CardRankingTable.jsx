@@ -111,7 +111,7 @@ export default function CardRankingTable({ rankingData, loading }) {
 
                       {/* TYPE */}
                       <td style={{ ...TD_MUTED }}>
-                        {card.card_category || 'Cashback'}
+                        {card.category_name || card.card_category || 'Cashback'}
                       </td>
 
                       {/* NET SAVINGS/YR */}

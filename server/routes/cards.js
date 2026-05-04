@@ -6,7 +6,7 @@ const pool = require('../db');
 router.get('/', async (req, res) => {
   try {
     const cards = await pool.query(
-      `SELECT c.*,
+      `SELECT c.*, cc.name AS category_name,
         json_agg(
           json_build_object(
             'category_id', cr.category_id,
@@ -16,10 +16,11 @@ router.get('/', async (req, res) => {
           )
         ) AS rates
        FROM cards c
+       LEFT JOIN card_categories cc ON cc.slug = c.card_category
        LEFT JOIN card_rates cr ON cr.card_id = c.id
        LEFT JOIN categories cat ON cat.id = cr.category_id
        WHERE c.status = 'active'
-       GROUP BY c.id
+       GROUP BY c.id, cc.name
        ORDER BY c.name`
     );
     res.json(cards.rows);
@@ -33,7 +34,7 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const card = await pool.query(
-      `SELECT c.*,
+      `SELECT c.*, cc.name AS category_name,
         json_agg(
           json_build_object(
             'category_id', cr.category_id,
@@ -43,10 +44,11 @@ router.get('/:id', async (req, res) => {
           )
         ) AS rates
        FROM cards c
+       LEFT JOIN card_categories cc ON cc.slug = c.card_category
        LEFT JOIN card_rates cr ON cr.card_id = c.id
        LEFT JOIN categories cat ON cat.id = cr.category_id
        WHERE c.id = $1
-       GROUP BY c.id`,
+       GROUP BY c.id, cc.name`,
       [id]
     );
     if (card.rows.length === 0) return res.status(404).json({ error: 'Card not found' });
@@ -126,6 +128,7 @@ const calculateHandler = async (req, res) => {
 
     const { rows: cards } = await pool.query(
       `SELECT c.id, c.name, c.bank, c.card_category, c.annual_fee, c.fee_notes, c.min_salary, c.image_url, c.apply_link,
+          cc.name AS category_name,
           json_agg(
             json_build_object(
               'category_name', cat.name,
@@ -134,10 +137,11 @@ const calculateHandler = async (req, res) => {
             )
           ) AS rates
         FROM cards c
+        LEFT JOIN card_categories cc ON cc.slug = c.card_category
         LEFT JOIN card_rates cr ON cr.card_id = c.id
         LEFT JOIN categories cat ON cat.id = cr.category_id
         WHERE c.status = 'active'
-        GROUP BY c.id`
+        GROUP BY c.id, cc.name`
     );
 
     const results = cards.map((card) => {
@@ -168,6 +172,7 @@ const calculateHandler = async (req, res) => {
         name: card.name,
         bank: card.bank,
         card_category: card.card_category,
+        category_name: card.category_name,
         annual_fee: card.annual_fee,
         fee_notes: card.fee_notes,
         min_salary: card.min_salary,
@@ -200,6 +205,7 @@ const compareHandler = async (req, res) => {
 
     let query = `
       SELECT c.id, c.name, c.bank, c.card_category, c.annual_fee, c.fee_notes, c.min_salary, c.key_benefits, c.image_url, c.apply_link,
+        cc.name AS category_name,
         json_agg(
           json_build_object(
             'category_name', cat.name,
@@ -208,6 +214,7 @@ const compareHandler = async (req, res) => {
           )
         ) AS rates
       FROM cards c
+      LEFT JOIN card_categories cc ON cc.slug = c.card_category
       LEFT JOIN card_rates cr ON cr.card_id = c.id
       LEFT JOIN categories cat ON cat.id = cr.category_id
       WHERE c.status = 'active'
@@ -217,7 +224,7 @@ const compareHandler = async (req, res) => {
       params.push(card_ids);
       query += ` AND c.id = ANY($1)`;
     }
-    query += ' GROUP BY c.id';
+    query += ' GROUP BY c.id, cc.name';
 
     const { rows: cards } = await pool.query(query, params);
 
@@ -254,6 +261,7 @@ const compareHandler = async (req, res) => {
         name: card.name,
         bank: card.bank,
         card_category: card.card_category,
+        category_name: card.category_name,
         annual_fee: card.annual_fee,
         fee_notes: card.fee_notes,
         min_salary: card.min_salary,
@@ -275,6 +283,18 @@ const compareHandler = async (req, res) => {
 };
 
 router.post('/compare', compareHandler);
+
+router.get('/card-categories', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT slug, name FROM card_categories ORDER BY sort_order, name'
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 module.exports = router;
 module.exports.calculateHandler = calculateHandler;

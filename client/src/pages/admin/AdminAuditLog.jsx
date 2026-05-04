@@ -45,6 +45,45 @@ const ACTION_STYLES = {
   'STATUS CHANGE':    { bg: '#DBEAFE', color: '#1E40AF', border: '#BFDBFE' },
 };
 
+function isImageUrl(value) {
+  if (!value) return false;
+  return /^https?:\/\/.*\.(png|jpg|jpeg|webp|svg|gif)/i.test(value) ||
+    value.includes('cloudinary.com');
+}
+
+function renderValue(value) {
+  if (!value) return <span style={{ color: '#9CA3AF' }}>—</span>;
+
+  if (isImageUrl(value)) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <img
+          src={value}
+          alt="Card image"
+          style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #E5E7EB' }}
+        />
+        <a
+          href={value}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: '#C9920A', fontSize: '13px', fontWeight: 600, textDecoration: 'none' }}
+        >
+          View Full
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <span
+      style={{ fontSize: '13px', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline-block' }}
+      title={value}
+    >
+      {value}
+    </span>
+  );
+}
+
 function ActionBadge({ type }) {
   const style = ACTION_STYLES[type] || { bg: '#F3F4F6', color: '#374151', border: '#E5E7EB' };
   return (
@@ -254,7 +293,7 @@ export default function AdminAuditLog() {
         </div>
 
         {/* Audit table */}
-        <div className="adm-table-wrap">
+        <div className="adm-table-wrap" style={{ overflowX: 'auto' }}>
           <table className="adm-table adm-audit-table">
             <thead>
               <tr>
@@ -262,8 +301,8 @@ export default function AdminAuditLog() {
                 <th>Action Performed</th>
                 <th>Card Name</th>
                 <th>Field Changed</th>
-                <th>Old Value</th>
-                <th>New Value</th>
+                <th style={{ width: '20%', minWidth: '180px' }}>Old Value</th>
+                <th style={{ width: '20%', minWidth: '180px' }}>New Value</th>
               </tr>
             </thead>
             <tbody>
@@ -281,8 +320,8 @@ export default function AdminAuditLog() {
                     <td><ActionBadge type={log.action_type} /></td>
                     <td className="adm-log-card-name">{log.card_name || '—'}</td>
                     <td className="adm-log-field">{log.field_name || '—'}</td>
-                    <td className="adm-log-old">{log.old_value || '—'}</td>
-                    <td className="adm-log-new">{log.new_value || '—'}</td>
+                    <td className="adm-log-old">{renderValue(log.old_value)}</td>
+                    <td className="adm-log-new">{renderValue(log.new_value)}</td>
                   </tr>
                 ))
               )}

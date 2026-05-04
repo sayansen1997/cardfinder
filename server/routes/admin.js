@@ -86,11 +86,7 @@ router.get('/cards', auth, async (req, res) => {
       pi++;
     }
     if (category) {
-      conditions.push(`EXISTS (
-        SELECT 1 FROM card_rates cr2
-        JOIN categories cat2 ON cat2.id = cr2.category_id
-        WHERE cr2.card_id = c.id AND cat2.slug = $${pi}
-      )`);
+      conditions.push(`c.card_category = $${pi}`);
       params.push(category);
       pi++;
     }
@@ -106,8 +102,11 @@ router.get('/cards', auth, async (req, res) => {
       pool.query(`SELECT COUNT(*) FROM cards c ${where}`, params),
       pool.query(
         `SELECT c.id, c.name, c.bank, c.card_category, c.annual_fee, c.min_salary, c.status, c.created_at,
+          cc.name AS category_name,
           (SELECT MAX(cr.monthly_cap) FROM card_rates cr WHERE cr.card_id = c.id) AS max_cap
-         FROM cards c ${where}
+         FROM cards c
+         LEFT JOIN card_categories cc ON cc.slug = c.card_category
+         ${where}
          ORDER BY c.name
          LIMIT $${pi} OFFSET $${pi + 1}`,
         [...params, Number(limit), offset]
@@ -411,9 +410,13 @@ router.put('/cards/:id', auth, upload.single('image'), async (req, res) => {
 // GET /api/admin/audit/types — distinct action_type values
 router.get('/audit/types', auth, async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT DISTINCT action_type FROM audit_log WHERE action_type IS NOT NULL ORDER BY action_type'
-    );
+    const result = await pool.query(`
+      SELECT DISTINCT action_type
+      FROM audit_log
+      WHERE action_type IS NOT NULL
+        AND action_type NOT IN ('ASSET UPDATE', 'MODIFIED APR')
+      ORDER BY action_type ASC
+    `);
     res.json(result.rows.map((r) => r.action_type));
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -505,6 +508,76 @@ router.get('/card-types', auth, async (req, res) => {
     );
     res.json(result.rows.map((r) => r.card_category));
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ——— Card Categories CRUD ———
+
+router.get('/card-categories', auth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM card_categories ORDER BY sort_order, name'
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/card-categories', auth, async (req, res) => {
+  const { slug, name, sort_order } = req.body;
+  if (!slug || !name) {
+    return res.status(400).json({ error: 'slug and name are required' });
+  }
+  try {
+    const result = await pool.query(
+      `INSERT INTO card_categories (slug, name, sort_order) VALUES ($1, $2, $3) RETURNING *`,
+      [slug.toLowerCase().replace(/\s+/g, '_'), name, sort_order || 0]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    if (err.code === '23505') {
+      return res.status(400).json({ error: 'Category with this slug already exists' });
+    }
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/card-categories/:id', auth, async (req, res) => {
+  const { id } = req.params;
+  const { name, sort_order } = req.body;
+  try {
+    await pool.query(
+      `UPDATE card_categories SET name = $1, sort_order = $2, updated_at = NOW() WHERE id = $3`,
+      [name, sort_order || 0, id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/card-categories/:id', auth, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const catRes = await pool.query('SELECT slug FROM card_categories WHERE id = $1', [id]);
+    if (!catRes.rows.length) return res.status(404).json({ error: 'Not found' });
+    const slug = catRes.rows[0].slug;
+
+    const usageRes = await pool.query('SELECT COUNT(*) FROM cards WHERE card_category = $1', [slug]);
+    const usageCount = parseInt(usageRes.rows[0].count);
+    if (usageCount > 0) {
+      return res.status(400).json({ error: `Cannot delete: ${usageCount} card(s) are using this category` });
+    }
+
+    await pool.query('DELETE FROM card_categories WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
