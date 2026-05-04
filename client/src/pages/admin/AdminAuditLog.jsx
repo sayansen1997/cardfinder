@@ -51,6 +51,20 @@ function isImageUrl(value) {
     value.includes('cloudinary.com');
 }
 
+const CASHBACK_ACTION_TYPES = ['CASHBACK UPDATED', 'UPDATED CASHBACK'];
+
+function isCashbackRateLog(log) {
+  return CASHBACK_ACTION_TYPES.includes(log.action_type);
+}
+
+function formatRateValue(value) {
+  if (value === null || value === undefined || value === '') return '—';
+  const num = parseFloat(value);
+  if (isNaN(num)) return value;
+  const pct = parseFloat((num * 100).toFixed(4)).toString();
+  return `${pct}%`;
+}
+
 function renderValue(value) {
   if (!value) return <span style={{ color: '#9CA3AF' }}>—</span>;
 
@@ -320,8 +334,12 @@ export default function AdminAuditLog() {
                     <td><ActionBadge type={log.action_type} /></td>
                     <td className="adm-log-card-name">{log.card_name || '—'}</td>
                     <td className="adm-log-field">{log.field_name || '—'}</td>
-                    <td className="adm-log-old">{renderValue(log.old_value)}</td>
-                    <td className="adm-log-new">{renderValue(log.new_value)}</td>
+                    <td className="adm-log-old">
+                      {isCashbackRateLog(log) ? formatRateValue(log.old_value) : renderValue(log.old_value)}
+                    </td>
+                    <td className="adm-log-new">
+                      {isCashbackRateLog(log) ? formatRateValue(log.new_value) : renderValue(log.new_value)}
+                    </td>
                   </tr>
                 ))
               )}

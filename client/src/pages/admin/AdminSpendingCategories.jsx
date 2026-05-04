@@ -113,7 +113,7 @@ export default function AdminSpendingCategories() {
   };
 
   const handleDelete = async (id, name) => {
-    if (!window.confirm(`Delete spending category "${name}"?\nThis will also remove its cashback rates from all cards.`)) return;
+    if (!window.confirm(`Delete category "${name}"? This cannot be undone.`)) return;
     try {
       await adminAxios().delete(`/admin/spending-categories/${id}`);
       fetchCategories();

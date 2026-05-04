@@ -664,19 +664,34 @@ router.delete('/spending-categories/:id', auth, async (req, res) => {
   const { id } = req.params;
   const client = await pool.connect();
   try {
-    await client.query('BEGIN');
-    await client.query('DELETE FROM card_rates WHERE category_id = $1', [id]);
-    const result = await client.query(
-      'DELETE FROM categories WHERE id = $1 RETURNING id', [id]
-    );
-    if (!result.rows.length) {
-      await client.query('ROLLBACK');
+    const catRes = await client.query('SELECT name FROM categories WHERE id = $1', [id]);
+    if (!catRes.rows.length) {
       return res.status(404).json({ error: 'Category not found' });
     }
+
+    const usageRes = await client.query(
+      `SELECT COUNT(*)::int AS in_use_count,
+              COUNT(CASE WHEN cashback_rate > 0 THEN 1 END)::int AS active_count
+       FROM card_rates
+       WHERE category_id = $1`,
+      [id]
+    );
+    const { active_count } = usageRes.rows[0];
+
+    if (active_count > 0) {
+      return res.status(400).json({
+        error: `Cannot delete: ${active_count} card(s) have an active cashback rate set for "${catRes.rows[0].name}". Set all rates to 0 first, then delete.`,
+      });
+    }
+
+    await client.query('BEGIN');
+    await client.query('DELETE FROM card_rates WHERE category_id = $1', [id]);
+    await client.query('DELETE FROM categories WHERE id = $1', [id]);
     await client.query('COMMIT');
     res.json({ success: true });
   } catch (err) {
     await client.query('ROLLBACK');
+    console.error('Delete spending category error:', err);
     res.status(500).json({ error: err.message });
   } finally {
     client.release();
