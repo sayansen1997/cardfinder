@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-import { CircleCheckBig } from 'lucide-react';
+import { CircleCheckBig, RotateCw } from 'lucide-react';
 import API_BASE from '../utils/api';
 import DashboardNavbar from '../components/DashboardNavbar';
 import CardImage from '../components/CardImage';
@@ -179,7 +179,9 @@ export default function CompareCards() {
             <button
               className="cc-btn-gold"
               onClick={handleRecalculate}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
             >
+              <RotateCw size={16} color="#fff" />
               Recalculate
             </button>
           </div>

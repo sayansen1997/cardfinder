@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Trash2 } from 'lucide-react';
+import { Trash2, RotateCw } from 'lucide-react';
 import API_BASE from '../utils/api';
 import DashboardNavbar from '../components/DashboardNavbar';
 import Footer from '../components/Footer';
@@ -219,8 +219,13 @@ export default function SavedCalculations() {
             <p className="sc-eyebrow">History</p>
             <h1 className="sc-title">Saved Calculations</h1>
           </div>
-          <button className="sc-btn-new" onClick={handleStartNew}>
-            🔄 Start New Calculation
+          <button
+            className="sc-btn-new"
+            onClick={handleStartNew}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+          >
+            <RotateCw size={16} color="#fff" />
+            Start New Calculation
           </button>
         </div>
 

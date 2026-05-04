@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { RotateCw, Bookmark, GitCompareArrows } from 'lucide-react';
 import CardImage from './CardImage';
 
 const RANK_LABELS = ['#1 Best Pick', '#2 Runner Up', '#3 Third Place'];
@@ -101,9 +102,16 @@ export default function TopResults({ results, spending, income, onRecalculate, o
                   cursor: saveState === 'saving' || saveState === 'saved' ? 'default' : 'pointer',
                   opacity: saveState === 'saving' || saveState === 'saved' ? 0.7 : 1,
                   transition: 'opacity 0.15s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
                 }}
               >
-                {saveState === 'saving' ? 'Saving…' : saveState === 'saved' ? '✓ Saved!' : saveState === 'error' ? 'Try Again' : 'Save Results'}
+                {saveState === 'saving' ? 'Saving…'
+                  : saveState === 'saved' ? '✓ Saved!'
+                  : saveState === 'error' ? 'Try Again'
+                  : <><Bookmark size={16} color="#FFBD49" /> Save Results</>}
               </button>
               <button
                 onClick={onRecalculate}
@@ -117,8 +125,13 @@ export default function TopResults({ results, spending, income, onRecalculate, o
                   fontSize: '14px',
                   fontWeight: 600,
                   cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
                 }}
               >
+                <RotateCw size={16} color="#fff" />
                 Recalculate
               </button>
             </div>
@@ -468,7 +481,9 @@ export default function TopResults({ results, spending, income, onRecalculate, o
                 topResults: top3,
               },
             })}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
           >
+            <GitCompareArrows size={16} color="#FFBD49" />
             Compare Cards
           </button>
         </div>
