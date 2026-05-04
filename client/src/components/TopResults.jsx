@@ -17,7 +17,7 @@ function getBenefits(card) {
   return [];
 }
 
-export default function TopResults({ results, onRecalculate, onSave }) {
+export default function TopResults({ results, spending, income, onRecalculate, onSave }) {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState({});
   const [saveState, setSaveState] = useState('idle');
@@ -460,7 +460,14 @@ export default function TopResults({ results, onRecalculate, onSave }) {
         <div style={{ textAlign: 'center', marginTop: '85px', paddingBottom: '20px' }}>
           <button
             className="cf-btn-compare-cards"
-            onClick={() => navigate('/compare', { state: { cardIds: top3.map((c) => c.id) } })}
+            onClick={() => navigate('/compare', {
+              state: {
+                cardIds: top3.map((c) => c.id),
+                spending: spending || {},
+                income: income || 0,
+                topResults: top3,
+              },
+            })}
           >
             Compare Cards
           </button>

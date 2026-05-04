@@ -2,12 +2,26 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import '../pages/dashboard.css';
 
-export default function DashboardNavbar({ firstName = 'A' }) {
+export default function DashboardNavbar({ firstName }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const initial = (firstName || 'A').charAt(0).toUpperCase();
 
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [displayName, setDisplayName] = useState('A');
   const [showMenu, setShowMenu] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = () => {
+      const token = localStorage.getItem('userToken');
+      setIsLoggedIn(!!token);
+      setDisplayName(firstName || localStorage.getItem('userName') || 'A');
+    };
+    checkAuth();
+    window.addEventListener('storage', checkAuth);
+    return () => window.removeEventListener('storage', checkAuth);
+  }, [firstName]);
+
+  const initial = displayName.charAt(0).toUpperCase();
 
   useEffect(() => {
     const close = (e) => {
@@ -20,11 +34,21 @@ export default function DashboardNavbar({ firstName = 'A' }) {
   const handleLogout = () => {
     localStorage.removeItem('userToken');
     localStorage.removeItem('userName');
+    setIsLoggedIn(false);
     navigate('/');
+    window.location.reload();
   };
 
-  const scrollTo = (id) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  const handleCalculatorClick = (e) => {
+    e.preventDefault();
+    if (location.pathname === '/dashboard') {
+      document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      navigate('/dashboard');
+      setTimeout(() => {
+        document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' });
+      }, 200);
+    }
   };
 
   return (
@@ -37,15 +61,17 @@ export default function DashboardNavbar({ firstName = 'A' }) {
 
         {/* Center links */}
         <div className="db-nav-links">
-          <Link
-            to="/dashboard"
-            className={`db-nav-link${location.pathname === '/dashboard' ? ' active' : ''}`}
-          >
-            My Dashboard
-          </Link>
+          {isLoggedIn && (
+            <Link
+              to="/dashboard"
+              className={`db-nav-link${location.pathname === '/dashboard' ? ' active' : ''}`}
+            >
+              My Dashboard
+            </Link>
+          )}
           <button
             className="db-nav-link db-nav-btn"
-            onClick={() => scrollTo('calculator')}
+            onClick={handleCalculatorClick}
           >
             Calculator
           </button>
@@ -55,69 +81,90 @@ export default function DashboardNavbar({ firstName = 'A' }) {
           >
             Compare Cards
           </Link>
-          <Link
-            to="/saved"
-            className={`db-nav-link${location.pathname === '/saved' ? ' active' : ''}`}
-          >
-            Saved Calculations
-          </Link>
+          {isLoggedIn && (
+            <Link
+              to="/saved"
+              className={`db-nav-link${location.pathname === '/saved' ? ' active' : ''}`}
+            >
+              Saved Calculations
+            </Link>
+          )}
         </div>
 
-        {/* Right: avatar dropdown */}
+        {/* Right: avatar if logged in, Log In button if not */}
         <div className="db-nav-right">
-          <div style={{ position: 'relative' }} data-avatar-menu>
-            <div
-              className="db-avatar"
-              onClick={() => setShowMenu((prev) => !prev)}
-              style={{ cursor: 'pointer' }}
-            >
-              {initial}
-            </div>
-
-            {showMenu && (
-              <div style={{
-                position: 'absolute',
-                top: '50px',
-                right: 0,
-                background: 'white',
-                borderRadius: '8px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                padding: '8px 0',
-                minWidth: '160px',
-                zIndex: 100,
-              }}>
-                <div
-                  onClick={() => { navigate('/profile'); setShowMenu(false); }}
-                  style={{
-                    padding: '10px 16px',
-                    cursor: 'pointer',
-                    fontFamily: 'Inter, sans-serif',
-                    fontSize: '14px',
-                    color: '#374151',
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = '#F3F4F5'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'white'; }}
-                >
-                  👤 View Profile
-                </div>
-                <div
-                  onClick={handleLogout}
-                  style={{
-                    padding: '10px 16px',
-                    cursor: 'pointer',
-                    fontFamily: 'Inter, sans-serif',
-                    fontSize: '14px',
-                    color: '#DC2626',
-                    borderTop: '1px solid #F3F4F5',
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = '#F3F4F5'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'white'; }}
-                >
-                  🚪 Logout
-                </div>
+          {isLoggedIn ? (
+            <div style={{ position: 'relative' }} data-avatar-menu>
+              <div
+                className="db-avatar"
+                onClick={() => setShowMenu((prev) => !prev)}
+                style={{ cursor: 'pointer' }}
+              >
+                {initial}
               </div>
-            )}
-          </div>
+
+              {showMenu && (
+                <div style={{
+                  position: 'absolute',
+                  top: '50px',
+                  right: 0,
+                  background: 'white',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  padding: '8px 0',
+                  minWidth: '160px',
+                  zIndex: 100,
+                }}>
+                  <div
+                    onClick={() => { navigate('/profile'); setShowMenu(false); }}
+                    style={{
+                      padding: '10px 16px',
+                      cursor: 'pointer',
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '14px',
+                      color: '#374151',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = '#F3F4F5'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'white'; }}
+                  >
+                    👤 View Profile
+                  </div>
+                  <div
+                    onClick={handleLogout}
+                    style={{
+                      padding: '10px 16px',
+                      cursor: 'pointer',
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '14px',
+                      color: '#DC2626',
+                      borderTop: '1px solid #F3F4F5',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = '#F3F4F5'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'white'; }}
+                  >
+                    🚪 Logout
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={() => navigate('/login')}
+              style={{
+                background: '#C9920A',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '8px 16px',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '14px',
+                fontWeight: 600,
+                color: 'white',
+                cursor: 'pointer',
+              }}
+            >
+              Log In
+            </button>
+          )}
         </div>
       </div>
     </nav>

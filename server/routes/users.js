@@ -142,16 +142,47 @@ router.post('/login', async (req, res) => {
 });
 
 // POST /calculations — save a calculation for the logged-in user
+// Accepts either a standard calculator save or a compare-page save (type: 'compare')
 router.post('/calculations', userAuth, async (req, res) => {
-  const { monthly_income, spending, top_cards, net_savings } = req.body;
+  const { type, monthly_income, spending, top_cards, net_savings, card_ids, results } = req.body;
   try {
+    let savedMonthlyIncome, savedTopCards, savedNetSavings;
+    if (type === 'compare') {
+      savedMonthlyIncome = monthly_income || 0;
+      savedTopCards = JSON.stringify({ type: 'compare', card_ids, top_cards, results });
+      savedNetSavings = Array.isArray(results) && results.length > 0
+        ? Math.max(...results.map((r) => Number(r.net_annual_savings) || 0))
+        : 0;
+    } else {
+      savedMonthlyIncome = monthly_income;
+      savedTopCards = JSON.stringify(top_cards);
+      savedNetSavings = net_savings;
+    }
     const result = await pool.query(
       `INSERT INTO user_calculations (user_id, monthly_income, spending, top_cards, net_savings, created_at)
        VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *`,
-      [req.user.id, monthly_income, JSON.stringify(spending), JSON.stringify(top_cards), net_savings]
+      [req.user.id, savedMonthlyIncome, JSON.stringify(spending), savedTopCards, savedNetSavings]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /calculations/:id — delete a calculation (owner only)
+router.delete('/calculations/:id', userAuth, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      'DELETE FROM user_calculations WHERE id = $1 AND user_id = $2 RETURNING id',
+      [id, req.user.id]
+    );
+    if (!result.rows.length) {
+      return res.status(404).json({ error: 'Calculation not found or unauthorized' });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Delete calculation error:', err);
     res.status(500).json({ error: err.message });
   }
 });

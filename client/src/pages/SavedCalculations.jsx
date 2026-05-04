@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { Trash2 } from 'lucide-react';
 import API_BASE from '../utils/api';
 import DashboardNavbar from '../components/DashboardNavbar';
 import Footer from '../components/Footer';
@@ -38,13 +39,19 @@ const topCatSubtitle = (breakdown) => {
   return entries.length ? `Best for ${entries.join(' & ')}` : '';
 };
 
-function CalcCard({ calc, categories }) {
+function CalcCard({ calc, categories, onDelete }) {
   const [open, setOpen] = useState(false);
 
   const income = Number(calc.monthly_income) || 0;
   const netSavings = Number(calc.net_savings) || 0;
   const spending = calc.spending || {};
-  const topCards = calc.top_cards || [];
+
+  // top_cards is an array for standard saves, or { type:'compare', top_cards, results } for compare saves
+  const rawTopCards = calc.top_cards;
+  const isCompare = rawTopCards && !Array.isArray(rawTopCards) && rawTopCards.type === 'compare';
+  const topCards = isCompare
+    ? (Array.isArray(rawTopCards.top_cards) ? rawTopCards.top_cards : (Array.isArray(rawTopCards.results) ? rawTopCards.results : []))
+    : (Array.isArray(rawTopCards) ? rawTopCards : []);
 
   const catMap = {};
   (categories || []).forEach((c) => {
@@ -71,6 +78,22 @@ function CalcCard({ calc, categories }) {
               AED {netSavings.toLocaleString()} /yr
             </span>
           </div>
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(calc.id); }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#DC2626',
+              cursor: 'pointer',
+              padding: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              flexShrink: 0,
+            }}
+            title="Delete this calculation"
+          >
+            <Trash2 size={18} />
+          </button>
           <span className={`sc-chevron${open ? ' open' : ''}`}>▼</span>
         </div>
       </div>
@@ -164,6 +187,20 @@ export default function SavedCalculations() {
       .finally(() => setLoading(false));
   }, [navigate]);
 
+  const handleDelete = async (calcId) => {
+    if (!window.confirm('Delete this saved calculation? This cannot be undone.')) return;
+    try {
+      const token = localStorage.getItem('userToken');
+      await axios.delete(`${API_BASE}/users/calculations/${calcId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCalculations((prev) => prev.filter((c) => c.id !== calcId));
+    } catch (err) {
+      console.error('Failed to delete:', err);
+      alert('Failed to delete. Please try again.');
+    }
+  };
+
   const handleStartNew = () => {
     navigate('/dashboard');
     setTimeout(() => {
@@ -206,7 +243,7 @@ export default function SavedCalculations() {
         ) : (
           <div className="sc-list">
             {calculations.map((calc) => (
-              <CalcCard key={calc.id} calc={calc} categories={categories} />
+              <CalcCard key={calc.id} calc={calc} categories={categories} onDelete={handleDelete} />
             ))}
           </div>
         )}

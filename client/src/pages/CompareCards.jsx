@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useLocation, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { CircleCheckBig } from 'lucide-react';
 import API_BASE from '../utils/api';
@@ -26,6 +26,7 @@ const parseBenefits = (str) =>
 
 export default function CompareCards() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const paramId = searchParams.get('cards');
   const [allCards, setAllCards] = useState([]);
@@ -33,6 +34,8 @@ export default function CompareCards() {
   const [slots, setSlots] = useState([null, null, null]);
   const [compareData, setCompareData] = useState([]);
   const [spending, setSpending] = useState({});
+  const [income] = useState(location.state?.income || 0);
+  const [topResults] = useState(location.state?.topResults || []);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [breakdownOpen, setBreakdownOpen] = useState(true);
   const [rankingData, setRankingData] = useState([]);
@@ -68,7 +71,12 @@ export default function CompareCards() {
       cats.forEach((c) => {
         defaultSpending[c.name] = Number(c.default_spend) || 0;
       });
-      setSpending(defaultSpending);
+      const passedSpending = location.state?.spending;
+      setSpending(
+        passedSpending && Object.keys(passedSpending).length > 0
+          ? passedSpending
+          : defaultSpending
+      );
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -126,6 +134,13 @@ export default function CompareCards() {
     runCompare(slots, spending);
   }, [slots, spending, runCompare]);
 
+  const handleRecalculate = () => {
+    navigate('/');
+    setTimeout(() => {
+      document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
+
   const handleSwap = (slotIdx, card) => {
     const next = [...slots];
     next[slotIdx] = card;
@@ -162,14 +177,8 @@ export default function CompareCards() {
           </div>
           <div className="cc-header-actions">
             <button
-              className="cc-btn-outline"
-              onClick={() => window.print()}
-            >
-              Save Results
-            </button>
-            <button
               className="cc-btn-gold"
-              onClick={() => runCompare(slots, spending)}
+              onClick={handleRecalculate}
             >
               Recalculate
             </button>

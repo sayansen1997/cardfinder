@@ -107,7 +107,13 @@ export default function HomePage() {
       />
 
       {showResults && (
-        <TopResults results={calcResults} onRecalculate={handleRecalculate} onSave={handleSaveCalc} />
+        <TopResults
+          results={calcResults}
+          spending={calcSpending}
+          income={calcIncome}
+          onRecalculate={handleRecalculate}
+          onSave={handleSaveCalc}
+        />
       )}
 
       <CardRankingTable rankingData={rankingData} loading={rankingLoading} />
