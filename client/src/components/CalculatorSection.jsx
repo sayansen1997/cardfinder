@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import API_BASE from '../utils/api';
+import CategoryIcon from './CategoryIcon';
 
 function updateSlider(el) {
   if (!el) return;
@@ -282,7 +283,7 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
                           marginBottom: '4px',
                         }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span style={{ fontSize: '16px' }}>{cat.icon}</span>
+                            <CategoryIcon name={cat.icon} size={16} color="#94A3B8" />
                             <span style={{
                               fontFamily: 'Inter, sans-serif',
                               fontSize: '14px',

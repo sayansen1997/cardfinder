@@ -43,6 +43,12 @@ export default function AdminNavbar() {
           Categories
         </Link>
         <Link
+          to="/admin/spending-categories"
+          className={`adm-navbar-link${isActive('/admin/spending-categories') ? ' active' : ''}`}
+        >
+          Spending Categories
+        </Link>
+        <Link
           to="/admin/audit"
           className={`adm-navbar-link${isActive('/admin/audit') ? ' active' : ''}`}
         >

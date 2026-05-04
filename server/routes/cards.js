@@ -131,7 +131,7 @@ const calculateHandler = async (req, res) => {
           cc.name AS category_name,
           json_agg(
             json_build_object(
-              'category_name', cat.name,
+              'category_slug', cat.slug,
               'cashback_rate', cr.cashback_rate,
               'monthly_cap', cr.monthly_cap
             )
@@ -145,12 +145,12 @@ const calculateHandler = async (req, res) => {
     );
 
     const results = cards.map((card) => {
-      const rates = (card.rates || []).filter((r) => r.category_name !== null);
+      const rates = (card.rates || []).filter((r) => r.category_slug !== null);
       const breakdown = {};
       let totalAnnualCashback = 0;
 
       for (const [category, monthlySpend] of Object.entries(spending)) {
-        const rate = rates.find((r) => r.category_name === category);
+        const rate = rates.find((r) => r.category_slug === category);
         if (!rate) continue;
 
         const monthlyCap = rate.monthly_cap != null ? Number(rate.monthly_cap) : Infinity;
@@ -208,7 +208,7 @@ const compareHandler = async (req, res) => {
         cc.name AS category_name,
         json_agg(
           json_build_object(
-            'category_name', cat.name,
+            'category_slug', cat.slug,
             'cashback_rate', cr.cashback_rate,
             'monthly_cap', cr.monthly_cap
           )
@@ -234,14 +234,14 @@ const compareHandler = async (req, res) => {
       : cards;
 
     const results = orderedCards.map((card) => {
-      const rates = (card.rates || []).filter((r) => r.category_name !== null);
+      const rates = (card.rates || []).filter((r) => r.category_slug !== null);
       const breakdown = {};
       const breakdownUncapped = {};
       let totalCapped = 0;
       let totalUncapped = 0;
 
       for (const [category, monthlySpend] of Object.entries(spending)) {
-        const rate = rates.find((r) => r.category_name === category);
+        const rate = rates.find((r) => r.category_slug === category);
         if (!rate) continue;
 
         const raw = Number(monthlySpend) * Number(rate.cashback_rate);

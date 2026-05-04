@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Trash2 } from 'lucide-react';
 import AdminNavbar from '../../components/admin/AdminNavbar';
 import CardImage from '../../components/CardImage';
+import CategoryIcon from '../../components/CategoryIcon';
 import API_BASE from '../../utils/api';
 import './admin.css';
 
@@ -55,7 +56,9 @@ function EditCashbackModal({ card, categories, onClose, onSaved }) {
     adminAxios().get(`/admin/cards/${card.id}/rates`)
       .then((res) => {
         const map = {};
-        res.data.forEach((r) => { map[r.slug] = r.cashback_rate; });
+        res.data.forEach((r) => {
+          map[r.slug] = parseFloat((Number(r.cashback_rate) * 100).toFixed(4)).toString();
+        });
         setRates(map);
         setLoading(false);
       })
@@ -66,7 +69,11 @@ function EditCashbackModal({ card, categories, onClose, onSaved }) {
     setSaving(true);
     setError('');
     try {
-      await adminAxios().put(`/admin/cards/${card.id}/rates`, { rates });
+      const ratesPayload = {};
+      Object.entries(rates).forEach(([slug, value]) => {
+        ratesPayload[slug] = (parseFloat(value) || 0) / 100;
+      });
+      await adminAxios().put(`/admin/cards/${card.id}/rates`, { rates: ratesPayload });
       onSaved();
     } catch {
       setError('Failed to save. Please try again.');
@@ -97,14 +104,14 @@ function EditCashbackModal({ card, categories, onClose, onSaved }) {
             categories.map((cat) => (
               <div key={cat.slug} className="adm-rate-row">
                 <span className="adm-rate-cat">
-                  <span className="adm-rate-icon">{cat.icon}</span>
+                  <span className="adm-rate-icon"><CategoryIcon name={cat.icon} size={16} color="#94A3B8" /></span>
                   {cat.label}
                 </span>
                 <div className="adm-rate-input-wrap">
                   <input
                     type="number"
                     className="adm-rate-input"
-                    step="0.01"
+                    step="0.1"
                     min="0"
                     max="100"
                     value={rates[cat.slug] ?? ''}
@@ -419,7 +426,11 @@ function AddCardModal({ categories, cardCategories, onClose, onSaved }) {
       formData.append('annual_fee', form.annual_fee || '0');
       formData.append('min_salary', form.min_salary || '0');
       formData.append('key_benefits', form.key_benefits || '');
-      formData.append('rates', JSON.stringify(rates));
+      const ratesPayload = {};
+      Object.entries(rates).forEach(([slug, value]) => {
+        ratesPayload[slug] = (parseFloat(value) || 0) / 100;
+      });
+      formData.append('rates', JSON.stringify(ratesPayload));
       if (imageFile) formData.append('image', imageFile);
 
       await fetch(`${API_BASE}/admin/cards`, {
@@ -572,9 +583,9 @@ function AddCardModal({ categories, cardCategories, onClose, onSaved }) {
                     <input
                       type="number"
                       className="adm-cashback-input"
-                      step="0.01"
+                      step="0.1"
                       min="0"
-                      placeholder="0.00"
+                      placeholder="0"
                       value={rates[cat.slug] || ''}
                       onChange={(e) => setRates((r) => ({ ...r, [cat.slug]: e.target.value }))}
                     />

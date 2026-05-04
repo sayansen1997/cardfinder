@@ -582,4 +582,105 @@ router.delete('/card-categories/:id', auth, async (req, res) => {
   }
 });
 
+// ——— Spending Categories CRUD ———
+
+router.get('/spending-categories', auth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM categories ORDER BY display_order, name'
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/spending-categories', auth, async (req, res) => {
+  const { slug, name, icon, min_spend, max_spend, default_spend, sort_order } = req.body;
+  if (!slug || !name) {
+    return res.status(400).json({ error: 'slug and name are required' });
+  }
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const catRes = await client.query(
+      `INSERT INTO categories (slug, name, label, icon, min_spend, max_spend, default_spend, display_order, is_active)
+       VALUES ($1, $2, $2, $3, $4, $5, $6, $7, true) RETURNING *`,
+      [
+        slug.toLowerCase().replace(/\s+/g, '_'),
+        name,
+        icon || 'Circle',
+        min_spend ?? 0,
+        max_spend ?? 5000,
+        default_spend ?? 500,
+        sort_order ?? 0,
+      ]
+    );
+    const newCat = catRes.rows[0];
+    await client.query(
+      `INSERT INTO card_rates (card_id, category_id, cashback_rate, monthly_cap)
+       SELECT c.id, $1, 0, NULL FROM cards c
+       WHERE NOT EXISTS (
+         SELECT 1 FROM card_rates cr WHERE cr.card_id = c.id AND cr.category_id = $1
+       )`,
+      [newCat.id]
+    );
+    await client.query('COMMIT');
+    res.json(newCat);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    if (err.code === '23505') {
+      return res.status(400).json({ error: 'Category with this slug already exists' });
+    }
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+});
+
+router.put('/spending-categories/:id', auth, async (req, res) => {
+  const { id } = req.params;
+  const { name, icon, min_spend, max_spend, default_spend, sort_order } = req.body;
+  try {
+    await pool.query(
+      `UPDATE categories SET
+        name        = COALESCE($1, name),
+        label       = COALESCE($1, label),
+        icon        = COALESCE($2, icon),
+        min_spend   = COALESCE($3, min_spend),
+        max_spend   = COALESCE($4, max_spend),
+        default_spend = COALESCE($5, default_spend),
+        display_order = COALESCE($6, display_order)
+       WHERE id = $7`,
+      [name, icon, min_spend, max_spend, default_spend, sort_order, id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/spending-categories/:id', auth, async (req, res) => {
+  const { id } = req.params;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('DELETE FROM card_rates WHERE category_id = $1', [id]);
+    const result = await client.query(
+      'DELETE FROM categories WHERE id = $1 RETURNING id', [id]
+    );
+    if (!result.rows.length) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Category not found' });
+    }
+    await client.query('COMMIT');
+    res.json({ success: true });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+});
+
 module.exports = router;

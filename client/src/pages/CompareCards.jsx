@@ -6,6 +6,7 @@ import API_BASE from '../utils/api';
 import DashboardNavbar from '../components/DashboardNavbar';
 import CardImage from '../components/CardImage';
 import CardRankingTable from '../components/CardRankingTable';
+import CategoryIcon from '../components/CategoryIcon';
 import Footer from '../components/Footer';
 import './compare.css';
 
@@ -558,10 +559,12 @@ export default function CompareCards() {
               {categories.map((cat) => (
                 <div key={cat.id} className="cc-trow cc-breakdown-row">
                   <div className="cc-td-label">
-                    {cat.icon && (
-                      <span className="cc-cat-icon">{cat.icon}</span>
-                    )}
-                    {cat.label || cat.name}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <CategoryIcon name={cat.icon} size={20} color="#94A3B8" />
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        {cat.label || cat.name}
+                      </span>
+                    </div>
                   </div>
                   {[0, 1, 2].map((i) => {
                     const card = slots[i];
