@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { Trash2 } from 'lucide-react';
 import AdminNavbar from '../../components/admin/AdminNavbar';
 import CardImage from '../../components/CardImage';
 import API_BASE from '../../utils/api';
@@ -609,6 +610,7 @@ export default function AdminCardManagement() {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [incomeFilter, setIncomeFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [loading, setLoading] = useState(true);
 
   const [categories, setCategories] = useState([]);
@@ -625,7 +627,7 @@ export default function AdminCardManagement() {
     setLoading(true);
     try {
       const res = await adminAxios().get('/admin/cards', {
-        params: { page: pg, limit: LIMIT, search, category: categoryFilter, income: incomeFilter },
+        params: { page: pg, limit: LIMIT, search, category: categoryFilter, income: incomeFilter, status: statusFilter },
       });
       setCards(res.data.cards);
       setTotal(res.data.total);
@@ -635,7 +637,7 @@ export default function AdminCardManagement() {
     } finally {
       setLoading(false);
     }
-  }, [search, categoryFilter, incomeFilter, navigate]);
+  }, [search, categoryFilter, incomeFilter, statusFilter, navigate]);
 
   // Initial data load
   useEffect(() => {
@@ -655,7 +657,7 @@ export default function AdminCardManagement() {
   // Fetch cards when filters change
   useEffect(() => {
     fetchCards(1);
-  }, [categoryFilter, incomeFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [categoryFilter, incomeFilter, statusFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Debounced search
   const handleSearchChange = (val) => {
@@ -668,6 +670,7 @@ export default function AdminCardManagement() {
     setSearch('');
     setCategoryFilter('');
     setIncomeFilter('');
+    setStatusFilter('');
   };
 
   const handleEditSaved = () => {
@@ -745,6 +748,17 @@ export default function AdminCardManagement() {
             ))}
           </select>
 
+          <select
+            className="adm-filter-select"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            style={{ background: 'white', color: '#0D1B2A', colorScheme: 'light' }}
+          >
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+
           <button className="adm-btn-clear" onClick={clearFilters}>
             Clear Filters
           </button>
@@ -760,6 +774,7 @@ export default function AdminCardManagement() {
                 <th>Annual Fee (AED)</th>
                 <th>Min. Income (AED)</th>
                 <th>Max. Cap</th>
+                <th>Status</th>
                 <th>Last Updated</th>
                 <th>Actions</th>
               </tr>
@@ -767,11 +782,11 @@ export default function AdminCardManagement() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="adm-table-loading">Loading…</td>
+                  <td colSpan="8" className="adm-table-loading">Loading…</td>
                 </tr>
               ) : cards.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="adm-table-loading">No cards found.</td>
+                  <td colSpan="8" className="adm-table-loading">No cards found.</td>
                 </tr>
               ) : (
                 cards.map((card) => (
@@ -796,6 +811,14 @@ export default function AdminCardManagement() {
                     <td>{Number(card.annual_fee).toLocaleString()}</td>
                     <td>{Number(card.min_salary).toLocaleString()}</td>
                     <td>{fmtCap(card.max_cap)}</td>
+                    <td>
+                      <span
+                        className="adm-status-badge"
+                        data-status={card.status || 'active'}
+                      >
+                        {card.status === 'inactive' ? 'Inactive' : 'Active'}
+                      </span>
+                    </td>
                     <td>{formatDate(card.created_at)}</td>
                     <td>
                       <div className="adm-actions">
@@ -818,7 +841,7 @@ export default function AdminCardManagement() {
                           onClick={() => handleDeleteCard(card.id, card.name)}
                           style={{ color: '#DC2626' }}
                         >
-                          🗑
+                          <Trash2 size={18} color="#FD2626" />
                         </button>
                       </div>
                     </td>

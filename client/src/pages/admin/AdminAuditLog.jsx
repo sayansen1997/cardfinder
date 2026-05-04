@@ -36,9 +36,13 @@ function isoDate(d) {
 
 const ACTION_STYLES = {
   'UPDATED CASHBACK': { bg: '#DCFCE7', color: '#166534', border: '#BBF7D0' },
+  'FIELD UPDATED':    { bg: '#DBEAFE', color: '#1E40AF', border: '#BFDBFE' },
+  'IMAGE UPDATED':    { bg: '#F3E8FF', color: '#6B21A8', border: '#E9D5FF' },
+  'CARD CREATED':     { bg: '#DCFCE7', color: '#14532D', border: '#86EFAC' },
+  'CARD DELETED':     { bg: '#FEE2E2', color: '#991B1B', border: '#FCA5A5' },
+  'ASSET UPDATE':     { bg: '#F3E8FF', color: '#6B21A8', border: '#E9D5FF' },
   'MODIFIED APR':     { bg: '#FEF9C3', color: '#854D0E', border: '#FDE047' },
   'STATUS CHANGE':    { bg: '#DBEAFE', color: '#1E40AF', border: '#BFDBFE' },
-  'ASSET UPDATE':     { bg: '#F3E8FF', color: '#6B21A8', border: '#E9D5FF' },
 };
 
 function ActionBadge({ type }) {

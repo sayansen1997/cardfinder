@@ -68,7 +68,7 @@ router.get('/audit-log', auth, async (req, res) => {
 // GET /api/admin/cards?page=&limit=&search=&category=&income=
 router.get('/cards', auth, async (req, res) => {
   try {
-    const { page = 1, limit = 12, search, category, income } = req.query;
+    const { page = 1, limit = 12, search, category, income, status } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
 
     const conditions = [];
@@ -92,6 +92,11 @@ router.get('/cards', auth, async (req, res) => {
         WHERE cr2.card_id = c.id AND cat2.slug = $${pi}
       )`);
       params.push(category);
+      pi++;
+    }
+    if (status) {
+      conditions.push(`c.status = $${pi}`);
+      params.push(status);
       pi++;
     }
 
@@ -237,17 +242,18 @@ router.put('/cards/:id/rates', auth, async (req, res) => {
 router.delete('/cards/:id', auth, async (req, res) => {
   const { id } = req.params;
   try {
-    const cardRes = await pool.query('SELECT name FROM cards WHERE id = $1', [id]);
+    const cardRes = await pool.query('SELECT name, bank FROM cards WHERE id = $1', [id]);
     if (!cardRes.rows.length) return res.status(404).json({ error: 'Card not found' });
-    const cardName = cardRes.rows[0].name;
+    const { name: cardName, bank } = cardRes.rows[0];
+
+    // Log before delete so card_id is still valid
+    await pool.query(
+      `INSERT INTO audit_log (admin_user, table_name, field_name, old_value, new_value, changed_at, action_type, card_id, card_name)
+       VALUES ($1, 'cards', 'card', $2, '', NOW(), 'CARD DELETED', $3, $4)`,
+      [req.admin.email, `${cardName} (${bank})`, id, cardName]
+    );
 
     await pool.query('DELETE FROM cards WHERE id = $1', [id]);
-
-    await pool.query(
-      `INSERT INTO audit_log (admin_user, table_name, field_name, old_value, new_value, changed_at, action_type, card_name)
-       VALUES ($1, 'cards', 'card', $2, 'deleted', NOW(), 'ASSET UPDATE', $3)`,
-      [req.admin.email, cardName, cardName]
-    );
 
     res.json({ success: true });
   } catch (err) {
@@ -303,8 +309,8 @@ router.post('/cards', auth, upload.single('image'), async (req, res) => {
 
     await client.query(
       `INSERT INTO audit_log (admin_user, table_name, field_name, old_value, new_value, changed_at, action_type, card_id, card_name)
-       VALUES ($1, 'cards', 'created', '', $2, NOW(), 'ASSET UPDATE', $3, $4)`,
-      [req.admin.email, name, card.id, name]
+       VALUES ($1, 'cards', 'all', '', $2, NOW(), 'CARD CREATED', $3, $4)`,
+      [req.admin.email, `Created card: ${name} (${bank})`, card.id, name]
     );
 
     await client.query('COMMIT');
@@ -326,12 +332,14 @@ router.put('/cards/:id', auth, upload.single('image'), async (req, res) => {
   } = req.body;
 
   try {
-    const existing = await pool.query('SELECT image_url FROM cards WHERE id = $1', [id]);
+    // Fetch full old record for diff
+    const existing = await pool.query('SELECT * FROM cards WHERE id = $1', [id]);
     if (!existing.rows.length) {
       return res.status(404).json({ error: 'Card not found' });
     }
-    const image_url = req.file ? req.file.path : existing.rows[0].image_url;
+    const old = existing.rows[0];
 
+    const image_url = req.file ? req.file.path : old.image_url;
     const benefitsStr = key_benefits != null
       ? (key_benefits || '').split('\n').map((s) => s.trim()).filter(Boolean).join(', ')
       : null;
@@ -353,21 +361,43 @@ router.put('/cards/:id', auth, upload.single('image'), async (req, res) => {
         updated_at = NOW()
        WHERE id = $13`,
       [
-        name || null,
-        bank || null,
-        card_category || null,
+        name || null, bank || null, card_category || null,
         annual_fee ? Number(annual_fee) : null,
         min_salary ? Number(min_salary) : null,
         max_cap ? Number(max_cap) : null,
-        status || null,
-        apply_link || null,
-        fee_notes || null,
-        benefitsStr,
-        eligibility_notes || null,
-        image_url,
-        id,
+        status || null, apply_link || null,
+        fee_notes || null, benefitsStr,
+        eligibility_notes || null, image_url, id,
       ]
     );
+
+    // Re-fetch updated record and log per-field diffs
+    const updated = await pool.query('SELECT * FROM cards WHERE id = $1', [id]);
+    const newCard = updated.rows[0];
+
+    const fieldsToTrack = [
+      'name', 'bank', 'card_category', 'annual_fee', 'min_salary',
+      'max_cap', 'status', 'apply_link', 'fee_notes',
+      'key_benefits', 'eligibility_notes', 'image_url',
+    ];
+
+    for (const field of fieldsToTrack) {
+      const oldStr = old[field] == null ? '' : String(old[field]);
+      const newStr = newCard[field] == null ? '' : String(newCard[field]);
+      if (oldStr !== newStr) {
+        await pool.query(
+          `INSERT INTO audit_log
+             (admin_user, table_name, field_name, old_value, new_value, changed_at, action_type, card_id, card_name)
+           VALUES ($1, 'cards', $2, $3, $4, NOW(), $5, $6, $7)`,
+          [
+            req.admin.email, field,
+            oldStr.substring(0, 500), newStr.substring(0, 500),
+            field === 'image_url' ? 'IMAGE UPDATED' : 'FIELD UPDATED',
+            id, newCard.name,
+          ]
+        );
+      }
+    }
 
     res.json({ success: true, image_url });
   } catch (err) {
