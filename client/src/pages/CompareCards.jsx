@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import { CircleCheckBig } from 'lucide-react';
 import API_BASE from '../utils/api';
 import DashboardNavbar from '../components/DashboardNavbar';
 import CardImage from '../components/CardImage';
@@ -26,6 +27,7 @@ const parseBenefits = (str) =>
 export default function CompareCards() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
+  const paramId = searchParams.get('cards');
   const [allCards, setAllCards] = useState([]);
   const [categories, setCategories] = useState([]);
   const [slots, setSlots] = useState([null, null, null]);
@@ -50,17 +52,16 @@ export default function CompareCards() {
     return () => document.removeEventListener('mousedown', handler);
   }, [openDropdown]);
 
-  /* ——— Fetch all cards + categories ——— */
+  /* ——— Fetch all cards + categories (once on mount) ——— */
   useEffect(() => {
     Promise.all([
       axios.get(`${API_BASE}/cards`),
       axios.get(`${API_BASE}/categories`),
     ]).then(([cardsRes, catsRes]) => {
-      const cards = cardsRes.data || [];
       const cats = (catsRes.data || []).sort(
         (a, b) => (a.display_order || 0) - (b.display_order || 0)
       );
-      setAllCards(cards);
+      setAllCards(cardsRes.data || []);
       setCategories(cats);
 
       const defaultSpending = {};
@@ -68,24 +69,29 @@ export default function CompareCards() {
         defaultSpending[c.name] = Number(c.default_spend) || 0;
       });
       setSpending(defaultSpending);
-
-      // Priority: location.state.cardIds > ?cards= query param > default first 3
-      const stateIds = location.state?.cardIds || [];
-      const paramId = searchParams.get('cards');
-      let initialSlots;
-      if (stateIds.length > 0) {
-        const ordered = stateIds.map((id) => cards.find((c) => c.id === id)).filter(Boolean);
-        initialSlots = [ordered[0] || null, ordered[1] || null, ordered[2] || null];
-      } else if (paramId) {
-        const target = cards.find((c) => c.id === Number(paramId));
-        const rest = cards.filter((c) => c.id !== Number(paramId));
-        initialSlots = [target || null, rest[0] || null, rest[1] || null];
-      } else {
-        initialSlots = [cards[0] || null, cards[1] || null, cards[2] || null];
-      }
-      setSlots(initialSlots);
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* ——— Assign slots when cards load OR paramId changes ——— */
+  useEffect(() => {
+    if (allCards.length === 0) return;
+    const stateIds = location.state?.cardIds || [];
+    let initialSlots;
+    if (paramId) {
+      // explicit card selected — paramId wins so same-page navigation works
+      const target = allCards.find((c) => c.id === Number(paramId));
+      const rest = allCards
+        .filter((c) => c.id !== Number(paramId))
+        .sort((a, b) => (a.annual_fee || 0) - (b.annual_fee || 0));
+      initialSlots = [target || null, rest[0] || null, rest[1] || null];
+    } else if (stateIds.length > 0) {
+      const ordered = stateIds.map((id) => allCards.find((c) => c.id === id)).filter(Boolean);
+      initialSlots = [ordered[0] || null, ordered[1] || null, ordered[2] || null];
+    } else {
+      initialSlots = [allCards[0] || null, allCards[1] || null, allCards[2] || null];
+    }
+    setSlots(initialSlots);
+  }, [allCards, paramId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ——— Run compare whenever slots or spending change ——— */
   const runCompare = useCallback(async (currentSlots, currentSpending) => {
@@ -151,7 +157,7 @@ export default function CompareCards() {
             <p className="cc-eyebrow">Card Comparison</p>
             <h1 className="cc-title">Compare Credit Cards</h1>
             <p className="cc-subtitle">
-              Side-by-side comparison of cashback, fees, and benefits for your spending profile.
+              Considering your monthly spending habits, these credit cards in the UAE provide the best overall value after accounting for fees.
             </p>
           </div>
           <div className="cc-header-actions">
@@ -177,79 +183,204 @@ export default function CompareCards() {
 
           {[0, 1, 2].map((i) => {
             const card = slots[i];
-            const d = getD(i);
+            const buttonColor = i === 0 ? '#D97706' : '#011A3D';
+            const buttonHoverColor = i === 0 ? '#B45309' : '#020F26';
             return (
-              <div key={i} className="cc-slot">
-                {i === 0 && activeSlots.length > 0 && (
-                  <span className="cc-top-pick">Top Pick</span>
-                )}
-
-                {card ? (
-                  <>
-                    <div className="cc-thumb" style={{ overflow: 'hidden', padding: 0 }}>
-                      <CardImage card={card} height={80} />
-                    </div>
-                    <p className="cc-slot-name">{card.name}</p>
-                    <p className="cc-slot-bank">{card.bank}</p>
-                  </>
-                ) : (
-                  <div
-                    className="cc-thumb"
-                    style={{ background: '#E5E7EB', color: '#9CA3AF', fontSize: 12 }}
-                  >
-                    Empty
-                  </div>
-                )}
-
-                {/* Swap dropdown */}
-                <div className="cc-swap-wrap">
-                  <button
-                    className="cc-swap-btn"
-                    onClick={() =>
-                      setOpenDropdown(openDropdown === i ? null : i)
-                    }
-                  >
-                    ⇄ Swap Card
-                  </button>
-                  {openDropdown === i && (
-                    <div className="cc-dropdown">
-                      {allCards.map((ac) => (
-                        <button
-                          key={ac.id}
-                          className={`cc-dd-item${
-                            card && card.id === ac.id ? ' active' : ''
-                          }`}
-                          onClick={() => handleSwap(i, ac)}
-                        >
-                          <span
-                            className="cc-dd-thumb"
-                            style={{ background: gradient(allCards.indexOf(ac)) }}
-                          >
-                            {abbr(ac.name)}
-                          </span>
-                          <span>
-                            {ac.name}
-                            <br />
-                            <span style={{ color: '#6B7280', fontSize: 11 }}>
-                              {ac.bank}
-                            </span>
-                          </span>
-                        </button>
-                      ))}
+              <div
+                key={i}
+                style={{
+                  background: 'white',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '16px',
+                  position: 'relative',
+                  zIndex: openDropdown === i ? 1000 : 1,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                  transition: 'all 0.2s ease',
+                  cursor: 'default',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-3px)';
+                  e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.08)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)';
+                }}
+              >
+                {/* Card image */}
+                <div style={{
+                  width: '100%',
+                  background: '#F3F4F5',
+                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  overflow: 'hidden',
+                  flexShrink: 0,
+                }}>
+                  {card ? (
+                    card.image_url ? (
+                      <img
+                        src={card.image_url}
+                        alt={card.name}
+                        style={{ width: '100%', objectFit: 'cover', borderRadius: '8px', display: 'block' }}
+                      />
+                    ) : (
+                      <CardImage card={card} height={140} />
+                    )
+                  ) : (
+                    <div style={{
+                      height: '140px',
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#9CA3AF',
+                      fontSize: '12px',
+                    }}>
+                      Empty
                     </div>
                   )}
                 </div>
 
+                {/* Card name */}
+                <h4 style={{
+                  color: '#001A3D',
+                  fontFamily: 'Manrope, sans-serif',
+                  fontSize: '18px',
+                  fontStyle: 'normal',
+                  fontWeight: 700,
+                  lineHeight: '28px',
+                  margin: 0,
+                }}>
+                  {card ? card.name : '—'}
+                </h4>
+
+                {/* Card category */}
+                <div style={{
+                  color: '#E5A00D',
+                  fontFamily: 'Inter, sans-serif',
+                  fontSize: '12px',
+                  fontStyle: 'normal',
+                  fontWeight: 600,
+                  lineHeight: '16px',
+                  letterSpacing: '0.6px',
+                  textTransform: 'uppercase',
+                  marginTop: '-8px',
+                }}>
+                  {card?.card_category || ''}
+                </div>
+
+                {/* Swap Card + Top Pick row */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ position: 'relative' }}>
+                    <button
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#6B7280',
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        cursor: 'pointer',
+                        padding: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                      }}
+                      onClick={() => setOpenDropdown(openDropdown === i ? null : i)}
+                    >
+                      ⇄ Swap Card
+                    </button>
+                    {openDropdown === i && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        width: 'max(100%, 380px)',
+                        background: 'white',
+                        border: '1px solid #E5E7EB',
+                        borderRadius: '8px',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                        padding: '8px',
+                        zIndex: 100,
+                        maxHeight: '400px',
+                        overflowY: 'auto',
+                      }}>
+                        {allCards.map((ac) => (
+                          <button
+                            key={ac.id}
+                            className={`cc-dd-item${card && card.id === ac.id ? ' active' : ''}`}
+                            onClick={() => handleSwap(i, ac)}
+                          >
+                            <span
+                              className="cc-dd-thumb"
+                              style={{ background: gradient(allCards.indexOf(ac)) }}
+                            >
+                              {abbr(ac.name)}
+                            </span>
+                            <span>
+                              {ac.name}
+                              <br />
+                              <span style={{ color: '#6B7280', fontSize: 11 }}>{ac.bank}</span>
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {i === 0 && activeSlots.length > 0 && (
+                    <div style={{
+                      background: '#FEF3C7',
+                      color: '#92400E',
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      padding: '4px 12px',
+                      borderRadius: '999px',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      Top Pick
+                    </div>
+                  )}
+                </div>
+
+                {/* Apply Now */}
                 {card && (
-                  <a
-                    href={card.apply_link || '#'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="cc-apply-btn"
-                    style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}
+                  <button
+                    onClick={() => {
+                      if (card.apply_link) {
+                        let url = card.apply_link;
+                        if (!url.startsWith('http')) url = 'https://' + url;
+                        window.open(url, '_blank', 'noopener,noreferrer');
+                      }
+                    }}
+                    style={{
+                      width: '100%',
+                      background: buttonColor,
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '12px',
+                      fontFamily: 'Manrope, sans-serif',
+                      fontSize: '15px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      transition: 'background 0.15s ease',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = buttonHoverColor; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = buttonColor; }}
                   >
                     Apply Now
-                  </a>
+                  </button>
                 )}
               </div>
             );
@@ -258,8 +389,23 @@ export default function CompareCards() {
 
         {/* ——— Comparison table ——— */}
         <div className="cc-table-wrap">
-          {/* Section label: Key Features */}
-          <div className="cc-section-row-label">Key Features</div>
+          {/* Header row: Key Features label + card names */}
+          <div className="cc-trow" style={{ background: '#F3F4F5' }}>
+            <div className="cc-section-row-label" style={{ display: 'flex', alignItems: 'center' }}>Key Features</div>
+            {[0, 1, 2].map((i) => (
+              <div key={i} style={{
+                fontFamily: 'Manrope, sans-serif',
+                fontSize: '15px',
+                fontWeight: 700,
+                color: '#0D1B2A',
+                padding: '12px 20px',
+                display: 'flex',
+                alignItems: 'center',
+              }}>
+                {slots[i]?.name || ''}
+              </div>
+            ))}
+          </div>
 
           {/* Card Category */}
           <div className="cc-trow">
@@ -275,13 +421,19 @@ export default function CompareCards() {
           <div className="cc-trow">
             <div className="cc-td-label">Annual Fee</div>
             {[0, 1, 2].map((i) => (
-              <div key={i} className="cc-td">
-                {slots[i] ? fmtFee(slots[i].annual_fee) : '—'}
-                {slots[i]?.fee_notes && (
-                  <span style={{ fontSize: 11, color: '#9CA3AF', marginLeft: 6 }}>
-                    ({slots[i].fee_notes})
-                  </span>
-                )}
+              <div key={i} className="cc-td" style={{ alignItems: 'flex-start' }}>
+                {slots[i] ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'left' }}>
+                    <span style={{ fontWeight: 700, fontSize: '15px' }}>
+                      {Number(slots[i].annual_fee) === 0 ? 'Free' : `AED ${Number(slots[i].annual_fee).toLocaleString()}`}
+                    </span>
+                    {slots[i].fee_notes && (
+                      <span style={{ fontSize: '12px', color: '#6B7280', lineHeight: 1.4 }}>
+                        {slots[i].fee_notes}
+                      </span>
+                    )}
+                  </div>
+                ) : '—'}
               </div>
             ))}
           </div>
@@ -308,7 +460,10 @@ export default function CompareCards() {
                   {benefits.length > 0 ? (
                     <ul className="cc-benefits-list">
                       {benefits.map((b, bi) => (
-                        <li key={bi}>{b}</li>
+                        <li key={bi} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                          <CircleCheckBig size={16} color="#16A34A" style={{ flexShrink: 0, marginTop: '2px' }} />
+                          <span>{b}</span>
+                        </li>
                       ))}
                     </ul>
                   ) : (
@@ -334,11 +489,41 @@ export default function CompareCards() {
 
           {/* Net Annual Savings */}
           <div className="cc-trow cc-trow-savings">
-            <div className="cc-td-label cc-savings-label">Est. Net Annual Savings</div>
+            <div className="cc-td-label cc-savings-label">
+              <div>
+                <div style={{
+                  color: '#7F5700',
+                  fontFamily: 'Inter, sans-serif',
+                  fontSize: '13px',
+                  fontStyle: 'normal',
+                  fontWeight: 600,
+                  lineHeight: '17px',
+                  textTransform: 'uppercase',
+                }}>
+                  EST. NET ANNUAL SAVINGS
+                </div>
+                <div style={{
+                  color: '#7F5700',
+                  fontFamily: 'Inter, sans-serif',
+                  fontSize: '12px',
+                  fontStyle: 'normal',
+                  fontWeight: 400,
+                  lineHeight: '16px',
+                  textTransform: 'uppercase',
+                }}>
+                  After fees &amp; caps
+                </div>
+              </div>
+            </div>
             {[0, 1, 2].map((i) => {
               const d = getD(i);
               return (
-                <div key={i} className="cc-td cc-savings-val">
+                <div key={i} className="cc-td cc-savings-val" style={{
+                  color: '#7F5700',
+                  fontSize: '30px',
+                  fontWeight: 800,
+                  lineHeight: '36px',
+                }}>
                   {d ? fmtAED(d.net_annual_savings) : '—'}
                 </div>
               );
@@ -427,12 +612,18 @@ export default function CompareCards() {
               </div>
 
               {/* Net Annual Savings (repeat in breakdown) */}
-              <div className="cc-trow cc-trow-savings">
+              <div className="cc-trow" style={{ background: '#F0FDF480' }}>
                 <div className="cc-td-label cc-savings-label">Net Annual Savings</div>
                 {[0, 1, 2].map((i) => {
                   const d = getD(i);
                   return (
-                    <div key={i} className="cc-td cc-savings-val">
+                    <div key={i} className="cc-td" style={{
+                      color: '#15803D',
+                      fontSize: '24px',
+                      fontStyle: 'normal',
+                      fontWeight: 900,
+                      lineHeight: '32px',
+                    }}>
                       {d ? fmtAED(d.net_annual_savings) : '—'}
                     </div>
                   );
@@ -442,30 +633,59 @@ export default function CompareCards() {
               {/* Apply Now row */}
               <div className="cc-trow cc-apply-row">
                 <div className="cc-td-label" />
-                {[0, 1, 2].map((i) => (
-                  <div key={i} className="cc-td cc-apply-td">
-                    {slots[i] ? (
-                      <a
-                        href={slots[i].apply_link || '#'}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="cc-apply-btn-table"
-                        style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}
-                      >
-                        Apply Now
-                      </a>
-                    ) : null}
-                  </div>
-                ))}
+                {[0, 1, 2].map((i) => {
+                  const btnColor = i === 0 ? '#D97706' : '#011A3D';
+                  const btnHover = i === 0 ? '#B45309' : '#020F26';
+                  return (
+                    <div key={i} className="cc-td cc-apply-td">
+                      {slots[i] ? (
+                        <button
+                          onClick={() => {
+                            const link = slots[i].apply_link;
+                            if (link) {
+                              let url = link;
+                              if (!url.startsWith('http')) url = 'https://' + url;
+                              window.open(url, '_blank', 'noopener,noreferrer');
+                            }
+                          }}
+                          style={{
+                            width: '100%',
+                            background: btnColor,
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            padding: '12px',
+                            fontFamily: 'Manrope, sans-serif',
+                            fontSize: '15px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            transition: 'background 0.15s ease',
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = btnHover; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = btnColor; }}
+                        >
+                          Apply Now
+                        </button>
+                      ) : null}
+                    </div>
+                  );
+                })}
               </div>
             </>
           )}
         </div>
 
-        <p className="cc-disclaimer">
-          * Cashback estimates are based on your spending profile and card rates. Actual rewards
-          may vary. Annual fees and cashback caps apply. Always check the issuer&apos;s website
-          for current terms and conditions.
+        <p style={{
+          color: '#94A3B8',
+          textAlign: 'center',
+          fontFamily: 'Inter, sans-serif',
+          fontSize: '11px',
+          fontStyle: 'italic',
+          fontWeight: 400,
+          lineHeight: '15px',
+          marginTop: '24px',
+        }}>
+          Card rewards data last updated 20/01/2026 · Savings estimates are indicative based on your spending inputs · Always verify rates on the bank&apos;s official website
         </p>
       </div>
 

@@ -3,7 +3,7 @@
    ====================================================== */
 
 .cc-page {
-  background: #F5F5F5;
+  background: #01142E;
   min-height: 100vh;
   font-family: 'Inter', sans-serif;
 }
@@ -36,14 +36,14 @@
   font-family: 'Manrope', sans-serif;
   font-size: 32px;
   font-weight: 800;
-  color: #0D1B2A;
+  color: white;
   margin: 4px 0 0;
   line-height: 1.2;
 }
 
 .cc-subtitle {
   font-size: 15px;
-  color: #6B7280;
+  color: #94A3B8;
   max-width: 500px;
   line-height: 1.6;
   margin: 8px 0 0;
@@ -95,9 +95,9 @@
 /* ——— Card slot row ——— */
 
 .cc-slot-row {
-  gap: 16px;
+  gap: 20px;
   margin-top: 32px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .cc-slot {
@@ -247,7 +247,7 @@
 .cc-table-wrap {
   background: white;
   border-radius: 12px;
-  margin-top: 20px;
+  margin-top: 48px;
   overflow: hidden;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
@@ -260,7 +260,7 @@
   color: #6B7280;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  background: #F8FAFC;
+  background: #F3F4F5;
   border-bottom: 1px solid #F3F4F6;
 }
 
@@ -275,9 +275,11 @@
 /* Label cell (first column, grey background) */
 .cc-td-label {
   padding: 15px 20px;
-  font-size: 13px;
-  font-weight: 500;
-  color: #6B7280;
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   background: #FAFAFA;
   border-right: 1px solid #F3F4F6;
   display: flex;
@@ -302,27 +304,30 @@
 
 .cc-benefits-list {
   margin: 0;
-  padding: 0 0 0 16px;
-  list-style: disc;
+  padding: 0;
+  list-style: none;
 }
 .cc-benefits-list li {
   font-size: 13px;
   color: #374151;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   line-height: 1.45;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 /* Annual cashback value */
 .cc-cashback-val { font-weight: 600; }
 
 /* Net savings row */
-.cc-trow-savings { background: #FFFCF2; }
-.cc-savings-label { font-weight: 600 !important; color: #0D1B2A !important; }
+.cc-trow-savings { background: #7F57001A; }
+.cc-savings-label { font-weight: 600 !important; color: #7F5700 !important; }
 .cc-savings-val {
   font-family: 'Manrope', sans-serif;
   font-size: 18px;
   font-weight: 800;
-  color: #C9920A !important;
+  color: #7F5700 !important;
 }
 
 /* ——— Breakdown toggle ——— */
@@ -333,6 +338,7 @@
   border: none;
   border-top: 2px solid #E5E7EB;
   padding: 14px 20px;
+  margin-top: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -382,7 +388,7 @@
 .cc-fee-red { color: #DC2626 !important; }
 
 /* Apply row */
-.cc-apply-row { background: #F8FAFC; }
+.cc-apply-row { background: #F8FAFC; padding-bottom: 14px; }
 .cc-apply-td { align-items: center; }
 
 .cc-apply-btn-table {

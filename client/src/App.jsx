@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import NavBar from './components/NavBar';
+import ScrollToTop from './components/ScrollToTop';
 import ProtectedAdminRoute from './components/ProtectedAdminRoute';
 import HomePage from './pages/HomePage';
 import Results from './pages/Results';
@@ -33,6 +34,7 @@ function Layout() {
 
   return (
     <>
+      <ScrollToTop />
       {showGlobalNav && <NavBar />}
       <Routes>
         <Route path="/" element={<HomePage />} />
