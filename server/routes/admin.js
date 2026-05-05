@@ -4,6 +4,7 @@ const pool = require('../db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { upload } = require('../config/cloudinary');
+const PDFDocument = require('pdfkit');
 
 const auth = (req, res, next) => {
   const token = req.headers['authorization']?.split(' ')[1];
@@ -40,15 +41,6 @@ router.post('/seed-admin', async (req, res) => {
       [email, hash]
     );
     res.json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.get('/leads', auth, async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM leads ORDER BY created_at DESC');
-    res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -695,6 +687,284 @@ router.delete('/spending-categories/:id', auth, async (req, res) => {
     res.status(500).json({ error: err.message });
   } finally {
     client.release();
+  }
+});
+
+// ——— Lead Management ———
+
+// GET /api/admin/leads — Paginated list
+router.get('/leads', auth, async (req, res) => {
+  const { page = 1, limit = 20, status, search, auth_provider } = req.query;
+  const offset = (parseInt(page) - 1) * parseInt(limit);
+
+  let whereClauses = ['1=1'];
+  let params = [];
+  let paramIndex = 1;
+
+  if (status) {
+    whereClauses.push(`lead_status = $${paramIndex++}`);
+    params.push(status);
+  }
+  if (auth_provider) {
+    whereClauses.push(`auth_provider = $${paramIndex++}`);
+    params.push(auth_provider);
+  }
+  if (search) {
+    whereClauses.push(`(email ILIKE $${paramIndex} OR full_name ILIKE $${paramIndex})`);
+    params.push(`%${search}%`);
+    paramIndex++;
+  }
+
+  const where = `WHERE ${whereClauses.join(' AND ')}`;
+
+  try {
+    const [countResult, dataResult] = await Promise.all([
+      pool.query(`SELECT COUNT(*)::int AS total FROM users ${where}`, params),
+      pool.query(
+        `SELECT
+          id, email, full_name, income_range, nationality,
+          auth_provider, lead_status, admin_notes,
+          utm_source, utm_medium, utm_campaign,
+          created_at,
+          (SELECT COUNT(*) FROM user_calculations WHERE user_id = users.id) AS calculations_count
+        FROM users
+        ${where}
+        ORDER BY created_at DESC
+        LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
+        [...params, parseInt(limit), offset]
+      ),
+    ]);
+
+    res.json({
+      total: countResult.rows[0].total,
+      leads: dataResult.rows,
+      page: parseInt(page),
+      limit: parseInt(limit),
+    });
+  } catch (err) {
+    console.error('Get leads error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/admin/leads/export/csv — CSV export (must be before /:id)
+router.get('/leads/export/csv', auth, async (req, res) => {
+  const { status, auth_provider, search } = req.query;
+
+  let whereClauses = ['1=1'];
+  let params = [];
+  let paramIndex = 1;
+
+  if (status) {
+    whereClauses.push(`lead_status = $${paramIndex++}`);
+    params.push(status);
+  }
+  if (auth_provider) {
+    whereClauses.push(`auth_provider = $${paramIndex++}`);
+    params.push(auth_provider);
+  }
+  if (search) {
+    whereClauses.push(`(email ILIKE $${paramIndex} OR full_name ILIKE $${paramIndex})`);
+    params.push(`%${search}%`);
+    paramIndex++;
+  }
+
+  const where = `WHERE ${whereClauses.join(' AND ')}`;
+
+  try {
+    const result = await pool.query(
+      `SELECT
+        id, email, full_name, income_range, nationality,
+        auth_provider, lead_status, admin_notes,
+        utm_source, utm_medium, utm_campaign,
+        created_at
+      FROM users
+      ${where}
+      ORDER BY created_at DESC`,
+      params
+    );
+
+    const headers = [
+      'ID', 'Email', 'Full Name', 'Income Range', 'Nationality',
+      'Auth Provider', 'Status', 'Admin Notes',
+      'UTM Source', 'UTM Medium', 'UTM Campaign', 'Signup Date',
+    ];
+
+    const escapeCSV = (val) => {
+      if (val === null || val === undefined) return '';
+      const str = String(val).replace(/"/g, '""');
+      return /[",\n]/.test(str) ? `"${str}"` : str;
+    };
+
+    const rows = result.rows.map((r) => [
+      r.id, r.email, r.full_name || '', r.income_range || '',
+      r.nationality || '', r.auth_provider || '', r.lead_status || '',
+      r.admin_notes || '', r.utm_source || '', r.utm_medium || '',
+      r.utm_campaign || '',
+      r.created_at ? new Date(r.created_at).toISOString().split('T')[0] : '',
+    ].map(escapeCSV).join(','));
+
+    const csv = [headers.join(','), ...rows].join('\n');
+    const filename = `leads_${new Date().toISOString().split('T')[0]}.csv`;
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(csv);
+  } catch (err) {
+    console.error('CSV export error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/admin/leads/export/pdf — PDF export (must be before /:id)
+router.get('/leads/export/pdf', auth, async (req, res) => {
+  const { status, auth_provider, search } = req.query;
+
+  let whereClauses = ['1=1'];
+  let params = [];
+  let paramIndex = 1;
+
+  if (status) {
+    whereClauses.push(`lead_status = $${paramIndex++}`);
+    params.push(status);
+  }
+  if (auth_provider) {
+    whereClauses.push(`auth_provider = $${paramIndex++}`);
+    params.push(auth_provider);
+  }
+  if (search) {
+    whereClauses.push(`(email ILIKE $${paramIndex} OR full_name ILIKE $${paramIndex})`);
+    params.push(`%${search}%`);
+    paramIndex++;
+  }
+
+  const where = `WHERE ${whereClauses.join(' AND ')}`;
+
+  try {
+    const result = await pool.query(
+      `SELECT
+        id, email, full_name, income_range, nationality,
+        auth_provider, lead_status, admin_notes,
+        utm_source, utm_medium, utm_campaign,
+        created_at
+      FROM users
+      ${where}
+      ORDER BY created_at DESC`,
+      params
+    );
+
+    const filename = `leads_${new Date().toISOString().split('T')[0]}.pdf`;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    const doc = new PDFDocument({ margin: 40, size: 'A4', layout: 'landscape' });
+    doc.pipe(res);
+
+    doc.fillColor('#0D1B2A').fontSize(22).font('Helvetica-Bold')
+       .text('Card Finder — Lead Management Report', { align: 'left' });
+    doc.moveDown(0.3);
+    doc.fillColor('#6B7280').fontSize(10).font('Helvetica')
+       .text(`Generated: ${new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}`);
+    doc.text(`Total Leads: ${result.rows.length}`);
+    if (status) doc.text(`Status Filter: ${status}`);
+    if (auth_provider) doc.text(`Auth Provider Filter: ${auth_provider}`);
+    doc.moveDown(1);
+
+    const statusCounts = result.rows.reduce((acc, r) => {
+      acc[r.lead_status] = (acc[r.lead_status] || 0) + 1;
+      return acc;
+    }, {});
+
+    doc.fillColor('#0D1B2A').fontSize(11).font('Helvetica-Bold').text('Status Summary:');
+    doc.font('Helvetica').fontSize(10).fillColor('#374151');
+    Object.entries(statusCounts).forEach(([s, c]) => { doc.text(`  • ${s}: ${c}`); });
+    doc.moveDown(1);
+
+    const tableTop = doc.y;
+    const colWidths = [30, 110, 120, 50, 70, 60, 70, 80, 70, 70];
+    const headers = ['ID', 'Name', 'Email', 'Income', 'Nationality', 'Provider', 'Status', 'UTM Source', 'UTM Medium', 'Date'];
+
+    let x = 40;
+    doc.fillColor('white').rect(40, tableTop, 760, 22).fillAndStroke('#0D1B2A', '#0D1B2A');
+    doc.fillColor('white').fontSize(9).font('Helvetica-Bold');
+    headers.forEach((h, i) => {
+      doc.text(h, x + 4, tableTop + 7, { width: colWidths[i] - 4, ellipsis: true });
+      x += colWidths[i];
+    });
+
+    const statusColors = { 'New': '#3B82F6', 'Contacted': '#F59E0B', 'Qualified': '#10B981', 'Closed': '#6B7280' };
+    let y = tableTop + 22;
+    doc.font('Helvetica').fontSize(8);
+
+    result.rows.forEach((r, idx) => {
+      if (y > 540) {
+        doc.addPage({ layout: 'landscape', margin: 40 });
+        y = 40;
+        doc.fillColor('white').rect(40, y, 760, 22).fillAndStroke('#0D1B2A', '#0D1B2A');
+        doc.fillColor('white').fontSize(9).font('Helvetica-Bold');
+        x = 40;
+        headers.forEach((h, i) => {
+          doc.text(h, x + 4, y + 7, { width: colWidths[i] - 4, ellipsis: true });
+          x += colWidths[i];
+        });
+        y += 22;
+        doc.font('Helvetica').fontSize(8);
+      }
+
+      if (idx % 2 === 0) doc.fillColor('#F9FAFB').rect(40, y, 760, 20).fill();
+
+      const cells = [
+        String(r.id), r.full_name || '-', r.email,
+        r.income_range || '-', r.nationality || '-', r.auth_provider || '-',
+        r.lead_status || '-', r.utm_source || '-', r.utm_medium || '-',
+        r.created_at ? new Date(r.created_at).toLocaleDateString() : '-',
+      ];
+
+      x = 40;
+      cells.forEach((val, i) => {
+        if (i === 6) {
+          doc.fillColor(statusColors[val] || '#6B7280').font('Helvetica-Bold');
+        } else {
+          doc.fillColor('#1F2937').font('Helvetica');
+        }
+        doc.text(String(val), x + 4, y + 6, { width: colWidths[i] - 4, ellipsis: true, lineBreak: false });
+        x += colWidths[i];
+      });
+
+      y += 20;
+    });
+
+    doc.fontSize(8).fillColor('#9CA3AF')
+       .text('Card Finder Admin — Confidential', 40, 560, { align: 'center', width: 760 });
+    doc.end();
+  } catch (err) {
+    console.error('PDF export error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT /api/admin/leads/:id — Update status / notes
+router.put('/leads/:id', auth, async (req, res) => {
+  const { id } = req.params;
+  const { lead_status, admin_notes } = req.body;
+
+  const validStatuses = ['New', 'Contacted', 'Qualified', 'Closed'];
+  if (lead_status && !validStatuses.includes(lead_status)) {
+    return res.status(400).json({ error: 'Invalid status' });
+  }
+
+  try {
+    await pool.query(
+      `UPDATE users SET
+        lead_status = COALESCE($1, lead_status),
+        admin_notes = COALESCE($2, admin_notes)
+      WHERE id = $3`,
+      [lead_status, admin_notes, id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Update lead error:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 

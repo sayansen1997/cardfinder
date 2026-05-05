@@ -117,13 +117,45 @@ router.put('/me', userAuth, async (req, res) => {
   }
 });
 
-// DELETE /me — delete account
+// DELETE /me — soft delete account
 router.delete('/me', userAuth, async (req, res) => {
+  const userId = req.user.id;
+  const client = await pool.connect();
   try {
-    await pool.query('DELETE FROM users WHERE id = $1', [req.user.id]);
-    res.json({ success: true });
+    await client.query('BEGIN');
+
+    const userRes = await client.query(
+      'SELECT email, full_name FROM users WHERE id = $1',
+      [userId]
+    );
+    if (!userRes.rows.length) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    await client.query('DELETE FROM user_calculations WHERE user_id = $1', [userId]);
+
+    await client.query(
+      `UPDATE users SET
+        password = NULL,
+        profile_picture = NULL,
+        google_id = NULL,
+        deleted_at = NOW(),
+        deletion_reason = 'User requested deletion',
+        lead_status = 'Closed',
+        admin_notes = COALESCE(admin_notes, '') || E'\\n[' || TO_CHAR(NOW(), 'DD Mon YYYY') || '] Account deleted by user.'
+      WHERE id = $1`,
+      [userId]
+    );
+
+    await client.query('COMMIT');
+    res.json({ success: true, message: 'Account deleted successfully' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    await client.query('ROLLBACK');
+    console.error('Delete account error:', err);
+    res.status(500).json({ error: 'Failed to delete account' });
+  } finally {
+    client.release();
   }
 });
 
@@ -146,6 +178,12 @@ router.post('/login', async (req, res) => {
     }
 
     const user = result.rows[0];
+
+    if (user.deleted_at) {
+      return res.status(401).json({
+        error: 'This account no longer exists. Please sign up to create a new account.',
+      });
+    }
 
     if (user.auth_provider === 'google' && !user.password) {
       return res.status(401).json({
@@ -266,7 +304,7 @@ router.post('/me/profile-picture', userAuth, upload.single('image'), async (req,
 
 // POST /register
 router.post('/register', async (req, res) => {
-  const { email, password, full_name, income_range, nationality, consent } = req.body;
+  const { email, password, full_name, income_range, nationality, consent, utm_source, utm_medium, utm_campaign } = req.body;
 
   if (!email || !password || !full_name) {
     return res.status(400).json({ error: 'Email, password, and full name are required' });
@@ -307,10 +345,12 @@ router.post('/register', async (req, res) => {
 
     const result = await pool.query(
       `INSERT INTO users
-        (email, password, full_name, income_range, nationality, auth_provider, created_at)
-       VALUES ($1, $2, $3, $4, $5, 'email', NOW())
+        (email, password, full_name, income_range, nationality, auth_provider,
+         utm_source, utm_medium, utm_campaign, created_at)
+       VALUES ($1, $2, $3, $4, $5, 'email', $6, $7, $8, NOW())
        RETURNING id, email, full_name, income_range, nationality, profile_picture`,
-      [normalizedEmail, passwordHash, full_name, income_range || null, nationality || null]
+      [normalizedEmail, passwordHash, full_name, income_range || null, nationality || null,
+       utm_source || null, utm_medium || null, utm_campaign || null]
     );
 
     const user = result.rows[0];
@@ -341,7 +381,7 @@ router.post('/register', async (req, res) => {
 
 // POST /api/users/google-auth — Sign in or sign up via Google
 router.post('/google-auth', async (req, res) => {
-  const { credential } = req.body;
+  const { credential, utm_source, utm_medium, utm_campaign } = req.body;
 
   if (!credential) {
     return res.status(400).json({ error: 'Google credential required' });
@@ -361,7 +401,7 @@ router.post('/google-auth', async (req, res) => {
     }
 
     let userResult = await pool.query(
-      'SELECT * FROM users WHERE google_id = $1',
+      'SELECT * FROM users WHERE google_id = $1 AND deleted_at IS NULL',
       [google_id]
     );
 
@@ -371,7 +411,7 @@ router.post('/google-auth', async (req, res) => {
       user = userResult.rows[0];
     } else {
       const emailCheck = await pool.query(
-        'SELECT * FROM users WHERE email = $1',
+        'SELECT * FROM users WHERE email = $1 AND deleted_at IS NULL',
         [email]
       );
 
@@ -391,10 +431,12 @@ router.post('/google-auth', async (req, res) => {
         user.profile_picture = user.profile_picture || picture;
       } else {
         const insertResult = await pool.query(
-          `INSERT INTO users (email, google_id, full_name, profile_picture, auth_provider, created_at)
-           VALUES ($1, $2, $3, $4, 'google', NOW())
+          `INSERT INTO users (email, google_id, full_name, profile_picture, auth_provider,
+             utm_source, utm_medium, utm_campaign, created_at)
+           VALUES ($1, $2, $3, $4, 'google', $5, $6, $7, NOW())
            RETURNING *`,
-          [email, google_id, name, picture]
+          [email, google_id, name, picture,
+           utm_source || null, utm_medium || null, utm_campaign || null]
         );
         user = insertResult.rows[0];
       }
