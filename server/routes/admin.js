@@ -101,7 +101,7 @@ router.get('/cards', auth, async (req, res) => {
     const [countRes, dataRes] = await Promise.all([
       pool.query(`SELECT COUNT(*) FROM cards c ${where}`, params),
       pool.query(
-        `SELECT c.id, c.name, c.bank, c.card_category, c.annual_fee, c.min_salary, c.status, c.created_at,
+        `SELECT c.id, c.name, c.bank, c.card_category, c.annual_fee, c.min_salary, c.status, c.created_at, c.image_url,
           cc.name AS category_name,
           (SELECT MAX(cr.monthly_cap) FROM card_rates cr WHERE cr.card_id = c.id) AS max_cap
          FROM cards c

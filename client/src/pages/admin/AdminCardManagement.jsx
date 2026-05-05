@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, ArrowRight } from 'lucide-react';
+import { Trash2, ArrowRight, Pencil, Plus, CloudUpload, Save } from 'lucide-react';
 import AdminNavbar from '../../components/admin/AdminNavbar';
 import CardImage from '../../components/CardImage';
 import CategoryIcon from '../../components/CategoryIcon';
@@ -129,8 +129,8 @@ function EditCashbackModal({ card, categories, onClose, onSaved }) {
 
         <div className="adm-modal-footer">
           <button className="adm-btn-cancel" onClick={onClose}>Cancel</button>
-          <button className="adm-btn-save" onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving…' : '💾 Save Changes'}
+          <button className="adm-btn-save" onClick={handleSave} disabled={saving} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            {saving ? 'Saving…' : <><Save size={16} color="white" />Save Changes</>}
           </button>
         </div>
       </div>
@@ -272,7 +272,7 @@ function EditCardModal({ cardId, categories, cardCategories, onClose, onSaved })
               </>
             ) : (
               <>
-                <span className="adm-upload-icon">☁</span>
+                <CloudUpload size={32} color="#94A3B8" />
                 <p className="adm-upload-label">Click to upload or drag and drop</p>
                 <p className="adm-upload-hint">PNG, JPG or SVG (Recommended: 1011 × 638px)</p>
               </>
@@ -372,8 +372,8 @@ function EditCardModal({ cardId, categories, cardCategories, onClose, onSaved })
 
         <div className="adm-modal-footer">
           <button className="adm-btn-cancel" onClick={onClose}>Cancel</button>
-          <button className="adm-btn-save" onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving…' : '💾 Save Changes'}
+          <button className="adm-btn-save" onClick={handleSave} disabled={saving} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            {saving ? 'Saving…' : <><Save size={16} color="white" />Save Changes</>}
           </button>
         </div>
       </div>
@@ -447,7 +447,7 @@ function AddCardModal({ categories, cardCategories, onClose, onSaved }) {
 
   return (
     <div className="adm-modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="adm-modal adm-modal-lg">
+      <div className="adm-modal adm-modal-lg" style={{ overflowX: 'hidden', overflowY: 'auto', maxHeight: '90vh', maxWidth: '700px', width: '100%', boxSizing: 'border-box', padding: '32px' }}>
         <div className="adm-add-modal-header">
           <div>
             <div className="adm-add-modal-title">Add New Card</div>
@@ -468,7 +468,7 @@ function AddCardModal({ categories, cardCategories, onClose, onSaved }) {
               <img src={imagePreview} alt="Card preview" className="adm-upload-preview" />
             ) : (
               <>
-                <span className="adm-upload-icon">☁</span>
+                <CloudUpload size={32} color="#94A3B8" />
                 <p className="adm-upload-label">Click to upload or drag and drop</p>
                 <p className="adm-upload-hint">PNG, JPG or SVG (Recommended size: 1011 × 638px)</p>
               </>
@@ -571,25 +571,51 @@ function AddCardModal({ categories, cardCategories, onClose, onSaved }) {
           </div>
 
           {/* Cashback setup */}
-          <div className="adm-cashback-section">
-            <div className="adm-cashback-section-title">
-              <span>🏷</span> Initial Cashback Setup
+          <div style={{ marginBottom: '20px' }}>
+            <div className="adm-cashback-section-title" style={{ marginBottom: '8px' }}>
+              Initial Cashback Setup
             </div>
-            <div className="adm-cashback-grid">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
               {categories.map((cat) => (
-                <div key={cat.slug} className="adm-cashback-cell">
-                  <label className="adm-cashback-label">{cat.slug.toUpperCase()}</label>
-                  <div className="adm-cashback-input-wrap">
+                <div
+                  key={cat.id || cat.slug}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '12px',
+                    padding: '12px 0',
+                    borderBottom: '1px solid #F3F4F5',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
+                    <CategoryIcon name={cat.icon} size={16} color="#94A3B8" />
+                    <span style={{ fontFamily: 'Inter', fontSize: '14px', color: '#0D1B2A', fontWeight: 500 }}>
+                      {cat.name || cat.label}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <input
                       type="number"
-                      className="adm-cashback-input"
                       step="0.1"
                       min="0"
                       placeholder="0"
                       value={rates[cat.slug] || ''}
                       onChange={(e) => setRates((r) => ({ ...r, [cat.slug]: e.target.value }))}
+                      style={{
+                        width: '80px',
+                        padding: '8px 10px',
+                        border: '1px solid #E5E7EB',
+                        borderRadius: '6px',
+                        background: 'white',
+                        color: '#0D1B2A',
+                        colorScheme: 'light',
+                        fontSize: '14px',
+                        textAlign: 'center',
+                        boxSizing: 'border-box',
+                      }}
                     />
-                    <span className="adm-cashback-pct">%</span>
+                    <span style={{ color: '#94A3B8', fontSize: '14px' }}>%</span>
                   </div>
                 </div>
               ))}
@@ -722,8 +748,13 @@ export default function AdminCardManagement() {
             <h1 className="adm-page-title">Card Management</h1>
             <p className="adm-page-subtitle">Configure and update the financial product ecosystem.</p>
           </div>
-          <button className="adm-btn-add" onClick={() => setShowAdd(true)}>
-            + Add New Card
+          <button
+            className="adm-btn-add"
+            onClick={() => setShowAdd(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Plus size={16} color="white" />
+            Add New Card
           </button>
         </div>
 
@@ -842,7 +873,7 @@ export default function AdminCardManagement() {
                           title="Edit card"
                           onClick={() => setEditingCardId(card.id)}
                         >
-                          ✏️
+                          <Pencil size={16} color="#C9920A" />
                         </button>
                         <button
                           className="adm-action-cashback"

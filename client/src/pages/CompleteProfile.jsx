@@ -103,7 +103,7 @@ export default function CompleteProfile() {
         boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
       }}>
         <img
-          src="/card-finder_logo.svg"
+          src="/card-finder-logo.svg"
           alt="Card Finder"
           style={{ height: '36px', marginBottom: '24px' }}
         />
