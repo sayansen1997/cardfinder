@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Camera, Trash2, Lock, Calendar, BarChart3, Save, RotateCw } from 'lucide-react';
+import { Camera, Trash2, Lock, Calendar, BarChart3, Save, RotateCw, AlertTriangle } from 'lucide-react';
 import API_BASE from '../utils/api';
 import DashboardNavbar from '../components/DashboardNavbar';
 import Footer from '../components/Footer';
@@ -43,6 +43,9 @@ export default function Profile() {
   const [hovering, setHovering] = useState(false);
   const [toast, setToast] = useState('');
   const [toastType, setToastType] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => {
     const t = localStorage.getItem('userToken');
@@ -141,20 +144,20 @@ export default function Profile() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete your account? This cannot be undone.')) return;
+  const handleDeleteAccount = async () => {
+    setDeleteError('');
+    setDeleting(true);
     try {
-      const res = await fetch(`${API_BASE}/users/me`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${localStorage.getItem('userToken')}` },
+      const token = localStorage.getItem('userToken');
+      await axios.delete(`${API_BASE}/users/me`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error('delete failed');
       localStorage.removeItem('userToken');
-      localStorage.removeItem('userName');
       localStorage.removeItem('user');
       navigate('/');
-    } catch {
-      showToast('Failed to delete account. Please try again.', 'error');
+    } catch (err) {
+      setDeleteError(err.response?.data?.error || 'Failed to delete account');
+      setDeleting(false);
     }
   };
 
@@ -374,7 +377,7 @@ export default function Profile() {
           </div>
 
           <div className="pr-delete-wrap">
-            <button className="pr-btn-delete" onClick={handleDelete} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button className="pr-btn-delete" onClick={() => setShowDeleteModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Trash2 size={16} color="#FD2626" />
               Delete Account
             </button>
@@ -383,6 +386,81 @@ export default function Profile() {
       </div>
 
       <Footer />
+
+      {/* Delete Account Confirmation Modal */}
+      {showDeleteModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
+          <div style={{ background: 'white', borderRadius: '12px', width: '100%', maxWidth: '500px', overflow: 'hidden' }}>
+
+            {/* Header */}
+            <div style={{ background: '#FEE2E2', padding: '20px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <AlertTriangle size={22} color="#DC2626" />
+              </div>
+              <div>
+                <h2 style={{ fontFamily: 'Manrope', fontSize: '18px', fontWeight: 700, color: '#991B1B', margin: 0 }}>
+                  Delete your account?
+                </h2>
+                <p style={{ fontFamily: 'Inter', fontSize: '13px', color: '#991B1B', margin: '2px 0 0', opacity: 0.85 }}>
+                  This action cannot be undone.
+                </p>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: '24px' }}>
+              <p style={{ fontFamily: 'Inter', fontSize: '14px', color: '#374151', margin: '0 0 16px', lineHeight: 1.5 }}>
+                Please review what will happen if you proceed:
+              </p>
+
+              <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '8px', padding: '16px', marginBottom: '12px' }}>
+                <p style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, color: '#991B1B', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>
+                  What will be permanently lost:
+                </p>
+                <ul style={{ fontFamily: 'Inter', fontSize: '13px', color: '#7F1D1D', margin: 0, paddingLeft: '18px', lineHeight: 1.7 }}>
+                  <li>All your saved calculations</li>
+                  <li>Your profile picture</li>
+                  <li>Access to your account</li>
+                </ul>
+              </div>
+
+              <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '8px', padding: '16px' }}>
+                <p style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>
+                  Good to know:
+                </p>
+                <p style={{ fontFamily: 'Inter', fontSize: '13px', color: '#14532D', margin: 0, lineHeight: 1.5 }}>
+                  You can sign up again later with the same email and reactivate your account.
+                </p>
+              </div>
+
+              {deleteError && (
+                <div style={{ marginTop: '12px', padding: '10px 12px', background: '#FEE2E2', color: '#991B1B', borderRadius: '6px', fontSize: '13px', fontFamily: 'Inter' }}>
+                  {deleteError}
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div style={{ padding: '16px 24px 24px', display: 'flex', justifyContent: 'flex-end', gap: '8px', borderTop: '1px solid #F3F4F5' }}>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
+                style={{ background: '#E5E7EB', border: 'none', borderRadius: '8px', padding: '10px 20px', fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: '#374151', cursor: deleting ? 'not-allowed' : 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+                style={{ background: '#DC2626', border: 'none', borderRadius: '8px', padding: '10px 20px', fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: 'white', cursor: deleting ? 'not-allowed' : 'pointer', opacity: deleting ? 0.6 : 1, display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <Trash2 size={16} color="white" />
+                {deleting ? 'Deleting…' : 'Yes, Delete My Account'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

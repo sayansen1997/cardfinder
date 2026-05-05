@@ -694,7 +694,7 @@ router.delete('/spending-categories/:id', auth, async (req, res) => {
 
 // GET /api/admin/leads — Paginated list
 router.get('/leads', auth, async (req, res) => {
-  const { page = 1, limit = 20, status, search, auth_provider } = req.query;
+  const { page = 1, limit = 20, status, search, auth_provider, deleted } = req.query;
   const offset = (parseInt(page) - 1) * parseInt(limit);
 
   let whereClauses = ['1=1'];
@@ -714,6 +714,11 @@ router.get('/leads', auth, async (req, res) => {
     params.push(`%${search}%`);
     paramIndex++;
   }
+  if (deleted === 'active') {
+    whereClauses.push('deleted_at IS NULL');
+  } else if (deleted === 'deleted') {
+    whereClauses.push('deleted_at IS NOT NULL');
+  }
 
   const where = `WHERE ${whereClauses.join(' AND ')}`;
 
@@ -725,7 +730,7 @@ router.get('/leads', auth, async (req, res) => {
           id, email, full_name, income_range, nationality,
           auth_provider, lead_status, admin_notes,
           utm_source, utm_medium, utm_campaign,
-          created_at,
+          created_at, deleted_at, deletion_reason,
           (SELECT COUNT(*) FROM user_calculations WHERE user_id = users.id) AS calculations_count
         FROM users
         ${where}
@@ -749,7 +754,7 @@ router.get('/leads', auth, async (req, res) => {
 
 // GET /api/admin/leads/export/csv — CSV export (must be before /:id)
 router.get('/leads/export/csv', auth, async (req, res) => {
-  const { status, auth_provider, search } = req.query;
+  const { status, auth_provider, search, deleted } = req.query;
 
   let whereClauses = ['1=1'];
   let params = [];
@@ -768,6 +773,11 @@ router.get('/leads/export/csv', auth, async (req, res) => {
     params.push(`%${search}%`);
     paramIndex++;
   }
+  if (deleted === 'active') {
+    whereClauses.push('deleted_at IS NULL');
+  } else if (deleted === 'deleted') {
+    whereClauses.push('deleted_at IS NOT NULL');
+  }
 
   const where = `WHERE ${whereClauses.join(' AND ')}`;
 
@@ -777,7 +787,7 @@ router.get('/leads/export/csv', auth, async (req, res) => {
         id, email, full_name, income_range, nationality,
         auth_provider, lead_status, admin_notes,
         utm_source, utm_medium, utm_campaign,
-        created_at
+        created_at, deleted_at, deletion_reason
       FROM users
       ${where}
       ORDER BY created_at DESC`,
@@ -788,6 +798,7 @@ router.get('/leads/export/csv', auth, async (req, res) => {
       'ID', 'Email', 'Full Name', 'Income Range', 'Nationality',
       'Auth Provider', 'Status', 'Admin Notes',
       'UTM Source', 'UTM Medium', 'UTM Campaign', 'Signup Date',
+      'Deleted At', 'Deletion Reason',
     ];
 
     const escapeCSV = (val) => {
@@ -802,6 +813,8 @@ router.get('/leads/export/csv', auth, async (req, res) => {
       r.admin_notes || '', r.utm_source || '', r.utm_medium || '',
       r.utm_campaign || '',
       r.created_at ? new Date(r.created_at).toISOString().split('T')[0] : '',
+      r.deleted_at ? new Date(r.deleted_at).toISOString().split('T')[0] : '',
+      r.deletion_reason || '',
     ].map(escapeCSV).join(','));
 
     const csv = [headers.join(','), ...rows].join('\n');
@@ -818,7 +831,7 @@ router.get('/leads/export/csv', auth, async (req, res) => {
 
 // GET /api/admin/leads/export/pdf — PDF export (must be before /:id)
 router.get('/leads/export/pdf', auth, async (req, res) => {
-  const { status, auth_provider, search } = req.query;
+  const { status, auth_provider, search, deleted } = req.query;
 
   let whereClauses = ['1=1'];
   let params = [];
@@ -837,6 +850,11 @@ router.get('/leads/export/pdf', auth, async (req, res) => {
     params.push(`%${search}%`);
     paramIndex++;
   }
+  if (deleted === 'active') {
+    whereClauses.push('deleted_at IS NULL');
+  } else if (deleted === 'deleted') {
+    whereClauses.push('deleted_at IS NOT NULL');
+  }
 
   const where = `WHERE ${whereClauses.join(' AND ')}`;
 
@@ -846,7 +864,7 @@ router.get('/leads/export/pdf', auth, async (req, res) => {
         id, email, full_name, income_range, nationality,
         auth_provider, lead_status, admin_notes,
         utm_source, utm_medium, utm_campaign,
-        created_at
+        created_at, deleted_at
       FROM users
       ${where}
       ORDER BY created_at DESC`,
@@ -892,7 +910,7 @@ router.get('/leads/export/pdf', auth, async (req, res) => {
       x += colWidths[i];
     });
 
-    const statusColors = { 'New': '#3B82F6', 'Contacted': '#F59E0B', 'Qualified': '#10B981', 'Closed': '#6B7280' };
+    const statusColors = { 'New': '#3B82F6', 'Contacted': '#F59E0B', 'Qualified': '#10B981', 'Closed': '#6B7280', 'DELETED': '#DC2626' };
     let y = tableTop + 22;
     doc.font('Helvetica').fontSize(8);
 
@@ -913,17 +931,21 @@ router.get('/leads/export/pdf', auth, async (req, res) => {
 
       if (idx % 2 === 0) doc.fillColor('#F9FAFB').rect(40, y, 760, 20).fill();
 
+      const statusLabel = r.deleted_at
+        ? `DELETED (${new Date(r.deleted_at).toLocaleDateString()})`
+        : (r.lead_status || '-');
       const cells = [
         String(r.id), r.full_name || '-', r.email,
         r.income_range || '-', r.nationality || '-', r.auth_provider || '-',
-        r.lead_status || '-', r.utm_source || '-', r.utm_medium || '-',
+        statusLabel, r.utm_source || '-', r.utm_medium || '-',
         r.created_at ? new Date(r.created_at).toLocaleDateString() : '-',
       ];
 
       x = 40;
       cells.forEach((val, i) => {
         if (i === 6) {
-          doc.fillColor(statusColors[val] || '#6B7280').font('Helvetica-Bold');
+          const colorKey = val.startsWith('DELETED') ? 'DELETED' : val;
+          doc.fillColor(statusColors[colorKey] || '#6B7280').font('Helvetica-Bold');
         } else {
           doc.fillColor('#1F2937').font('Helvetica');
         }

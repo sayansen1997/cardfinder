@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import API_BASE from '../utils/api';
 import GoogleSignInButton from '../components/GoogleSignInButton';
+import { getUTMs, clearUTMs } from '../utils/utm';
 import './signup.css';
 
 const FEATURES = [
@@ -87,6 +88,7 @@ export default function SignUpStep1() {
 
     setSubmitting(true);
     try {
+      const utms = getUTMs();
       const res = await axios.post(`${API_BASE}/users/register`, {
         email: form.email,
         password: form.password,
@@ -94,7 +96,9 @@ export default function SignUpStep1() {
         income_range: form.income_range,
         nationality: form.nationality,
         consent: form.consent,
+        ...utms,
       });
+      clearUTMs();
       localStorage.setItem('userToken', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       navigate('/dashboard');

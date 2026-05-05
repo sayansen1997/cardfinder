@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import API_BASE from '../utils/api'
+import { getUTMs, clearUTMs } from '../utils/utm'
 
 export default function GoogleSignInButton({ onSuccess, onError, mode = 'signup' }) {
   const buttonRef = useRef(null)
@@ -35,10 +36,13 @@ export default function GoogleSignInButton({ onSuccess, onError, mode = 'signup'
 
   const handleCredentialResponse = async (response) => {
     try {
+      const utms = getUTMs();
       const result = await axios.post(`${API_BASE}/users/google-auth`, {
         credential: response.credential,
+        ...utms,
       })
 
+      clearUTMs()
       localStorage.setItem('userToken', result.data.token)
       localStorage.setItem('user', JSON.stringify(result.data.user))
 

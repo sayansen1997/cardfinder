@@ -14,6 +14,7 @@ import AdminCardManagement from './pages/admin/AdminCardManagement';
 import AdminAuditLog from './pages/admin/AdminAuditLog';
 import AdminCategories from './pages/admin/AdminCategories';
 import AdminSpendingCategories from './pages/admin/AdminSpendingCategories';
+import AdminLeads from './pages/admin/AdminLeads';
 import SignUpStep1 from './pages/SignUpStep1';
 import SignUpStep2 from './pages/SignUpStep2';
 import Dashboard from './pages/Dashboard';
@@ -111,6 +112,14 @@ function Layout() {
           element={
             <ProtectedAdminRoute>
               <AdminSpendingCategories />
+            </ProtectedAdminRoute>
+          }
+        />
+        <Route
+          path="/admin/leads"
+          element={
+            <ProtectedAdminRoute>
+              <AdminLeads />
             </ProtectedAdminRoute>
           }
         />
