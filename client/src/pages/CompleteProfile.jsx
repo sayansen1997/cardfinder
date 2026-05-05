@@ -75,6 +75,7 @@ export default function CompleteProfile() {
 
       const updatedUser = { ...user, income_range: incomeRange, nationality };
       localStorage.setItem('user', JSON.stringify(updatedUser));
+      window.dispatchEvent(new Event('user-updated'));
 
       navigate('/dashboard');
     } catch (err) {

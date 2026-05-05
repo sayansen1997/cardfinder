@@ -179,99 +179,105 @@ export default function Profile() {
       {/* Dark top section */}
       <div className="pr-top">
         <div className="pr-inner">
-          <p className="pr-breadcrumb">Profile</p>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '20px' }}>
 
-          <div className="pr-user-row">
-            {/* Avatar — clickable upload */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                onMouseEnter={() => setHovering(true)}
-                onMouseLeave={() => setHovering(false)}
-                style={{
-                  position: 'relative',
-                  width: '80px',
-                  height: '80px',
-                  borderRadius: '12px',
-                  cursor: 'pointer',
-                  overflow: 'hidden',
-                  background: profilePicture ? 'transparent' : '#C9920A',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                }}
-                title="Click to upload profile picture"
-              >
-                {profilePicture ? (
-                  <img
-                    src={profilePicture}
-                    alt={fullName || 'Profile'}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            {/* Left: Profile label stacked above avatar + name */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '12px' }}>
+              <p className="pr-breadcrumb" style={{ margin: 0 }}>Profile</p>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '20px' }}>
+                {/* Avatar — clickable upload */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '8px' }}>
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    onMouseEnter={() => setHovering(true)}
+                    onMouseLeave={() => setHovering(false)}
+                    style={{
+                      position: 'relative',
+                      width: '120px',
+                      height: '120px',
+                      borderRadius: '16px',
+                      cursor: 'pointer',
+                      overflow: 'hidden',
+                      background: profilePicture ? 'transparent' : '#C9920A',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                    title="Click to upload profile picture"
+                  >
+                    {profilePicture ? (
+                      <img
+                        src={profilePicture}
+                        alt={fullName || 'Profile'}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <span style={{ color: 'white', fontFamily: 'Manrope', fontSize: '48px', fontWeight: 800 }}>
+                        {displayInitial}
+                      </span>
+                    )}
+
+                    {/* Camera overlay on hover */}
+                    <div style={{
+                      position: 'absolute',
+                      inset: 0,
+                      background: 'rgba(0,0,0,0.5)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      opacity: (hovering && !uploadingImage) ? 1 : 0,
+                      transition: 'opacity 0.2s ease',
+                    }}>
+                      <Camera size={32} color="white" />
+                    </div>
+
+                    {/* Upload progress overlay */}
+                    {uploadingImage && (
+                      <div style={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: 'rgba(0,0,0,0.65)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'white',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        fontFamily: 'Inter, sans-serif',
+                      }}>
+                        Uploading…
+                      </div>
+                    )}
+                  </div>
+
+                  <p style={{ fontSize: '11px', color: '#94A3B8', margin: 0, textAlign: 'left', fontFamily: 'Inter, sans-serif' }}>
+                    Click to upload (max 5MB)
+                  </p>
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    style={{ display: 'none' }}
                   />
-                ) : (
-                  <span style={{ color: 'white', fontFamily: 'Manrope', fontSize: '32px', fontWeight: 800 }}>
-                    {displayInitial}
-                  </span>
-                )}
-
-                {/* Camera overlay on hover */}
-                <div style={{
-                  position: 'absolute',
-                  inset: 0,
-                  background: 'rgba(0,0,0,0.5)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  opacity: (hovering && !uploadingImage) ? 1 : 0,
-                  transition: 'opacity 0.2s ease',
-                }}>
-                  <Camera size={24} color="white" />
                 </div>
 
-                {/* Upload progress overlay */}
-                {uploadingImage && (
-                  <div style={{
-                    position: 'absolute',
-                    inset: 0,
-                    background: 'rgba(0,0,0,0.65)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    fontFamily: 'Inter, sans-serif',
-                  }}>
-                    Uploading…
+                {/* Name + meta */}
+                <div className="pr-user-info">
+                  <h1 className="pr-user-name">{fullName || user.email}</h1>
+                  <div className="pr-user-meta">
+                    <span className="pr-badge-member">Member</span>
+                    <span className="pr-verified">✓ Identity Verified</span>
                   </div>
-                )}
-              </div>
-
-              <p style={{ fontSize: '11px', color: '#94A3B8', margin: 0, textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>
-                Click to upload (max 5MB)
-              </p>
-
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                style={{ display: 'none' }}
-              />
-            </div>
-
-            {/* Name + meta */}
-            <div className="pr-user-info">
-              <h1 className="pr-user-name">{fullName || user.email}</h1>
-              <div className="pr-user-meta">
-                <span className="pr-badge-member">Member</span>
-                <span className="pr-verified">✓ Identity Verified</span>
+                </div>
               </div>
             </div>
 
-            {/* CTA */}
-            <button className="pr-btn-new" onClick={() => navigate('/dashboard')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            {/* CTA — pushed to the right */}
+            <button className="pr-btn-new" onClick={() => navigate('/dashboard')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flexShrink: 0 }}>
               <RotateCw size={16} color="white" />
               Start New Calculation
             </button>

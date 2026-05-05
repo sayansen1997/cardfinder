@@ -3,6 +3,20 @@ import axios from 'axios';
 import API_BASE from '../utils/api';
 import CategoryIcon from './CategoryIcon';
 
+const incomeRangeToAed = (label) => {
+  const map = { '10k': 10000, '15k': 15000, '25k': 25000, '40k': 40000, '60k+': 60000 };
+  return map[label] || 10000;
+};
+
+const getUserDefaultIncome = () => {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    return incomeRangeToAed(user.income_range);
+  } catch {
+    return 10000;
+  }
+};
+
 function updateSlider(el) {
   if (!el) return;
   const min = parseFloat(el.min) || 0;
@@ -38,7 +52,8 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
         startIncome = initialIncome;
         startBracket = brks.find((b) => Number(b.value) === initialIncome) || brks[0];
       } else {
-        startBracket = brks[0];
+        const userIncome = getUserDefaultIncome();
+        startBracket = brks.find((b) => Number(b.value) === userIncome) || brks[0];
         startIncome = startBracket ? Number(startBracket.value) : 0;
       }
       setIncome(startIncome);
@@ -58,6 +73,20 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
   useEffect(() => {
     document.querySelectorAll('input[type="range"].cat-slider').forEach(updateSlider);
   }, [spending]);
+
+  useEffect(() => {
+    if (!brackets.length) return;
+    const handleUserUpdate = () => {
+      const userIncome = getUserDefaultIncome();
+      const matched = brackets.find((b) => Number(b.value) === userIncome) || brackets[0];
+      if (matched) {
+        setIncome(Number(matched.value));
+        setActiveBracket(matched.id ?? null);
+      }
+    };
+    window.addEventListener('user-updated', handleUserUpdate);
+    return () => window.removeEventListener('user-updated', handleUserUpdate);
+  }, [brackets]);
 
   const distributeIncome = (currentIncome, cats) => {
     const splits = {
