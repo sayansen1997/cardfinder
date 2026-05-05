@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import { Search, Download, FileText, X, MessageSquare, Mail, Calendar, AlertTriangle } from 'lucide-react'
+import { Search, Download, FileText, X, MessageSquare, Mail, Calendar, AlertTriangle, Trash2, RotateCcw } from 'lucide-react'
 import API_BASE from '../../utils/api'
 import AdminNavbar from '../../components/admin/AdminNavbar'
 
@@ -27,14 +27,19 @@ export default function AdminLeads() {
   const [providerFilter, setProviderFilter] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [deletedFilter, setDeletedFilter] = useState('all')
+  const [view, setView] = useState('normal')
   const [loading, setLoading] = useState(true)
   const [selectedLead, setSelectedLead] = useState(null)
   const [editingNotes, setEditingNotes] = useState('')
   const [savingNotes, setSavingNotes] = useState(false)
+  const [trashModal, setTrashModal] = useState(null)
+  const [trashReason, setTrashReason] = useState('')
+  const [trashNotes, setTrashNotes] = useState('')
+  const [actioning, setActioning] = useState(false)
 
   const fetchLeads = () => {
     setLoading(true)
-    const params = { page, limit }
+    const params = { page, limit, view }
     if (statusFilter) params.status = statusFilter
     if (providerFilter) params.auth_provider = providerFilter
     if (searchTerm) params.search = searchTerm
@@ -57,7 +62,7 @@ export default function AdminLeads() {
 
   useEffect(() => {
     fetchLeads()
-  }, [page, statusFilter, providerFilter, searchTerm, deletedFilter]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [page, statusFilter, providerFilter, searchTerm, deletedFilter, view]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleStatusChange = async (id, newStatus) => {
     try {
@@ -88,6 +93,7 @@ export default function AdminLeads() {
     if (providerFilter) params.append('auth_provider', providerFilter)
     if (searchTerm) params.append('search', searchTerm)
     if (deletedFilter !== 'all') params.append('deleted', deletedFilter)
+    if (view !== 'normal') params.append('view', view)
 
     const token = localStorage.getItem('adminToken')
     const url = `${API_BASE}/admin/leads/export/${format}?${params.toString()}`
@@ -98,13 +104,57 @@ export default function AdminLeads() {
         const downloadUrl = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = downloadUrl
-        a.download = `leads_${new Date().toISOString().split('T')[0]}.${format}`
+        a.download = `leads_${view === 'trash' ? 'trash_' : ''}${new Date().toISOString().split('T')[0]}.${format}`
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
         window.URL.revokeObjectURL(downloadUrl)
       })
       .catch(() => alert('Export failed'))
+  }
+
+  const handleTrashLead = async () => {
+    if (!trashModal?.lead || !trashReason) return
+    setActioning(true)
+    try {
+      await adminAxios().post(`/admin/leads/${trashModal.lead.id}/trash`, { reason: trashReason, notes: trashNotes })
+      setTrashModal(null)
+      setTrashReason('')
+      setTrashNotes('')
+      fetchLeads()
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to move to trash')
+    } finally {
+      setActioning(false)
+    }
+  }
+
+  const handleRestoreLead = async () => {
+    if (!trashModal?.lead) return
+    setActioning(true)
+    try {
+      await adminAxios().post(`/admin/leads/${trashModal.lead.id}/restore`)
+      setTrashModal(null)
+      fetchLeads()
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to restore')
+    } finally {
+      setActioning(false)
+    }
+  }
+
+  const handlePermanentDelete = async () => {
+    if (!trashModal?.lead) return
+    setActioning(true)
+    try {
+      await adminAxios().delete(`/admin/leads/${trashModal.lead.id}/permanent`)
+      setTrashModal(null)
+      fetchLeads()
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to delete permanently')
+    } finally {
+      setActioning(false)
+    }
   }
 
   const totalPages = Math.ceil(total / limit)
@@ -122,7 +172,7 @@ export default function AdminLeads() {
               Lead Management
             </h1>
             <p style={{ fontFamily: 'Inter', fontSize: '14px', color: '#6B7280', margin: '4px 0 0' }}>
-              Track and manage all signed-up users. Total: {total} leads
+              {view === 'trash' ? `Trash — ${total} lead${total !== 1 ? 's' : ''}` : `Track and manage all signed-up users. Total: ${total} leads`}
             </p>
           </div>
 
@@ -142,6 +192,23 @@ export default function AdminLeads() {
               Export PDF
             </button>
           </div>
+        </div>
+
+        {/* View toggle tabs */}
+        <div style={{ display: 'flex', gap: '4px', marginBottom: '16px', background: 'white', padding: '6px', borderRadius: '10px', width: 'fit-content' }}>
+          <button
+            onClick={() => { setView('normal'); setPage(1) }}
+            style={{ background: view === 'normal' ? '#0D1B2A' : 'transparent', color: view === 'normal' ? 'white' : '#6B7280', border: 'none', padding: '8px 16px', borderRadius: '6px', fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s ease', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            All Leads
+          </button>
+          <button
+            onClick={() => { setView('trash'); setPage(1) }}
+            style={{ background: view === 'trash' ? '#0D1B2A' : 'transparent', color: view === 'trash' ? 'white' : '#6B7280', border: 'none', padding: '8px 16px', borderRadius: '6px', fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s ease', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Trash2 size={14} />
+            Trash
+          </button>
         </div>
 
         {/* Filters */}
@@ -179,15 +246,17 @@ export default function AdminLeads() {
             <option value="google">Google</option>
           </select>
 
-          <select
-            value={deletedFilter}
-            onChange={(e) => { setDeletedFilter(e.target.value); setPage(1) }}
-            style={{ padding: '10px 12px', border: '1px solid #E5E7EB', borderRadius: '8px', background: 'white', color: '#0D1B2A', colorScheme: 'light', fontSize: '14px', fontFamily: 'Inter', cursor: 'pointer' }}
-          >
-            <option value="all">All Accounts</option>
-            <option value="active">Active Only</option>
-            <option value="deleted">Deleted Only</option>
-          </select>
+          {view === 'normal' && (
+            <select
+              value={deletedFilter}
+              onChange={(e) => { setDeletedFilter(e.target.value); setPage(1) }}
+              style={{ padding: '10px 12px', border: '1px solid #E5E7EB', borderRadius: '8px', background: 'white', color: '#0D1B2A', colorScheme: 'light', fontSize: '14px', fontFamily: 'Inter', cursor: 'pointer' }}
+            >
+              <option value="all">All Accounts</option>
+              <option value="active">Active Only</option>
+              <option value="deleted">Deleted Only</option>
+            </select>
+          )}
 
           {(() => {
             const filtersActive = !!(statusFilter || providerFilter || searchTerm || deletedFilter !== 'all')
@@ -213,13 +282,15 @@ export default function AdminLeads() {
         {/* Table */}
         <div style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', opacity: loading ? 0.4 : 1, transition: 'opacity 0.2s ease', pointerEvents: loading ? 'none' : 'auto' }}>
           {!leads || leads.length === 0 ? (
-            <div style={{ padding: '60px', textAlign: 'center', color: '#9CA3AF', fontFamily: 'Inter' }}>{loading ? 'Loading leads…' : 'No leads found'}</div>
+            <div style={{ padding: '60px', textAlign: 'center', color: '#9CA3AF', fontFamily: 'Inter' }}>
+              {loading ? 'Loading leads…' : view === 'trash' ? 'Trash is empty' : 'No leads found'}
+            </div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '900px' }}>
-                <thead style={{ background: '#0D1B2A' }}>
+                <thead style={{ background: view === 'trash' ? '#3B1F6E' : '#0D1B2A' }}>
                   <tr>
-                    {['NAME', 'EMAIL', 'STATUS', 'INCOME', 'NATIONALITY', 'PROVIDER', 'UTM SOURCE', 'SIGNUP DATE', 'NOTES'].map(h => (
+                    {['NAME', 'EMAIL', 'STATUS', 'INCOME', 'NATIONALITY', 'PROVIDER', 'UTM SOURCE', 'SIGNUP DATE', 'ACTIONS'].map(h => (
                       <th key={h} style={{ padding: '14px 16px', textAlign: 'left', color: 'white', fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
                         {h}
                       </th>
@@ -231,8 +302,9 @@ export default function AdminLeads() {
                     const status = lead.lead_status || 'New'
                     const colors = STATUS_COLORS[status] || STATUS_COLORS.New
                     const isDeleted = !!lead.deleted_at
+                    const isTrashed = !!lead.trashed_at
                     return (
-                      <tr key={lead.id} className="leads-row-fade" style={{ borderBottom: '1px solid #F3F4F5', background: isDeleted ? '#FFF5F5' : undefined }}>
+                      <tr key={lead.id} className="leads-row-fade" style={{ borderBottom: '1px solid #F3F4F5', background: isTrashed ? '#F5F3FF' : isDeleted ? '#FFF5F5' : undefined }}>
                         <td style={{ padding: '14px 16px', fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: isDeleted ? '#9CA3AF' : '#0D1B2A' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                             <span style={{ textDecoration: isDeleted ? 'line-through' : 'none' }}>
@@ -241,6 +313,11 @@ export default function AdminLeads() {
                             {isDeleted && (
                               <span style={{ background: '#FEE2E2', color: '#DC2626', fontSize: '10px', fontWeight: 700, padding: '2px 6px', borderRadius: '999px', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
                                 Deleted
+                              </span>
+                            )}
+                            {isTrashed && (
+                              <span style={{ background: '#EDE9FE', color: '#5B21B6', fontFamily: 'Inter', fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '999px', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+                                Trashed
                               </span>
                             )}
                           </div>
@@ -276,13 +353,47 @@ export default function AdminLeads() {
                           {lead.created_at ? new Date(lead.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
                         </td>
                         <td style={{ padding: '14px 16px' }}>
-                          <button
-                            onClick={() => { setSelectedLead(lead); setEditingNotes(lead.admin_notes || '') }}
-                            style={{ background: lead.admin_notes ? '#FEF3C7' : 'none', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', color: lead.admin_notes ? '#92400E' : '#9CA3AF' }}
-                            title={lead.admin_notes ? 'View notes' : 'Add notes'}
-                          >
-                            <MessageSquare size={14} />
-                          </button>
+                          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                            {/* Notes button */}
+                            <button
+                              onClick={() => { setSelectedLead(lead); setEditingNotes(lead.admin_notes || '') }}
+                              style={{ background: lead.admin_notes ? '#FEF3C7' : 'none', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', color: lead.admin_notes ? '#92400E' : '#9CA3AF' }}
+                              title={lead.admin_notes ? 'View notes' : 'Add notes'}
+                            >
+                              <MessageSquare size={14} />
+                            </button>
+
+                            {/* Trash — normal view only */}
+                            {view === 'normal' && (
+                              <button
+                                onClick={() => { setTrashModal({ lead, action: 'trash' }); setTrashReason(''); setTrashNotes('') }}
+                                style={{ background: 'none', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', color: '#6B7280' }}
+                                title="Move to trash"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            )}
+
+                            {/* Restore + permanent delete — trash view only */}
+                            {view === 'trash' && (
+                              <>
+                                <button
+                                  onClick={() => setTrashModal({ lead, action: 'restore' })}
+                                  style={{ background: 'none', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', color: '#10B981' }}
+                                  title="Restore from trash"
+                                >
+                                  <RotateCcw size={14} />
+                                </button>
+                                <button
+                                  onClick={() => setTrashModal({ lead, action: 'permanent' })}
+                                  style={{ background: 'none', border: 'none', borderRadius: '6px', padding: '6px 8px', cursor: 'pointer', color: '#DC2626' }}
+                                  title="Permanently delete"
+                                >
+                                  <AlertTriangle size={14} />
+                                </button>
+                              </>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     )
@@ -331,6 +442,24 @@ export default function AdminLeads() {
                   <X size={20} />
                 </button>
               </div>
+
+              {selectedLead.trashed_at && (
+                <div style={{ background: '#EDE9FE', borderLeft: '4px solid #7C3AED', padding: '12px 24px' }}>
+                  <div style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, color: '#5B21B6', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>
+                    In Trash
+                  </div>
+                  <div style={{ fontFamily: 'Inter', fontSize: '13px', color: '#4C1D95' }}>
+                    Moved to trash on {new Date(selectedLead.trashed_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}
+                    {selectedLead.trash_reason && ` — ${selectedLead.trash_reason}`}
+                    {selectedLead.trashed_by && ` by ${selectedLead.trashed_by}`}
+                  </div>
+                  {selectedLead.trash_notes && (
+                    <div style={{ fontFamily: 'Inter', fontSize: '13px', color: '#4C1D95', marginTop: '4px', fontStyle: 'italic' }}>
+                      "{selectedLead.trash_notes}"
+                    </div>
+                  )}
+                </div>
+              )}
 
               {selectedLead.deleted_at && (
                 <div style={{ background: '#FEE2E2', borderLeft: '4px solid #DC2626', padding: '12px 24px', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
@@ -388,6 +517,155 @@ export default function AdminLeads() {
                   {savingNotes ? 'Saving…' : 'Save Notes'}
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Trash Action Modal */}
+        {trashModal && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
+            <div style={{ background: 'white', borderRadius: '12px', width: '100%', maxWidth: '500px', overflow: 'hidden' }}>
+
+              {/* TRASH MODAL */}
+              {trashModal.action === 'trash' && (
+                <>
+                  <div style={{ background: '#EDE9FE', padding: '20px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Trash2 size={22} color="#5B21B6" />
+                    </div>
+                    <div>
+                      <h2 style={{ fontFamily: 'Manrope', fontSize: '18px', fontWeight: 700, color: '#5B21B6', margin: 0 }}>
+                        Move lead to trash
+                      </h2>
+                      <p style={{ fontFamily: 'Inter', fontSize: '13px', color: '#5B21B6', margin: '2px 0 0', opacity: 0.85 }}>
+                        {trashModal.lead.full_name || trashModal.lead.email}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '24px' }}>
+                    <div style={{ marginBottom: '16px' }}>
+                      <label style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#0D1B2A', display: 'block', marginBottom: '6px' }}>
+                        Reason *
+                      </label>
+                      <select
+                        value={trashReason}
+                        onChange={(e) => setTrashReason(e.target.value)}
+                        style={{ width: '100%', padding: '10px 12px', border: '1px solid #E5E7EB', borderRadius: '8px', background: 'white', color: '#0D1B2A', colorScheme: 'light', fontFamily: 'Inter', fontSize: '14px' }}
+                      >
+                        <option value="">Select reason...</option>
+                        <option value="Junk">Junk</option>
+                        <option value="Spam">Spam</option>
+                        <option value="Test Account">Test Account</option>
+                        <option value="Bounced Email">Bounced Email</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#0D1B2A', display: 'block', marginBottom: '6px' }}>
+                        Notes (optional)
+                      </label>
+                      <textarea
+                        value={trashNotes}
+                        onChange={(e) => setTrashNotes(e.target.value)}
+                        placeholder="Additional context..."
+                        rows={3}
+                        style={{ width: '100%', padding: '10px 12px', border: '1px solid #E5E7EB', borderRadius: '8px', background: 'white', color: '#0D1B2A', colorScheme: 'light', fontFamily: 'Inter', fontSize: '14px', resize: 'vertical', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '16px 24px 24px', display: 'flex', justifyContent: 'flex-end', gap: '8px', borderTop: '1px solid #F3F4F5' }}>
+                    <button onClick={() => setTrashModal(null)} disabled={actioning} style={{ background: '#E5E7EB', border: 'none', borderRadius: '8px', padding: '10px 20px', fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleTrashLead}
+                      disabled={actioning || !trashReason}
+                      style={{ background: '#5B21B6', border: 'none', borderRadius: '8px', padding: '10px 20px', fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: 'white', cursor: !trashReason ? 'not-allowed' : 'pointer', opacity: !trashReason || actioning ? 0.6 : 1, display: 'flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      <Trash2 size={16} />
+                      {actioning ? 'Moving...' : 'Move to Trash'}
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* RESTORE MODAL */}
+              {trashModal.action === 'restore' && (
+                <>
+                  <div style={{ background: '#D1FAE5', padding: '20px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <RotateCcw size={22} color="#065F46" />
+                    </div>
+                    <div>
+                      <h2 style={{ fontFamily: 'Manrope', fontSize: '18px', fontWeight: 700, color: '#065F46', margin: 0 }}>
+                        Restore lead?
+                      </h2>
+                      <p style={{ fontFamily: 'Inter', fontSize: '13px', color: '#065F46', margin: '2px 0 0', opacity: 0.85 }}>
+                        {trashModal.lead.full_name || trashModal.lead.email}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '24px' }}>
+                    <p style={{ fontFamily: 'Inter', fontSize: '14px', color: '#374151', margin: 0, lineHeight: 1.5 }}>
+                      This lead will be restored to the active leads list. All previous data and notes will be preserved.
+                    </p>
+                  </div>
+
+                  <div style={{ padding: '16px 24px 24px', display: 'flex', justifyContent: 'flex-end', gap: '8px', borderTop: '1px solid #F3F4F5' }}>
+                    <button onClick={() => setTrashModal(null)} disabled={actioning} style={{ background: '#E5E7EB', border: 'none', borderRadius: '8px', padding: '10px 20px', fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
+                      Cancel
+                    </button>
+                    <button onClick={handleRestoreLead} disabled={actioning} style={{ background: '#10B981', border: 'none', borderRadius: '8px', padding: '10px 20px', fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <RotateCcw size={16} />
+                      {actioning ? 'Restoring...' : 'Restore'}
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* PERMANENT DELETE MODAL */}
+              {trashModal.action === 'permanent' && (
+                <>
+                  <div style={{ background: '#FEE2E2', padding: '20px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <AlertTriangle size={22} color="#991B1B" />
+                    </div>
+                    <div>
+                      <h2 style={{ fontFamily: 'Manrope', fontSize: '18px', fontWeight: 700, color: '#991B1B', margin: 0 }}>
+                        Permanently delete lead?
+                      </h2>
+                      <p style={{ fontFamily: 'Inter', fontSize: '13px', color: '#991B1B', margin: '2px 0 0', opacity: 0.85 }}>
+                        {trashModal.lead.full_name || trashModal.lead.email}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '24px' }}>
+                    <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '8px', padding: '16px' }}>
+                      <p style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, color: '#991B1B', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>
+                        Warning — This cannot be undone
+                      </p>
+                      <p style={{ fontFamily: 'Inter', fontSize: '13px', color: '#7F1D1D', margin: 0, lineHeight: 1.5 }}>
+                        The lead and all associated data (calculations, notes, UTMs) will be permanently removed from the database. This action is logged in the audit trail but the data itself cannot be recovered.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '16px 24px 24px', display: 'flex', justifyContent: 'flex-end', gap: '8px', borderTop: '1px solid #F3F4F5' }}>
+                    <button onClick={() => setTrashModal(null)} disabled={actioning} style={{ background: '#E5E7EB', border: 'none', borderRadius: '8px', padding: '10px 20px', fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: '#374151', cursor: 'pointer' }}>
+                      Cancel
+                    </button>
+                    <button onClick={handlePermanentDelete} disabled={actioning} style={{ background: '#DC2626', border: 'none', borderRadius: '8px', padding: '10px 20px', fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <AlertTriangle size={16} />
+                      {actioning ? 'Deleting...' : 'Permanently Delete'}
+                    </button>
+                  </div>
+                </>
+              )}
+
             </div>
           </div>
         )}

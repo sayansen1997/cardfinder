@@ -694,12 +694,18 @@ router.delete('/spending-categories/:id', auth, async (req, res) => {
 
 // GET /api/admin/leads — Paginated list
 router.get('/leads', auth, async (req, res) => {
-  const { page = 1, limit = 20, status, search, auth_provider, deleted } = req.query;
+  const { page = 1, limit = 20, status, search, auth_provider, deleted, view = 'normal' } = req.query;
   const offset = (parseInt(page) - 1) * parseInt(limit);
 
   let whereClauses = ['1=1'];
   let params = [];
   let paramIndex = 1;
+
+  if (view === 'trash') {
+    whereClauses.push('trashed_at IS NOT NULL');
+  } else {
+    whereClauses.push('trashed_at IS NULL');
+  }
 
   if (status) {
     whereClauses.push(`lead_status = $${paramIndex++}`);
@@ -731,6 +737,7 @@ router.get('/leads', auth, async (req, res) => {
           auth_provider, lead_status, admin_notes,
           utm_source, utm_medium, utm_campaign,
           created_at, deleted_at, deletion_reason,
+          trashed_at, trashed_by, trash_reason, trash_notes,
           (SELECT COUNT(*) FROM user_calculations WHERE user_id = users.id) AS calculations_count
         FROM users
         ${where}
@@ -754,11 +761,17 @@ router.get('/leads', auth, async (req, res) => {
 
 // GET /api/admin/leads/export/csv — CSV export (must be before /:id)
 router.get('/leads/export/csv', auth, async (req, res) => {
-  const { status, auth_provider, search, deleted } = req.query;
+  const { status, auth_provider, search, deleted, view = 'normal' } = req.query;
 
   let whereClauses = ['1=1'];
   let params = [];
   let paramIndex = 1;
+
+  if (view === 'trash') {
+    whereClauses.push('trashed_at IS NOT NULL');
+  } else {
+    whereClauses.push('trashed_at IS NULL');
+  }
 
   if (status) {
     whereClauses.push(`lead_status = $${paramIndex++}`);
@@ -787,7 +800,8 @@ router.get('/leads/export/csv', auth, async (req, res) => {
         id, email, full_name, income_range, nationality,
         auth_provider, lead_status, admin_notes,
         utm_source, utm_medium, utm_campaign,
-        created_at, deleted_at, deletion_reason
+        created_at, deleted_at, deletion_reason,
+        trashed_at, trash_reason, trashed_by
       FROM users
       ${where}
       ORDER BY created_at DESC`,
@@ -799,6 +813,7 @@ router.get('/leads/export/csv', auth, async (req, res) => {
       'Auth Provider', 'Status', 'Admin Notes',
       'UTM Source', 'UTM Medium', 'UTM Campaign', 'Signup Date',
       'Deleted At', 'Deletion Reason',
+      'Trashed At', 'Trash Reason', 'Trashed By',
     ];
 
     const escapeCSV = (val) => {
@@ -815,6 +830,9 @@ router.get('/leads/export/csv', auth, async (req, res) => {
       r.created_at ? new Date(r.created_at).toISOString().split('T')[0] : '',
       r.deleted_at ? new Date(r.deleted_at).toISOString().split('T')[0] : '',
       r.deletion_reason || '',
+      r.trashed_at ? new Date(r.trashed_at).toISOString().split('T')[0] : '',
+      r.trash_reason || '',
+      r.trashed_by || '',
     ].map(escapeCSV).join(','));
 
     const csv = [headers.join(','), ...rows].join('\n');
@@ -831,11 +849,17 @@ router.get('/leads/export/csv', auth, async (req, res) => {
 
 // GET /api/admin/leads/export/pdf — PDF export (must be before /:id)
 router.get('/leads/export/pdf', auth, async (req, res) => {
-  const { status, auth_provider, search, deleted } = req.query;
+  const { status, auth_provider, search, deleted, view = 'normal' } = req.query;
 
   let whereClauses = ['1=1'];
   let params = [];
   let paramIndex = 1;
+
+  if (view === 'trash') {
+    whereClauses.push('trashed_at IS NOT NULL');
+  } else {
+    whereClauses.push('trashed_at IS NULL');
+  }
 
   if (status) {
     whereClauses.push(`lead_status = $${paramIndex++}`);
@@ -864,7 +888,7 @@ router.get('/leads/export/pdf', auth, async (req, res) => {
         id, email, full_name, income_range, nationality,
         auth_provider, lead_status, admin_notes,
         utm_source, utm_medium, utm_campaign,
-        created_at, deleted_at
+        created_at, deleted_at, trashed_at, trash_reason
       FROM users
       ${where}
       ORDER BY created_at DESC`,
@@ -910,7 +934,7 @@ router.get('/leads/export/pdf', auth, async (req, res) => {
       x += colWidths[i];
     });
 
-    const statusColors = { 'New': '#3B82F6', 'Contacted': '#F59E0B', 'Qualified': '#10B981', 'Closed': '#6B7280', 'DELETED': '#DC2626' };
+    const statusColors = { 'New': '#3B82F6', 'Contacted': '#F59E0B', 'Qualified': '#10B981', 'Closed': '#6B7280', 'DELETED': '#DC2626', 'TRASHED': '#7C3AED' };
     let y = tableTop + 22;
     doc.font('Helvetica').fontSize(8);
 
@@ -931,9 +955,11 @@ router.get('/leads/export/pdf', auth, async (req, res) => {
 
       if (idx % 2 === 0) doc.fillColor('#F9FAFB').rect(40, y, 760, 20).fill();
 
-      const statusLabel = r.deleted_at
-        ? `DELETED (${new Date(r.deleted_at).toLocaleDateString()})`
-        : (r.lead_status || '-');
+      const statusLabel = r.trashed_at
+        ? `TRASHED (${r.trash_reason || 'No reason'})`
+        : r.deleted_at
+          ? `DELETED (${new Date(r.deleted_at).toLocaleDateString()})`
+          : (r.lead_status || '-');
       const cells = [
         String(r.id), r.full_name || '-', r.email,
         r.income_range || '-', r.nationality || '-', r.auth_provider || '-',
@@ -944,7 +970,7 @@ router.get('/leads/export/pdf', auth, async (req, res) => {
       x = 40;
       cells.forEach((val, i) => {
         if (i === 6) {
-          const colorKey = val.startsWith('DELETED') ? 'DELETED' : val;
+          const colorKey = val.startsWith('TRASHED') ? 'TRASHED' : val.startsWith('DELETED') ? 'DELETED' : val;
           doc.fillColor(statusColors[colorKey] || '#6B7280').font('Helvetica-Bold');
         } else {
           doc.fillColor('#1F2937').font('Helvetica');
@@ -962,6 +988,131 @@ router.get('/leads/export/pdf', auth, async (req, res) => {
   } catch (err) {
     console.error('PDF export error:', err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/leads/:id/trash — Move lead to trash
+router.post('/leads/:id/trash', auth, async (req, res) => {
+  const { id } = req.params;
+  const { reason, notes } = req.body;
+  const adminUser = req.admin.email;
+
+  const validReasons = ['Junk', 'Spam', 'Test Account', 'Bounced Email', 'Other'];
+  if (!reason || !validReasons.includes(reason)) {
+    return res.status(400).json({ error: 'Invalid reason. Must be one of: ' + validReasons.join(', ') });
+  }
+
+  try {
+    const userRes = await pool.query('SELECT email, full_name FROM users WHERE id = $1', [id]);
+    if (!userRes.rows.length) {
+      return res.status(404).json({ error: 'Lead not found' });
+    }
+
+    const trashNote = `\n[${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}] Moved to trash by ${adminUser} (Reason: ${reason})`;
+
+    await pool.query(
+      `UPDATE users SET
+        trashed_at = NOW(),
+        trashed_by = $1,
+        trash_reason = $2,
+        trash_notes = $3,
+        admin_notes = COALESCE(admin_notes, '') || $4
+      WHERE id = $5`,
+      [adminUser, reason, notes || null, trashNote, id]
+    );
+
+    res.json({ success: true, message: 'Lead moved to trash' });
+  } catch (err) {
+    console.error('Trash lead error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/leads/:id/restore — Restore lead from trash
+router.post('/leads/:id/restore', auth, async (req, res) => {
+  const { id } = req.params;
+  const adminUser = req.admin.email;
+
+  try {
+    const userRes = await pool.query(
+      'SELECT email, trashed_at FROM users WHERE id = $1',
+      [id]
+    );
+
+    if (!userRes.rows.length) {
+      return res.status(404).json({ error: 'Lead not found' });
+    }
+
+    if (!userRes.rows[0].trashed_at) {
+      return res.status(400).json({ error: 'Lead is not in trash' });
+    }
+
+    const restoreNote = `\n[${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}] Restored from trash by ${adminUser}`;
+
+    await pool.query(
+      `UPDATE users SET
+        trashed_at = NULL,
+        trashed_by = NULL,
+        trash_reason = NULL,
+        trash_notes = NULL,
+        admin_notes = COALESCE(admin_notes, '') || $1
+      WHERE id = $2`,
+      [restoreNote, id]
+    );
+
+    res.json({ success: true, message: 'Lead restored from trash' });
+  } catch (err) {
+    console.error('Restore lead error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/admin/leads/:id/permanent — Permanently delete (must be in trash first)
+router.delete('/leads/:id/permanent', auth, async (req, res) => {
+  const { id } = req.params;
+  const adminUser = req.admin.email;
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const userRes = await client.query(
+      'SELECT email, full_name, trashed_at FROM users WHERE id = $1',
+      [id]
+    );
+
+    if (!userRes.rows.length) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Lead not found' });
+    }
+
+    const user = userRes.rows[0];
+
+    if (!user.trashed_at) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({
+        error: 'Lead must be in trash before permanent deletion. Move to trash first.',
+      });
+    }
+
+    await client.query(
+      `INSERT INTO audit_log
+        (admin_user, table_name, field_name, old_value, new_value, action_type, changed_at)
+       VALUES ($1, 'users', 'permanent_delete', $2, '', 'LEAD PURGED', NOW())`,
+      [adminUser, `Permanently deleted lead: ${user.email} (${user.full_name || 'no name'})`]
+    );
+
+    await client.query('DELETE FROM user_calculations WHERE user_id = $1', [id]);
+    await client.query('DELETE FROM users WHERE id = $1', [id]);
+
+    await client.query('COMMIT');
+    res.json({ success: true, message: 'Lead permanently deleted' });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Permanent delete error:', err);
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
   }
 });
 
