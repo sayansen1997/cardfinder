@@ -160,22 +160,23 @@
 }
 
 .db-view-cards-link {
-  font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  color: #C9920A;
-  background: none;
+  background: transparent;
   border: none;
   cursor: pointer;
   padding: 0;
-  white-space: nowrap;
-  margin-top: 8px;
-  transition: opacity 0.15s;
+  color: #FFBD49;
+  text-align: right;
+  font-family: Manrope, sans-serif;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 24px;
   flex-shrink: 0;
 }
 
 .db-view-cards-link:hover {
-  opacity: 0.75;
+  color: #FFC868;
+  text-decoration: none;
 }
 
 /* ——— Page wrapper ——— */

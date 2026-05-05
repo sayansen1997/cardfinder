@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { ArrowRight } from 'lucide-react';
 import axios from 'axios';
 import API_BASE from '../utils/api';
 import DashboardNavbar from '../components/DashboardNavbar';
@@ -112,7 +113,7 @@ export default function Dashboard() {
               </p>
             </div>
             <button className="db-view-cards-link" onClick={scrollToResults}>
-              View Recommended Cards →
+              View Recommended Cards <ArrowRight size={16} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: '4px' }} />
             </button>
           </div>
         </div>

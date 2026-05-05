@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 
 const formatIncome = (val) =>
   `AED ${val >= 1000 ? Math.floor(val / 1000) + 'k' : val}`;
@@ -59,7 +60,7 @@ export default function CardRankingTable({ rankingData, loading }) {
             </p>
           </div>
           <a href="https://etihadbureau.ae/Individual/CreditScore" target="_blank" rel="noopener noreferrer" className="cf-aecb-link">
-            Check your AECB Credit Score →
+            Check your AECB Credit Score <ArrowRight size={16} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: '4px' }} />
           </a>
         </div>
 
@@ -154,7 +155,7 @@ export default function CardRankingTable({ rankingData, loading }) {
                             whiteSpace: 'nowrap',
                           }}
                         >
-                          Compare →
+                          Compare <ArrowRight size={16} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: '4px' }} />
                         </button>
                       </td>
                     </tr>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { RotateCw, Bookmark, GitCompareArrows } from 'lucide-react';
+import { RotateCw, Bookmark, GitCompareArrows, ArrowRight } from 'lucide-react';
 import CardImage from './CardImage';
 
 const RANK_LABELS = ['#1 Best Pick', '#2 Runner Up', '#3 Third Place'];
@@ -142,7 +142,7 @@ export default function TopResults({ results, spending, income, onRecalculate, o
                   style={{ background: 'none', border: 'none', color: '#C9920A', cursor: 'pointer', fontSize: '13px', fontWeight: 600, padding: 0 }}
                   onClick={() => navigate('/saved')}
                 >
-                  View in Saved Calculations →
+                  View in Saved Calculations <ArrowRight size={14} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: '4px' }} />
                 </button>
               </span>
             )}
@@ -448,7 +448,7 @@ export default function TopResults({ results, spending, income, onRecalculate, o
                           marginTop: '16px',
                         }}
                       >
-                        See full savings breakdown →
+                        See full savings breakdown <ArrowRight size={14} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: '4px' }} />
                       </button>
                     </div>
                   )}

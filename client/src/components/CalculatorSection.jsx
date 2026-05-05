@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { ArrowRight } from 'lucide-react';
 import API_BASE from '../utils/api';
 import CategoryIcon from './CategoryIcon';
 
@@ -170,7 +171,7 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
                   padding: '28px',
                   boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
                 }}>
-                  <h3 style={{ margin: '0 0 4px' }}>Monthly Income</h3>
+                  <h3 style={{ margin: '0 0 4px', color: '#191C1D' }}>Monthly Income</h3>
                   <p style={{
                     fontFamily: 'Inter, sans-serif',
                     fontSize: '14px',
@@ -475,7 +476,7 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
                   >
                     {loading
                       ? 'Calculating…'
-                      : <><span>Find My Best Cards</span><span style={{ color: '#C9920A', fontSize: '18px' }}>→</span></>
+                      : <><span>Find My Best Cards</span><ArrowRight size={18} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: '4px', color: '#C9920A' }} /></>
                     }
                   </button>
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import { ArrowRight } from 'lucide-react';
 import API_BASE from '../utils/api';
 import GoogleSignInButton from '../components/GoogleSignInButton';
 import './signup.css';
@@ -125,7 +126,7 @@ export default function LoginPage() {
                 cursor: loading ? 'not-allowed' : 'pointer', transition: 'background 0.2s',
               }}
             >
-              {loading ? 'Signing in…' : 'Sign In →'}
+              {loading ? 'Signing in…' : <><span>Sign In</span><ArrowRight size={16} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: '4px' }} /></>}
             </button>
           </form>
 

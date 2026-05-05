@@ -1,3 +1,5 @@
+import { ArrowRight } from 'lucide-react';
+
 export default function HeroSection({ onCalculateClick }) {
   return (
     <section className="cf-hero">
@@ -22,7 +24,7 @@ export default function HeroSection({ onCalculateClick }) {
             Browse Cards
           </button>
           <button className="cf-btn-gold" onClick={onCalculateClick}>
-            Start Calculating With My Income →
+            Start Calculating With My Income <ArrowRight size={16} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: '4px' }} />
           </button>
         </div>
       </div>

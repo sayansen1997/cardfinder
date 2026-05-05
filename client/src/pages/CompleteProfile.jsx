@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { ArrowRight } from 'lucide-react';
 import API_BASE from '../utils/api';
 
 const INPUT_STYLE = {
@@ -195,7 +196,7 @@ export default function CompleteProfile() {
               marginTop: '8px',
             }}
           >
-            {submitting ? 'Saving...' : 'Continue to Dashboard →'}
+            {submitting ? 'Saving...' : <><span>Continue to Dashboard</span><ArrowRight size={16} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: '4px' }} /></>}
           </button>
         </form>
 

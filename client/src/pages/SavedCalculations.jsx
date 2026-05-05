@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, RotateCw } from 'lucide-react';
+import { Trash2, RotateCw, ArrowRight } from 'lucide-react';
 import API_BASE from '../utils/api';
 import DashboardNavbar from '../components/DashboardNavbar';
 import Footer from '../components/Footer';
@@ -242,7 +242,7 @@ export default function SavedCalculations() {
               Run the calculator and save your results to see them here.
             </div>
             <button className="sc-empty-btn" onClick={handleStartNew}>
-              Start Calculating →
+              Start Calculating <ArrowRight size={16} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: '4px' }} />
             </button>
           </div>
         ) : (

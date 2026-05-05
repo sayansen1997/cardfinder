@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 import API_BASE from '../../utils/api';
 import './admin.css';
 
@@ -70,7 +71,7 @@ export default function AdminLogin() {
             />
             {error && <p className="adm-error">{error}</p>}
             <button type="submit" className="adm-btn-signin" disabled={loading}>
-              {loading ? 'Signing in…' : 'Sign In →'}
+              {loading ? 'Signing in…' : <><span>Sign In</span><ArrowRight size={16} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: '4px' }} /></>}
             </button>
           </form>
         </div>

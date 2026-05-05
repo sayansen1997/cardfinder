@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Trash2 } from 'lucide-react';
+import { Trash2, ArrowRight } from 'lucide-react';
 import AdminNavbar from '../../components/admin/AdminNavbar';
 import CardImage from '../../components/CardImage';
 import CategoryIcon from '../../components/CategoryIcon';
@@ -602,7 +602,7 @@ function AddCardModal({ categories, cardCategories, onClose, onSaved }) {
         <div className="adm-modal-footer">
           <button className="adm-btn-cancel" onClick={onClose}>Cancel</button>
           <button className="adm-btn-save" onClick={handleSubmit} disabled={saving}>
-            {saving ? 'Adding…' : 'Add Card →'}
+            {saving ? 'Adding…' : <><span>Add Card</span><ArrowRight size={16} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: '4px' }} /></>}
           </button>
         </div>
       </div>

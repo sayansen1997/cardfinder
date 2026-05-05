@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { ArrowRight } from 'lucide-react';
 import API_BASE from '../utils/api';
 import './signup.css';
 
@@ -174,7 +175,7 @@ export default function SignUpStep2() {
             disabled={!consent || !nationality || submitting}
             onClick={handleSubmit}
           >
-            {submitting ? 'Saving…' : 'Complete Registration →'}
+            {submitting ? 'Saving…' : <><span>Complete Registration</span><ArrowRight size={16} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: '4px' }} /></>}
           </button>
 
           <p className="su-secure-note">🔒 Your data is secured</p>
