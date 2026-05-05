@@ -110,11 +110,6 @@ export default function Dashboard() {
               <p className="db-welcome">
                 Welcome 👋{userName ? `, ${userName}.` : '.'}
               </p>
-              <h1 className="db-title">Best Credit Card Calculator</h1>
-              <p className="db-subtitle">
-                Don't let your rewards go to waste. Use our calculator to find credit cards
-                in the UAE that actually pay you back based on your lifestyle.
-              </p>
             </div>
             <button className="db-view-cards-link" onClick={scrollToResults}>
               View Recommended Cards →

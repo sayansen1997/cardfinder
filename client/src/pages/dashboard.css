@@ -118,7 +118,11 @@
 
 .db-banner {
   background: #01142E;
-  padding: 40px 0 0;
+  padding: 50px 0 0;
+}
+
+.db-page .cf-calculator {
+  padding-top: 36px;
 }
 
 .db-banner-inner {
@@ -130,9 +134,11 @@
 .db-welcome {
   font-family: 'Manrope', sans-serif;
   font-size: 28px;
-  font-weight: 700;
-  color: white;
-  margin: 0 0 8px;
+  font-weight: 400;
+  color: #94A3B8;
+  line-height: 48px;
+  letter-spacing: -1.2px;
+  margin: 0;
 }
 
 .db-title {
