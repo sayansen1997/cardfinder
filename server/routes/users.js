@@ -327,18 +327,72 @@ router.post('/register', async (req, res) => {
     const normalizedEmail = email.toLowerCase().trim();
 
     const existing = await pool.query(
-      'SELECT id, auth_provider FROM users WHERE email = $1',
+      'SELECT id, auth_provider, deleted_at FROM users WHERE email = $1',
       [normalizedEmail]
     );
 
     if (existing.rows.length) {
       const existingUser = existing.rows[0];
-      if (existingUser.auth_provider === 'google') {
-        return res.status(400).json({
-          error: 'This email is registered with Google. Please use Google Sign In.',
+
+      if (!existingUser.deleted_at) {
+        if (existingUser.auth_provider === 'google') {
+          return res.status(400).json({
+            error: 'This email is registered with Google. Please use Google Sign In.',
+          });
+        }
+        return res.status(400).json({ error: 'Email already registered. Please log in.' });
+      }
+
+      if (!req.body.reactivate) {
+        return res.status(409).json({
+          requires_reactivation: true,
+          message: 'An account with this email was previously deleted. Would you like to reactivate it?',
+          deleted_at: existingUser.deleted_at,
         });
       }
-      return res.status(400).json({ error: 'Email already registered. Please log in.' });
+
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      await pool.query(
+        `UPDATE users SET
+          password = $1,
+          full_name = COALESCE($2, full_name),
+          income_range = COALESCE($3, income_range),
+          nationality = COALESCE($4, nationality),
+          auth_provider = 'email',
+          deleted_at = NULL,
+          deletion_reason = NULL,
+          lead_status = 'New',
+          admin_notes = COALESCE(admin_notes, '') || E'\\n[' || TO_CHAR(NOW(), 'DD Mon YYYY') || '] Account reactivated by user.'
+        WHERE id = $5`,
+        [passwordHash, full_name, income_range || null, nationality || null, existingUser.id]
+      );
+
+      const updatedUser = await pool.query(
+        'SELECT id, email, full_name, income_range, nationality, profile_picture FROM users WHERE id = $1',
+        [existingUser.id]
+      );
+      const user = updatedUser.rows[0];
+
+      const token = jwt.sign(
+        { id: user.id, email: user.email },
+        process.env.JWT_SECRET || 'cardfinder_secret_2024',
+        { expiresIn: '7d' }
+      );
+
+      return res.json({
+        success: true,
+        reactivated: true,
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          full_name: user.full_name,
+          profile_picture: user.profile_picture,
+          income_range: user.income_range,
+          nationality: user.nationality,
+        },
+      });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -401,7 +455,7 @@ router.post('/google-auth', async (req, res) => {
     }
 
     let userResult = await pool.query(
-      'SELECT * FROM users WHERE google_id = $1 AND deleted_at IS NULL',
+      'SELECT * FROM users WHERE google_id = $1',
       [google_id]
     );
 
@@ -409,26 +463,62 @@ router.post('/google-auth', async (req, res) => {
 
     if (userResult.rows.length) {
       user = userResult.rows[0];
+
+      if (user.deleted_at) {
+        await pool.query(
+          `UPDATE users SET
+            deleted_at = NULL,
+            deletion_reason = NULL,
+            profile_picture = $1,
+            full_name = COALESCE(full_name, $2),
+            lead_status = 'New',
+            admin_notes = COALESCE(admin_notes, '') || E'\\n[' || TO_CHAR(NOW(), 'DD Mon YYYY') || '] Account reactivated via Google sign-in.'
+          WHERE id = $3`,
+          [picture, name, user.id]
+        );
+        const refetch = await pool.query('SELECT * FROM users WHERE id = $1', [user.id]);
+        user = refetch.rows[0];
+      }
     } else {
       const emailCheck = await pool.query(
-        'SELECT * FROM users WHERE email = $1 AND deleted_at IS NULL',
+        'SELECT * FROM users WHERE email = $1',
         [email]
       );
 
       if (emailCheck.rows.length) {
-        await pool.query(
-          `UPDATE users SET
-            google_id = $1,
-            full_name = COALESCE(full_name, $2),
-            profile_picture = COALESCE(profile_picture, $3),
-            auth_provider = 'google'
-          WHERE email = $4`,
-          [google_id, name, picture, email]
-        );
-        user = emailCheck.rows[0];
-        user.google_id = google_id;
-        user.full_name = user.full_name || name;
-        user.profile_picture = user.profile_picture || picture;
+        const existingUser = emailCheck.rows[0];
+
+        if (existingUser.deleted_at) {
+          await pool.query(
+            `UPDATE users SET
+              google_id = $1,
+              full_name = COALESCE(full_name, $2),
+              profile_picture = $3,
+              auth_provider = 'google',
+              deleted_at = NULL,
+              deletion_reason = NULL,
+              lead_status = 'New',
+              admin_notes = COALESCE(admin_notes, '') || E'\\n[' || TO_CHAR(NOW(), 'DD Mon YYYY') || '] Account reactivated via Google sign-in.'
+            WHERE email = $4`,
+            [google_id, name, picture, email]
+          );
+          const refetch = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+          user = refetch.rows[0];
+        } else {
+          await pool.query(
+            `UPDATE users SET
+              google_id = $1,
+              full_name = COALESCE(full_name, $2),
+              profile_picture = COALESCE(profile_picture, $3),
+              auth_provider = 'google'
+            WHERE email = $4`,
+            [google_id, name, picture, email]
+          );
+          user = existingUser;
+          user.google_id = google_id;
+          user.full_name = user.full_name || name;
+          user.profile_picture = user.profile_picture || picture;
+        }
       } else {
         const insertResult = await pool.query(
           `INSERT INTO users (email, google_id, full_name, profile_picture, auth_provider,

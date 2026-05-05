@@ -57,7 +57,10 @@
       "Bash(taskkill /PID 20048 /F)",
       "PowerShell(Stop-Process *)",
       "Read(//tmp/**)",
-      "PowerShell(psql *)"
+      "PowerShell(psql *)",
+      "Bash(pkill -f \"node server.js\")",
+      "Bash(nohup node server.js)",
+      "PowerShell(netstat *)"
     ]
   }
 }

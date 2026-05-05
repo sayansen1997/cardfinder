@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import { RotateCw } from 'lucide-react';
 import API_BASE from '../utils/api';
 import GoogleSignInButton from '../components/GoogleSignInButton';
 import { getUTMs, clearUTMs } from '../utils/utm';
@@ -59,6 +60,9 @@ export default function SignUpStep1() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [incomeBrackets, setIncomeBrackets] = useState([]);
+  const [showReactivateModal, setShowReactivateModal] = useState(false);
+  const [reactivateData, setReactivateData] = useState(null);
+  const [reactivating, setReactivating] = useState(false);
 
   useEffect(() => {
     axios.get(`${API_BASE}/income-brackets`)
@@ -101,10 +105,46 @@ export default function SignUpStep1() {
       clearUTMs();
       localStorage.setItem('userToken', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
-      navigate('/dashboard');
+      navigate(res.data.reactivated ? '/dashboard?reactivated=true' : '/dashboard');
     } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed');
-      setSubmitting(false);
+      if (err.response?.status === 409 && err.response?.data?.requires_reactivation) {
+        setReactivateData({
+          deleted_at: err.response.data.deleted_at,
+          message: err.response.data.message,
+        });
+        setShowReactivateModal(true);
+        setSubmitting(false);
+      } else {
+        setError(err.response?.data?.error || 'Registration failed');
+        setSubmitting(false);
+      }
+    }
+  };
+
+  const handleConfirmReactivate = async () => {
+    setReactivating(true);
+    setError('');
+    try {
+      const utms = getUTMs();
+      const res = await axios.post(`${API_BASE}/users/register`, {
+        email: form.email,
+        password: form.password,
+        full_name: form.full_name,
+        income_range: form.income_range,
+        nationality: form.nationality,
+        consent: form.consent,
+        ...utms,
+        reactivate: true,
+      });
+      clearUTMs();
+      localStorage.setItem('userToken', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+      setShowReactivateModal(false);
+      navigate('/dashboard?reactivated=true');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Reactivation failed');
+      setReactivating(false);
+      setShowReactivateModal(false);
     }
   };
 
@@ -278,6 +318,70 @@ export default function SignUpStep1() {
           </p>
         </div>
       </div>
+
+      {showReactivateModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '20px' }}>
+          <div style={{ background: 'white', borderRadius: '12px', width: '100%', maxWidth: '480px', overflow: 'hidden' }}>
+
+            <div style={{ background: '#FEF3C7', padding: '20px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <RotateCw size={22} color="#92400E" />
+              </div>
+              <div>
+                <h2 style={{ fontFamily: 'Manrope', fontSize: '18px', fontWeight: 700, color: '#92400E', margin: 0 }}>
+                  Welcome back!
+                </h2>
+                <p style={{ fontFamily: 'Inter', fontSize: '13px', color: '#92400E', margin: '2px 0 0', opacity: 0.85 }}>
+                  We found a previous account
+                </p>
+              </div>
+            </div>
+
+            <div style={{ padding: '24px' }}>
+              <p style={{ fontFamily: 'Inter', fontSize: '14px', color: '#374151', margin: '0 0 16px', lineHeight: 1.5 }}>
+                An account with <strong>{form.email}</strong> was previously deleted.
+              </p>
+
+              <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '8px', padding: '16px', marginBottom: '12px' }}>
+                <p style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>
+                  Reactivate to restore:
+                </p>
+                <ul style={{ fontFamily: 'Inter', fontSize: '13px', color: '#14532D', margin: 0, paddingLeft: '18px', lineHeight: 1.7 }}>
+                  <li>Your account access</li>
+                  <li>Your profile information</li>
+                </ul>
+              </div>
+
+              <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '8px', padding: '16px' }}>
+                <p style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 700, color: '#991B1B', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px' }}>
+                  Note:
+                </p>
+                <p style={{ fontFamily: 'Inter', fontSize: '13px', color: '#7F1D1D', margin: 0, lineHeight: 1.5 }}>
+                  Saved calculations and old profile picture will not be restored. Your new password will be set.
+                </p>
+              </div>
+            </div>
+
+            <div style={{ padding: '16px 24px 24px', display: 'flex', justifyContent: 'flex-end', gap: '8px', borderTop: '1px solid #F3F4F5' }}>
+              <button
+                onClick={() => setShowReactivateModal(false)}
+                disabled={reactivating}
+                style={{ background: '#E5E7EB', border: 'none', borderRadius: '8px', padding: '10px 20px', fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: '#374151', cursor: reactivating ? 'not-allowed' : 'pointer' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmReactivate}
+                disabled={reactivating}
+                style={{ background: '#C9920A', border: 'none', borderRadius: '8px', padding: '10px 20px', fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: 'white', cursor: reactivating ? 'not-allowed' : 'pointer', opacity: reactivating ? 0.6 : 1, display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <RotateCw size={16} color="white" />
+                {reactivating ? 'Reactivating...' : 'Yes, Reactivate'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

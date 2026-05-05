@@ -189,22 +189,31 @@ export default function AdminLeads() {
             <option value="deleted">Deleted Only</option>
           </select>
 
-          {(statusFilter || providerFilter || searchTerm || deletedFilter !== 'active') && (
-            <button
-              onClick={() => { setStatusFilter(''); setProviderFilter(''); setSearchTerm(''); setDeletedFilter('all'); setPage(1) }}
-              style={{ background: 'none', border: 'none', color: '#C9920A', fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
-            >
-              Clear Filters
-            </button>
-          )}
+          {(() => {
+            const filtersActive = !!(statusFilter || providerFilter || searchTerm || deletedFilter !== 'all')
+            return (
+              <button
+                onClick={() => { setStatusFilter(''); setProviderFilter(''); setSearchTerm(''); setDeletedFilter('all'); setPage(1) }}
+                style={{ background: 'none', border: 'none', color: '#C9920A', fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, cursor: filtersActive ? 'pointer' : 'default', opacity: filtersActive ? 1 : 0, visibility: filtersActive ? 'visible' : 'hidden', pointerEvents: filtersActive ? 'auto' : 'none', transition: 'opacity 0.25s ease, visibility 0.25s ease', padding: '8px 12px' }}
+              >
+                Clear Filters
+              </button>
+            )
+          })()}
         </div>
 
+        <style>{`
+          @keyframes rowFadeIn {
+            from { opacity: 0.5; }
+            to   { opacity: 1; }
+          }
+          .leads-row-fade { animation: rowFadeIn 0.3s ease; }
+        `}</style>
+
         {/* Table */}
-        <div style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-          {loading ? (
-            <div style={{ padding: '60px', textAlign: 'center', color: '#9CA3AF', fontFamily: 'Inter' }}>Loading leads…</div>
-          ) : !leads || leads.length === 0 ? (
-            <div style={{ padding: '60px', textAlign: 'center', color: '#9CA3AF', fontFamily: 'Inter' }}>No leads found</div>
+        <div style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', opacity: loading ? 0.4 : 1, transition: 'opacity 0.2s ease', pointerEvents: loading ? 'none' : 'auto' }}>
+          {!leads || leads.length === 0 ? (
+            <div style={{ padding: '60px', textAlign: 'center', color: '#9CA3AF', fontFamily: 'Inter' }}>{loading ? 'Loading leads…' : 'No leads found'}</div>
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '900px' }}>
@@ -223,7 +232,7 @@ export default function AdminLeads() {
                     const colors = STATUS_COLORS[status] || STATUS_COLORS.New
                     const isDeleted = !!lead.deleted_at
                     return (
-                      <tr key={lead.id} style={{ borderBottom: '1px solid #F3F4F5', background: isDeleted ? '#FFF5F5' : undefined }}>
+                      <tr key={lead.id} className="leads-row-fade" style={{ borderBottom: '1px solid #F3F4F5', background: isDeleted ? '#FFF5F5' : undefined }}>
                         <td style={{ padding: '14px 16px', fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: isDeleted ? '#9CA3AF' : '#0D1B2A' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                             <span style={{ textDecoration: isDeleted ? 'line-through' : 'none' }}>

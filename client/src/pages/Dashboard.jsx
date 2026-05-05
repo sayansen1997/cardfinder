@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { ArrowRight, CheckCircle } from 'lucide-react';
 import axios from 'axios';
 import API_BASE from '../utils/api';
 import DashboardNavbar from '../components/DashboardNavbar';
@@ -11,6 +12,10 @@ import './dashboard.css';
 import './home.css';
 
 export default function Dashboard() {
+  const [searchParams] = useSearchParams();
+  const [showReactivatedNotice, setShowReactivatedNotice] = useState(
+    searchParams.get('reactivated') === 'true'
+  );
   const [userName, setUserName] = useState('');
 
   const [rankingData, setRankingData] = useState([]);
@@ -21,6 +26,13 @@ export default function Dashboard() {
   const [showResults, setShowResults] = useState(false);
 
   const calculatorRef = useRef(null);
+
+  useEffect(() => {
+    if (showReactivatedNotice) {
+      const timer = setTimeout(() => setShowReactivatedNotice(false), 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [showReactivatedNotice]);
 
   useEffect(() => {
     // Quick first-paint from localStorage, then confirm with API
@@ -102,6 +114,13 @@ export default function Dashboard() {
   return (
     <div className="db-page">
       <DashboardNavbar firstName={userName} />
+
+      {showReactivatedNotice && (
+        <div style={{ background: '#D1FAE5', border: '1px solid #6EE7B7', borderRadius: '8px', padding: '12px 16px', margin: '16px 20px', display: 'flex', alignItems: 'center', gap: '10px', fontFamily: 'Inter', fontSize: '14px', color: '#065F46', fontWeight: 600 }}>
+          <CheckCircle size={20} color="#10B981" />
+          Welcome back! Your account has been reactivated successfully.
+        </div>
+      )}
 
       {/* Welcome banner */}
       <div className="db-banner">
