@@ -227,6 +227,23 @@
   margin-top: 20px;
 }
 
+.pr-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.06);
+  color: white;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+  margin-bottom: 4px;
+}
+.pr-input::placeholder { color: rgba(255,255,255,0.35); }
+.pr-input:focus { border-color: #C9920A; }
+
 .pr-select {
   width: 100%;
   padding: 12px 14px;

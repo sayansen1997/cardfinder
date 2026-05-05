@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import API_BASE from '../utils/api';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 import './signup.css';
 
 export default function LoginPage() {
@@ -13,12 +14,14 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    if (!form.email) { setError('Please enter your email.'); return; }
     setLoading(true);
     try {
-      const res = await axios.post(`${API_BASE}/users/login`, { email: form.email });
+      const res = await axios.post(`${API_BASE}/users/login`, {
+        email: form.email,
+        password: form.password,
+      });
       localStorage.setItem('userToken', res.data.token);
-      if (res.data.name) localStorage.setItem('userName', res.data.name);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.error || 'Sign in failed. Please try again.');
@@ -125,6 +128,28 @@ export default function LoginPage() {
               {loading ? 'Signing in…' : 'Sign In →'}
             </button>
           </form>
+
+          <div style={{ marginTop: '24px' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              margin: '20px 0',
+              color: '#9CA3AF',
+              fontFamily: 'Inter',
+              fontSize: '13px',
+            }}>
+              <div style={{ flex: 1, height: '1px', background: '#E5E7EB' }} />
+              <span>or continue with</span>
+              <div style={{ flex: 1, height: '1px', background: '#E5E7EB' }} />
+            </div>
+
+            <GoogleSignInButton
+              mode="login"
+              onSuccess={(user, profile_complete) => navigate(profile_complete ? '/dashboard' : '/complete-profile')}
+              onError={() => {}}
+            />
+          </div>
 
           <p className="su-login-line" style={{ marginTop: '20px' }}>
             Don&apos;t have an account?{' '}

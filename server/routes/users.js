@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const { OAuth2Client } = require('google-auth-library');
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const { upload } = require('../config/cloudinary');
 
 const USER_SECRET = process.env.JWT_SECRET || 'cardfiner_user_secret';
 
@@ -75,7 +79,8 @@ router.post('/complete-profile', async (req, res) => {
 router.get('/me', userAuth, async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT u.id, u.name, u.email, u.income_range, u.nationality, u.created_at,
+      `SELECT u.id, u.email, u.full_name, u.profile_picture,
+        u.income_range, u.nationality, u.auth_provider, u.created_at,
         COUNT(uc.id)::int AS calculations_count
        FROM users u
        LEFT JOIN user_calculations uc ON uc.user_id = u.id
@@ -84,7 +89,7 @@ router.get('/me', userAuth, async (req, res) => {
       [req.user.id]
     );
     if (!result.rows.length) {
-      return res.json({ name: req.user.name || 'there', email: req.user.email });
+      return res.json({ email: req.user.email });
     }
     res.json(result.rows[0]);
   } catch (err) {
@@ -92,16 +97,18 @@ router.get('/me', userAuth, async (req, res) => {
   }
 });
 
-// PUT /me — update income_range and nationality
+// PUT /me — update full_name, income_range, nationality
 router.put('/me', userAuth, async (req, res) => {
-  console.log('PUT /me - user:', req.user);
-  console.log('PUT /me - body:', req.body);
-  const { income_range, nationality } = req.body;
+  const { income_range, nationality, full_name } = req.body;
   try {
     const result = await pool.query(
-      `UPDATE users SET income_range = $1, nationality = $2 WHERE id = $3
-       RETURNING id, name, email, income_range, nationality`,
-      [income_range, nationality, req.user.id]
+      `UPDATE users SET
+        income_range = COALESCE($1, income_range),
+        nationality  = COALESCE($2, nationality),
+        full_name    = COALESCE($3, full_name)
+       WHERE id = $4
+       RETURNING id, email, full_name, profile_picture, income_range, nationality`,
+      [income_range || null, nationality || null, full_name || null, req.user.id]
     );
     if (!result.rows.length) return res.status(404).json({ error: 'User not found' });
     res.json(result.rows[0]);
@@ -120,24 +127,63 @@ router.delete('/me', userAuth, async (req, res) => {
   }
 });
 
-// POST /login — look up user by email and issue JWT (demo: no password check)
+// POST /login
 router.post('/login', async (req, res) => {
-  const { email } = req.body;
-  if (!email) return res.status(400).json({ error: 'Email is required' });
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password required' });
+  }
+
   try {
-    const result = await pool.query('SELECT id, name, email FROM users WHERE email = $1', [email]);
-    if (!result.rows.length) {
-      return res.status(401).json({ error: 'No account found with that email. Please sign up.' });
-    }
-    const user = result.rows[0];
-    const token = jwt.sign(
-      { id: user.id, email: user.email, name: user.name },
-      USER_SECRET,
-      { expiresIn: '30d' }
+    const result = await pool.query(
+      'SELECT * FROM users WHERE email = $1',
+      [email.toLowerCase().trim()]
     );
-    res.json({ token, name: user.name, id: user.id });
+
+    if (!result.rows.length) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const user = result.rows[0];
+
+    if (user.auth_provider === 'google' && !user.password) {
+      return res.status(401).json({
+        error: 'This account was created with Google. Please use Google Sign In.',
+      });
+    }
+
+    if (!user.password) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (!passwordMatch) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET || 'cardfinder_secret_2024',
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        full_name: user.full_name,
+        profile_picture: user.profile_picture,
+        income_range: user.income_range,
+        nationality: user.nationality,
+      },
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Login failed' });
   }
 });
 
@@ -197,6 +243,185 @@ router.get('/calculations', userAuth, async (req, res) => {
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /me/profile-picture — upload via Cloudinary
+router.post('/me/profile-picture', userAuth, upload.single('image'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No image uploaded' });
+  }
+  try {
+    const imageUrl = req.file.path;
+    await pool.query(
+      'UPDATE users SET profile_picture = $1 WHERE id = $2',
+      [imageUrl, req.user.id]
+    );
+    res.json({ success: true, profile_picture: imageUrl });
+  } catch (err) {
+    console.error('Profile picture upload error:', err);
+    res.status(500).json({ error: 'Failed to upload profile picture' });
+  }
+});
+
+// POST /register
+router.post('/register', async (req, res) => {
+  const { email, password, full_name, income_range, nationality, consent } = req.body;
+
+  if (!email || !password || !full_name) {
+    return res.status(400).json({ error: 'Email, password, and full name are required' });
+  }
+
+  if (!consent) {
+    return res.status(400).json({ error: 'You must accept the terms to continue' });
+  }
+
+  if (password.length < 8) {
+    return res.status(400).json({ error: 'Password must be at least 8 characters' });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: 'Invalid email format' });
+  }
+
+  try {
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const existing = await pool.query(
+      'SELECT id, auth_provider FROM users WHERE email = $1',
+      [normalizedEmail]
+    );
+
+    if (existing.rows.length) {
+      const existingUser = existing.rows[0];
+      if (existingUser.auth_provider === 'google') {
+        return res.status(400).json({
+          error: 'This email is registered with Google. Please use Google Sign In.',
+        });
+      }
+      return res.status(400).json({ error: 'Email already registered. Please log in.' });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const result = await pool.query(
+      `INSERT INTO users
+        (email, password, full_name, income_range, nationality, auth_provider, created_at)
+       VALUES ($1, $2, $3, $4, $5, 'email', NOW())
+       RETURNING id, email, full_name, income_range, nationality, profile_picture`,
+      [normalizedEmail, passwordHash, full_name, income_range || null, nationality || null]
+    );
+
+    const user = result.rows[0];
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET || 'cardfinder_secret_2024',
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        full_name: user.full_name,
+        profile_picture: user.profile_picture,
+        income_range: user.income_range,
+        nationality: user.nationality,
+      },
+    });
+  } catch (err) {
+    console.error('Registration error:', err);
+    res.status(500).json({ error: 'Registration failed. Please try again.' });
+  }
+});
+
+// POST /api/users/google-auth — Sign in or sign up via Google
+router.post('/google-auth', async (req, res) => {
+  const { credential } = req.body;
+
+  if (!credential) {
+    return res.status(400).json({ error: 'Google credential required' });
+  }
+
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { sub: google_id, email, name, picture } = payload;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Could not retrieve email from Google' });
+    }
+
+    let userResult = await pool.query(
+      'SELECT * FROM users WHERE google_id = $1',
+      [google_id]
+    );
+
+    let user;
+
+    if (userResult.rows.length) {
+      user = userResult.rows[0];
+    } else {
+      const emailCheck = await pool.query(
+        'SELECT * FROM users WHERE email = $1',
+        [email]
+      );
+
+      if (emailCheck.rows.length) {
+        await pool.query(
+          `UPDATE users SET
+            google_id = $1,
+            full_name = COALESCE(full_name, $2),
+            profile_picture = COALESCE(profile_picture, $3),
+            auth_provider = 'google'
+          WHERE email = $4`,
+          [google_id, name, picture, email]
+        );
+        user = emailCheck.rows[0];
+        user.google_id = google_id;
+        user.full_name = user.full_name || name;
+        user.profile_picture = user.profile_picture || picture;
+      } else {
+        const insertResult = await pool.query(
+          `INSERT INTO users (email, google_id, full_name, profile_picture, auth_provider, created_at)
+           VALUES ($1, $2, $3, $4, 'google', NOW())
+           RETURNING *`,
+          [email, google_id, name, picture]
+        );
+        user = insertResult.rows[0];
+      }
+    }
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET || 'cardfinder_secret_2024',
+      { expiresIn: '7d' }
+    );
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        full_name: user.full_name,
+        profile_picture: user.profile_picture,
+        income_range: user.income_range,
+        nationality: user.nationality,
+      },
+      profile_complete: !!(user.income_range && user.nationality),
+    });
+  } catch (err) {
+    console.error('Google auth error:', err);
+    res.status(401).json({ error: 'Invalid Google credential' });
   }
 });
 

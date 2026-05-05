@@ -22,12 +22,16 @@ export default function Dashboard() {
   const calculatorRef = useRef(null);
 
   useEffect(() => {
+    // Quick first-paint from localStorage, then confirm with API
+    const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+    setUserName((storedUser.full_name || '').split(' ')[0]);
+
     const token = localStorage.getItem('userToken');
     if (!token) return;
     axios
       .get(`${API_BASE}/users/me`, { headers: { Authorization: `Bearer ${token}` } })
-      .then((res) => setUserName(res.data.name || res.data.first_name || ''))
-      .catch(() => setUserName(''));
+      .then((res) => setUserName((res.data.full_name || '').split(' ')[0]))
+      .catch(() => {});
 
     // Save any pending calculation stored before login
     const pending = localStorage.getItem('pendingCalculation');
@@ -104,7 +108,7 @@ export default function Dashboard() {
           <div className="db-banner-inner">
             <div>
               <p className="db-welcome">
-                Welcome 👋{userName ? ` ${userName}.` : '.'}
+                Welcome 👋{userName ? `, ${userName}.` : '.'}
               </p>
               <h1 className="db-title">Best Credit Card Calculator</h1>
               <p className="db-subtitle">

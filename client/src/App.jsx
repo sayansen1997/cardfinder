@@ -20,6 +20,7 @@ import Dashboard from './pages/Dashboard';
 import SavedCalculations from './pages/SavedCalculations';
 import Profile from './pages/Profile';
 import LoginPage from './pages/LoginPage';
+import CompleteProfile from './pages/CompleteProfile';
 import ProtectedUserRoute from './components/ProtectedUserRoute';
 
 function Layout() {
@@ -32,7 +33,8 @@ function Layout() {
     location.pathname !== '/login' &&
     location.pathname !== '/compare' &&
     location.pathname !== '/saved' &&
-    location.pathname !== '/profile';
+    location.pathname !== '/profile' &&
+    location.pathname !== '/complete-profile';
 
   return (
     <>
@@ -48,6 +50,7 @@ function Layout() {
 
         {/* Auth */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/complete-profile" element={<CompleteProfile />} />
 
         {/* Signup */}
         <Route path="/signup" element={<SignUpStep1 />} />

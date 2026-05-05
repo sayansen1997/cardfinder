@@ -7,21 +7,28 @@ export default function DashboardNavbar({ firstName }) {
   const location = useLocation();
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [displayName, setDisplayName] = useState('A');
+  const [displayName, setDisplayName] = useState('');
+  const [profilePicture, setProfilePicture] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
     const checkAuth = () => {
       const token = localStorage.getItem('userToken');
       setIsLoggedIn(!!token);
-      setDisplayName(firstName || localStorage.getItem('userName') || 'A');
+      const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+      setDisplayName(storedUser.full_name || firstName || localStorage.getItem('userName') || '');
+      setProfilePicture(storedUser.profile_picture || null);
     };
     checkAuth();
     window.addEventListener('storage', checkAuth);
-    return () => window.removeEventListener('storage', checkAuth);
+    window.addEventListener('user-updated', checkAuth);
+    return () => {
+      window.removeEventListener('storage', checkAuth);
+      window.removeEventListener('user-updated', checkAuth);
+    };
   }, [firstName]);
 
-  const initial = displayName.charAt(0).toUpperCase();
+  const initial = (displayName || 'U').charAt(0).toUpperCase();
 
   useEffect(() => {
     const close = (e) => {
@@ -34,6 +41,7 @@ export default function DashboardNavbar({ firstName }) {
   const handleLogout = () => {
     localStorage.removeItem('userToken');
     localStorage.removeItem('userName');
+    localStorage.removeItem('user');
     setIsLoggedIn(false);
     navigate('/');
     window.location.reload();
@@ -98,9 +106,22 @@ export default function DashboardNavbar({ firstName }) {
               <div
                 className="db-avatar"
                 onClick={() => setShowMenu((prev) => !prev)}
-                style={{ cursor: 'pointer' }}
+                style={{
+                  cursor: 'pointer',
+                  background: profilePicture ? 'transparent' : undefined,
+                  overflow: 'hidden',
+                  padding: 0,
+                }}
               >
-                {initial}
+                {profilePicture ? (
+                  <img
+                    src={profilePicture}
+                    alt={displayName}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                ) : (
+                  initial
+                )}
               </div>
 
               {showMenu && (

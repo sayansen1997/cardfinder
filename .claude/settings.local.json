@@ -56,7 +56,8 @@
       "Bash(curl *)",
       "Bash(taskkill /PID 20048 /F)",
       "PowerShell(Stop-Process *)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "PowerShell(psql *)"
     ]
   }
 }
