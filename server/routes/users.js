@@ -435,7 +435,7 @@ router.post('/register', async (req, res) => {
 
 // POST /api/users/google-auth — Sign in or sign up via Google
 router.post('/google-auth', async (req, res) => {
-  const { credential, utm_source, utm_medium, utm_campaign } = req.body;
+  const { credential, utm_source, utm_medium, utm_campaign, reactivate } = req.body;
 
   if (!credential) {
     return res.status(400).json({ error: 'Google credential required' });
@@ -454,32 +454,24 @@ router.post('/google-auth', async (req, res) => {
       return res.status(400).json({ error: 'Could not retrieve email from Google' });
     }
 
-    let userResult = await pool.query(
+    let user;
+    let foundDeletedUser = null;
+
+    // Check by google_id (active OR deleted)
+    const userResult = await pool.query(
       'SELECT * FROM users WHERE google_id = $1',
       [google_id]
     );
 
-    let user;
-
     if (userResult.rows.length) {
-      user = userResult.rows[0];
-
-      if (user.deleted_at) {
-        await pool.query(
-          `UPDATE users SET
-            deleted_at = NULL,
-            deletion_reason = NULL,
-            profile_picture = $1,
-            full_name = COALESCE(full_name, $2),
-            lead_status = 'New',
-            admin_notes = COALESCE(admin_notes, '') || E'\\n[' || TO_CHAR(NOW(), 'DD Mon YYYY') || '] Account reactivated via Google sign-in.'
-          WHERE id = $3`,
-          [picture, name, user.id]
-        );
-        const refetch = await pool.query('SELECT * FROM users WHERE id = $1', [user.id]);
-        user = refetch.rows[0];
+      const found = userResult.rows[0];
+      if (found.deleted_at) {
+        foundDeletedUser = found;
+      } else {
+        user = found;
       }
     } else {
+      // No user with this google_id — check by email
       const emailCheck = await pool.query(
         'SELECT * FROM users WHERE email = $1',
         [email]
@@ -489,22 +481,9 @@ router.post('/google-auth', async (req, res) => {
         const existingUser = emailCheck.rows[0];
 
         if (existingUser.deleted_at) {
-          await pool.query(
-            `UPDATE users SET
-              google_id = $1,
-              full_name = COALESCE(full_name, $2),
-              profile_picture = $3,
-              auth_provider = 'google',
-              deleted_at = NULL,
-              deletion_reason = NULL,
-              lead_status = 'New',
-              admin_notes = COALESCE(admin_notes, '') || E'\\n[' || TO_CHAR(NOW(), 'DD Mon YYYY') || '] Account reactivated via Google sign-in.'
-            WHERE email = $4`,
-            [google_id, name, picture, email]
-          );
-          const refetch = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-          user = refetch.rows[0];
+          foundDeletedUser = existingUser;
         } else {
+          // Active email account — link Google
           await pool.query(
             `UPDATE users SET
               google_id = $1,
@@ -519,17 +498,51 @@ router.post('/google-auth', async (req, res) => {
           user.full_name = user.full_name || name;
           user.profile_picture = user.profile_picture || picture;
         }
-      } else {
-        const insertResult = await pool.query(
-          `INSERT INTO users (email, google_id, full_name, profile_picture, auth_provider,
-             utm_source, utm_medium, utm_campaign, created_at)
-           VALUES ($1, $2, $3, $4, 'google', $5, $6, $7, NOW())
-           RETURNING *`,
-          [email, google_id, name, picture,
-           utm_source || null, utm_medium || null, utm_campaign || null]
-        );
-        user = insertResult.rows[0];
       }
+    }
+
+    // Deleted account found — require explicit reactivation
+    if (foundDeletedUser) {
+      if (!reactivate) {
+        return res.status(409).json({
+          requires_reactivation: true,
+          auth_method: 'google',
+          message: 'An account with this email was previously deleted. Would you like to reactivate it?',
+          deleted_at: foundDeletedUser.deleted_at,
+          credential,
+        });
+      }
+
+      // Reactivation confirmed
+      await pool.query(
+        `UPDATE users SET
+          google_id = $1,
+          full_name = COALESCE(full_name, $2),
+          profile_picture = $3,
+          auth_provider = 'google',
+          deleted_at = NULL,
+          deletion_reason = NULL,
+          lead_status = 'New',
+          admin_notes = COALESCE(admin_notes, '') || E'\\n[' || TO_CHAR(NOW(), 'DD Mon YYYY') || '] Account reactivated via Google sign-in.'
+        WHERE id = $4`,
+        [google_id, name, picture, foundDeletedUser.id]
+      );
+
+      const refetch = await pool.query('SELECT * FROM users WHERE id = $1', [foundDeletedUser.id]);
+      user = refetch.rows[0];
+    }
+
+    // No user at all — create new
+    if (!user) {
+      const insertResult = await pool.query(
+        `INSERT INTO users (email, google_id, full_name, profile_picture, auth_provider,
+           utm_source, utm_medium, utm_campaign, created_at)
+         VALUES ($1, $2, $3, $4, 'google', $5, $6, $7, NOW())
+         RETURNING *`,
+        [email, google_id, name, picture,
+         utm_source || null, utm_medium || null, utm_campaign || null]
+      );
+      user = insertResult.rows[0];
     }
 
     const token = jwt.sign(
@@ -540,6 +553,7 @@ router.post('/google-auth', async (req, res) => {
 
     res.json({
       success: true,
+      reactivated: !!foundDeletedUser,
       token,
       user: {
         id: user.id,

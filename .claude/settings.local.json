@@ -61,7 +61,10 @@
       "Bash(pkill -f \"node server.js\")",
       "Bash(nohup node server.js)",
       "PowerShell(netstat *)",
-      "PowerShell(Get-Process *)"
+      "PowerShell(Get-Process *)",
+      "PowerShell(PGPASSWORD=hi2u_Postgres psql *)",
+      "PowerShell($env:PGPASSWORD=\"hi2u_Postgres\"; psql -U postgres -d cardfiner -c \"UPDATE admin_users SET password_hash='\\\\$2b\\\\$10\\\\$FYeldmq2RUkVmZlXBXie2e/mu5EVB5qPB.3ALS1VkY5f8vDxiz.ta' WHERE email='admin@cardfiner.ae' RETURNING id, email;\")",
+      "PowerShell($env:PGPASSWORD=\"nYLthDJRRkBcaTiIwsmCMsbkkJGMVlIy\"; psql -h switchback.proxy.rlwy.net -p 49397 -U postgres -d railway -c \"UPDATE admin_users SET password_hash='\\\\$2b\\\\$10\\\\$FYeldmq2RUkVmZlXBXie2e/mu5EVB5qPB.3ALS1VkY5f8vDxiz.ta' WHERE email='admin@cardfiner.ae' RETURNING id, email;\")"
     ]
   }
 }
