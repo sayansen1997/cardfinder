@@ -57,7 +57,10 @@ function EditCashbackModal({ card, categories, onClose, onSaved }) {
       .then((res) => {
         const map = {};
         res.data.forEach((r) => {
-          map[r.slug] = parseFloat((Number(r.cashback_rate) * 100).toFixed(4)).toString();
+          map[r.slug] = {
+            rate: parseFloat((Number(r.cashback_rate) * 100).toFixed(4)).toString(),
+            cap: r.monthly_cap != null ? String(r.monthly_cap) : '',
+          };
         });
         setRates(map);
         setLoading(false);
@@ -71,8 +74,12 @@ function EditCashbackModal({ card, categories, onClose, onSaved }) {
     try {
       const ratesPayload = {};
       Object.entries(rates).forEach(([slug, value]) => {
-        ratesPayload[slug] = (parseFloat(value) || 0) / 100;
+        ratesPayload[slug] = {
+          cashback_rate: (parseFloat(value.rate) || 0) / 100,
+          monthly_cap: value.cap !== '' && value.cap !== null ? Number(value.cap) : null,
+        };
       });
+
       await adminAxios().put(`/admin/cards/${card.id}/rates`, { rates: ratesPayload });
       onSaved();
     } catch {
@@ -81,9 +88,12 @@ function EditCashbackModal({ card, categories, onClose, onSaved }) {
     }
   };
 
+  const setField = (slug, field, value) =>
+    setRates((prev) => ({ ...prev, [slug]: { ...prev[slug], [field]: value } }));
+
   return (
     <div className="adm-modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="adm-modal">
+      <div className="adm-modal" style={{ width: '620px' }}>
         <div className="adm-modal-header">
           <div>
             <div className="adm-modal-title">{card.name}</div>
@@ -93,32 +103,45 @@ function EditCashbackModal({ card, categories, onClose, onSaved }) {
         </div>
 
         <div className="adm-modal-body">
-          <div className="adm-rate-table-head">
-            <span>SPENDING CATEGORY</span>
-            <span>CASHBACK RATE (%)</span>
+          {/* Header */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 140px', alignItems: 'center', gap: '16px', padding: '10px 0', borderBottom: '2px solid #E5E7EB', marginBottom: '4px' }}>
+            <div style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, color: '#44474E', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Spending Category</div>
+            <div style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, color: '#44474E', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>Cashback Rate</div>
+            <div style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, color: '#44474E', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>Monthly Cap</div>
           </div>
 
           {loading ? (
             <p className="adm-modal-loading">Loading rates…</p>
           ) : (
             categories.map((cat) => (
-              <div key={cat.slug} className="adm-rate-row">
-                <span className="adm-rate-cat">
-                  <span className="adm-rate-icon"><CategoryIcon name={cat.icon} size={16} color="#94A3B8" /></span>
-                  {cat.label}
-                </span>
-                <div className="adm-rate-input-wrap">
+              <div key={cat.slug} style={{ display: 'grid', gridTemplateColumns: '1fr 120px 140px', alignItems: 'center', gap: '16px', padding: '12px 0', borderBottom: '1px solid #F3F4F5' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <CategoryIcon name={cat.icon} size={16} color="#94A3B8" />
+                  <span style={{ fontFamily: 'Inter', fontSize: '14px', color: '#0D1B2A', fontWeight: 500 }}>{cat.label}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <input
                     type="number"
-                    className="adm-rate-input"
                     step="0.1"
                     min="0"
                     max="100"
-                    value={rates[cat.slug] ?? ''}
                     placeholder="0"
-                    onChange={(e) => setRates((prev) => ({ ...prev, [cat.slug]: e.target.value }))}
+                    value={rates[cat.slug]?.rate ?? ''}
+                    onChange={(e) => setField(cat.slug, 'rate', e.target.value)}
+                    style={{ width: '80px', padding: '8px 10px', border: '1px solid #E5E7EB', borderRadius: '6px', background: 'white', color: '#0D1B2A', colorScheme: 'light', fontSize: '14px', textAlign: 'center' }}
                   />
-                  <span className="adm-rate-pct">%</span>
+                  <span style={{ color: '#94A3B8', fontSize: '14px' }}>%</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Unlimited"
+                    value={rates[cat.slug]?.cap ?? ''}
+                    onChange={(e) => setField(cat.slug, 'cap', e.target.value)}
+                    style={{ width: '90px', padding: '8px 10px', border: '1px solid #E5E7EB', borderRadius: '6px', background: 'white', color: '#0D1B2A', colorScheme: 'light', fontSize: '14px', textAlign: 'center' }}
+                  />
+                  <span style={{ color: '#94A3B8', fontSize: '12px', whiteSpace: 'nowrap' }}>AED</span>
                 </div>
               </div>
             ))
@@ -427,8 +450,13 @@ function AddCardModal({ categories, cardCategories, onClose, onSaved }) {
       formData.append('min_salary', form.min_salary || '0');
       formData.append('key_benefits', form.key_benefits || '');
       const ratesPayload = {};
-      Object.entries(rates).forEach(([slug, value]) => {
-        ratesPayload[slug] = (parseFloat(value) || 0) / 100;
+      Object.entries(rates).forEach(([slug, val]) => {
+        const rate = typeof val === 'object' ? val.rate : val;
+        const cap = typeof val === 'object' ? val.cap : '';
+        ratesPayload[slug] = {
+          cashback_rate: (parseFloat(rate) || 0) / 100,
+          monthly_cap: cap !== '' && cap != null ? Number(cap) : null,
+        };
       });
       formData.append('rates', JSON.stringify(ratesPayload));
       if (imageFile) formData.append('image', imageFile);
@@ -575,51 +603,43 @@ function AddCardModal({ categories, cardCategories, onClose, onSaved }) {
             <div className="adm-cashback-section-title" style={{ marginBottom: '8px' }}>
               Initial Cashback Setup
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-              {categories.map((cat) => (
-                <div
-                  key={cat.id || cat.slug}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '12px',
-                    padding: '12px 0',
-                    borderBottom: '1px solid #F3F4F5',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
-                    <CategoryIcon name={cat.icon} size={16} color="#94A3B8" />
-                    <span style={{ fontFamily: 'Inter', fontSize: '14px', color: '#0D1B2A', fontWeight: 500 }}>
-                      {cat.name || cat.label}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      placeholder="0"
-                      value={rates[cat.slug] || ''}
-                      onChange={(e) => setRates((r) => ({ ...r, [cat.slug]: e.target.value }))}
-                      style={{
-                        width: '80px',
-                        padding: '8px 10px',
-                        border: '1px solid #E5E7EB',
-                        borderRadius: '6px',
-                        background: 'white',
-                        color: '#0D1B2A',
-                        colorScheme: 'light',
-                        fontSize: '14px',
-                        textAlign: 'center',
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                    <span style={{ color: '#94A3B8', fontSize: '14px' }}>%</span>
-                  </div>
-                </div>
-              ))}
+            {/* Header */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 140px', alignItems: 'center', gap: '16px', padding: '8px 0', borderBottom: '2px solid #E5E7EB', marginBottom: '4px' }}>
+              <div style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, color: '#44474E', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Category</div>
+              <div style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, color: '#44474E', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>Rate</div>
+              <div style={{ fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, color: '#44474E', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center' }}>Monthly Cap</div>
             </div>
+            {categories.map((cat) => (
+              <div key={cat.id || cat.slug} style={{ display: 'grid', gridTemplateColumns: '1fr 120px 140px', alignItems: 'center', gap: '16px', padding: '12px 0', borderBottom: '1px solid #F3F4F5' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <CategoryIcon name={cat.icon} size={16} color="#94A3B8" />
+                  <span style={{ fontFamily: 'Inter', fontSize: '14px', color: '#0D1B2A', fontWeight: 500 }}>{cat.name || cat.label}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    placeholder="0"
+                    value={rates[cat.slug]?.rate || ''}
+                    onChange={(e) => setRates((r) => ({ ...r, [cat.slug]: { ...r[cat.slug], rate: e.target.value } }))}
+                    style={{ width: '80px', padding: '8px 10px', border: '1px solid #E5E7EB', borderRadius: '6px', background: 'white', color: '#0D1B2A', colorScheme: 'light', fontSize: '14px', textAlign: 'center' }}
+                  />
+                  <span style={{ color: '#94A3B8', fontSize: '14px' }}>%</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Unlimited"
+                    value={rates[cat.slug]?.cap || ''}
+                    onChange={(e) => setRates((r) => ({ ...r, [cat.slug]: { ...r[cat.slug], cap: e.target.value } }))}
+                    style={{ width: '90px', padding: '8px 10px', border: '1px solid #E5E7EB', borderRadius: '6px', background: 'white', color: '#0D1B2A', colorScheme: 'light', fontSize: '14px', textAlign: 'center' }}
+                  />
+                  <span style={{ color: '#94A3B8', fontSize: '12px', whiteSpace: 'nowrap' }}>AED/mo</span>
+                </div>
+              </div>
+            ))}
           </div>
 
           {error && <p className="adm-modal-error">{error}</p>}

@@ -210,17 +210,19 @@ export default function TopResults({ results, spending, income, onRecalculate, o
 
                   {/* Card name + bank */}
                   <div>
-                    <div style={{
-                      fontFamily: 'Manrope, sans-serif',
-                      fontSize: '24px',
-                      fontStyle: 'normal',
-                      fontWeight: 700,
-                      lineHeight: '30px',
-                      color: '#011B3E',
-                      marginBottom: '4px',
-                    }}>
+                    <button
+                      onClick={() => {
+                        const params = new URLSearchParams()
+                        if (card.net_annual_savings !== undefined) params.append('net_savings', card.net_annual_savings)
+                        const qs = params.toString()
+                        navigate(`/cards/${card.id}${qs ? '?' + qs : ''}`)
+                      }}
+                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'Manrope, sans-serif', fontSize: '24px', fontWeight: 700, lineHeight: '30px', color: '#011B3E', marginBottom: '4px', textAlign: 'left', textDecoration: 'none', transition: 'color 0.2s ease' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = '#C9920A' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = '#011B3E' }}
+                    >
                       {card.name}
-                    </div>
+                    </button>
                     <div style={{
                       fontFamily: 'Inter, sans-serif',
                       fontSize: '13px',

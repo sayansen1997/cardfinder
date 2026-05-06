@@ -38,21 +38,25 @@ router.get('/:id', async (req, res) => {
         json_agg(
           json_build_object(
             'category_id', cr.category_id,
+            'category_slug', cat.slug,
             'category_name', cat.name,
+            'category_icon', cat.icon,
             'cashback_rate', cr.cashback_rate,
             'monthly_cap', cr.monthly_cap
-          )
-        ) AS rates
+          ) ORDER BY cr.cashback_rate DESC
+        ) FILTER (WHERE cr.id IS NOT NULL) AS rates
        FROM cards c
        LEFT JOIN card_categories cc ON cc.slug = c.card_category
        LEFT JOIN card_rates cr ON cr.card_id = c.id
        LEFT JOIN categories cat ON cat.id = cr.category_id
-       WHERE c.id = $1
+       WHERE c.id = $1 AND c.status = 'active'
        GROUP BY c.id, cc.name`,
       [id]
     );
     if (card.rows.length === 0) return res.status(404).json({ error: 'Card not found' });
-    res.json(card.rows[0]);
+    const row = card.rows[0];
+    row.rates = row.rates || [];
+    res.json(row);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

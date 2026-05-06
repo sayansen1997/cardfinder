@@ -174,6 +174,7 @@ router.put('/cards/:id/rates', auth, async (req, res) => {
   const { id } = req.params;
   const { rates } = req.body;
 
+
   if (!rates || typeof rates !== 'object') {
     return res.status(400).json({ error: 'rates object required' });
   }
@@ -192,12 +193,25 @@ router.put('/cards/:id/rates', auth, async (req, res) => {
       const cat = catsRes.rows.find((c) => c.slug === slug || c.name === slug);
       if (!cat) continue;
 
+      let newRate, newCap, isNewFormat;
+      if (typeof rateVal === 'object' && rateVal !== null) {
+        isNewFormat = true;
+        newRate = Number(rateVal.cashback_rate) || 0;
+        newCap = (rateVal.monthly_cap === null || rateVal.monthly_cap === undefined)
+          ? null
+          : Number(rateVal.monthly_cap);
+      } else {
+        isNewFormat = false;
+        newRate = Number(rateVal) || 0;
+        newCap = null;
+      }
+
       const oldRes = await client.query(
-        'SELECT cashback_rate FROM card_rates WHERE card_id = $1 AND category_id = $2',
+        'SELECT cashback_rate, monthly_cap FROM card_rates WHERE card_id = $1 AND category_id = $2',
         [id, cat.id]
       );
-      const oldVal = oldRes.rows[0]?.cashback_rate ?? null;
-      const newRate = parseFloat(rateVal) || 0;
+      const oldRate = oldRes.rows[0]?.cashback_rate ?? null;
+      const oldCap = oldRes.rows[0]?.monthly_cap ?? null;
 
       await client.query(
         'DELETE FROM card_rates WHERE card_id = $1 AND category_id = $2',
@@ -205,17 +219,29 @@ router.put('/cards/:id/rates', auth, async (req, res) => {
       );
       if (newRate > 0) {
         await client.query(
-          'INSERT INTO card_rates (card_id, category_id, cashback_rate) VALUES ($1, $2, $3)',
-          [id, cat.id, newRate]
+          'INSERT INTO card_rates (card_id, category_id, cashback_rate, monthly_cap) VALUES ($1, $2, $3, $4)',
+          [id, cat.id, newRate, newCap]
         );
       }
 
-      if (String(oldVal ?? '0') !== String(newRate)) {
+      if (String(oldRate ?? '0') !== String(newRate)) {
         await client.query(
           `INSERT INTO audit_log (admin_user, table_name, field_name, old_value, new_value, changed_at, action_type, card_id, card_name)
            VALUES ($1, 'card_rates', $2, $3, $4, NOW(), 'UPDATED CASHBACK', $5, $6)`,
-          [req.admin.email, cat.name, String(oldVal ?? '0'), String(newRate), id, cardName]
+          [req.admin.email, cat.name, String(oldRate ?? '0'), String(newRate), id, cardName]
         );
+      }
+
+      if (isNewFormat) {
+        const oldCapStr = oldCap != null ? String(oldCap) : 'Unlimited';
+        const newCapStr = newCap != null ? String(newCap) : 'Unlimited';
+        if (oldCapStr !== newCapStr) {
+          await client.query(
+            `INSERT INTO audit_log (admin_user, table_name, field_name, old_value, new_value, changed_at, action_type, card_id, card_name)
+             VALUES ($1, 'card_rates', $2, $3, $4, NOW(), 'UPDATED CAP', $5, $6)`,
+            [req.admin.email, `${cat.name} (cap)`, oldCapStr, newCapStr, id, cardName]
+          );
+        }
       }
     }
 
@@ -288,11 +314,20 @@ router.post('/cards', auth, upload.single('image'), async (req, res) => {
       for (const [slug, rateVal] of Object.entries(ratesObj)) {
         const cat = catsRes.rows.find((c) => c.slug === slug || c.name === slug);
         if (!cat) continue;
-        const newRate = parseFloat(rateVal) || 0;
+        let newRate, newCap;
+        if (typeof rateVal === 'object' && rateVal !== null) {
+          newRate = parseFloat(rateVal.cashback_rate) || 0;
+          newCap = (rateVal.monthly_cap !== null && rateVal.monthly_cap !== undefined && rateVal.monthly_cap !== '')
+            ? Number(rateVal.monthly_cap)
+            : null;
+        } else {
+          newRate = parseFloat(rateVal) || 0;
+          newCap = null;
+        }
         if (newRate > 0) {
           await client.query(
-            'INSERT INTO card_rates (card_id, category_id, cashback_rate) VALUES ($1,$2,$3)',
-            [card.id, cat.id, newRate]
+            'INSERT INTO card_rates (card_id, category_id, cashback_rate, monthly_cap) VALUES ($1,$2,$3,$4)',
+            [card.id, cat.id, newRate, newCap]
           );
         }
       }

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import CardImage from './CardImage';
 
 const LIFESTYLE_CATEGORIES = [
@@ -55,6 +56,7 @@ function parseBenefits(text) {
 }
 
 export default function CuratedSection({ cards, loading }) {
+  const navigate = useNavigate();
   const [activeCat, setActiveCat] = useState(LIFESTYLE_CATEGORIES[0]);
   const topCards = sortCards(cards, activeCat);
 
@@ -128,6 +130,7 @@ export default function CuratedSection({ cards, loading }) {
               topCards.map((card) => (
                 <div
                   key={card.id}
+                  onClick={() => navigate(`/cards/${card.id}`)}
                   style={{
                     background: 'white',
                     borderRadius: '12px',
@@ -175,15 +178,12 @@ export default function CuratedSection({ cards, loading }) {
                   </div>
 
                   {/* Card name */}
-                  <h4 style={{
-                    fontFamily: 'Manrope, sans-serif',
-                    fontSize: '18px',
-                    fontStyle: 'normal',
-                    fontWeight: 700,
-                    lineHeight: '28px',
-                    color: '#001A3D',
-                    margin: 0,
-                  }}>
+                  <h4
+                    onClick={() => navigate(`/cards/${card.id}`)}
+                    style={{ fontFamily: 'Manrope, sans-serif', fontSize: '18px', fontStyle: 'normal', fontWeight: 700, lineHeight: '28px', color: '#001A3D', margin: 0, cursor: 'pointer', transition: 'color 0.2s ease' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = '#C9920A' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = '#001A3D' }}
+                  >
                     {card.name}
                   </h4>
 
@@ -231,27 +231,10 @@ export default function CuratedSection({ cards, loading }) {
 
                   {/* Select Card button */}
                   <button
-                    style={{
-                      width: '100%',
-                      background: 'white',
-                      border: '1.5px solid #0D1B2A',
-                      borderRadius: '8px',
-                      padding: '12px',
-                      fontFamily: 'Inter, sans-serif',
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      color: '#0D1B2A',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#0D1B2A';
-                      e.currentTarget.style.color = 'white';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'white';
-                      e.currentTarget.style.color = '#0D1B2A';
-                    }}
+                    onClick={() => navigate(`/cards/${card.id}`)}
+                    style={{ width: '100%', background: 'white', border: '1.5px solid #0D1B2A', borderRadius: '8px', padding: '12px', fontFamily: 'Inter, sans-serif', fontSize: '14px', fontWeight: 600, color: '#0D1B2A', cursor: 'pointer', transition: 'all 0.15s ease' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = '#0D1B2A'; e.currentTarget.style.color = 'white'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'white'; e.currentTarget.style.color = '#0D1B2A'; }}
                   >
                     Select Card
                   </button>

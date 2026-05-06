@@ -106,7 +106,19 @@ export default function CardRankingTable({ rankingData, loading }) {
                           {isTop3 && (
                             <span style={{ color: '#C9920A', fontSize: '14px', lineHeight: 1 }}>★</span>
                           )}
-                          <span style={{ fontWeight: 600, color: 'white' }}>{card.name}</span>
+                          <button
+                            onClick={() => {
+                              const params = new URLSearchParams()
+                              if (card.net_annual_savings !== undefined) params.append('net_savings', card.net_annual_savings)
+                              const qs = params.toString()
+                              navigate(`/cards/${card.id}${qs ? '?' + qs : ''}`)
+                            }}
+                            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'white', fontFamily: 'Inter, sans-serif', fontSize: '14px', fontWeight: 600, textAlign: 'left', textDecoration: 'none', transition: 'color 0.2s ease' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.color = '#C9920A' }}
+                            onMouseLeave={(e) => { e.currentTarget.style.color = 'white' }}
+                          >
+                            {card.name}
+                          </button>
                         </div>
                       </td>
 
