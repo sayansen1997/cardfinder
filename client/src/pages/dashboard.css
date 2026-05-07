@@ -245,8 +245,22 @@
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .db-nav-links {
     display: none;
+  }
+  .db-mobile-toggle {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media (min-width: 769px) {
+  .db-mobile-toggle {
+    display: none !important;
+  }
+  .db-mobile-menu {
+    display: none !important;
   }
 }

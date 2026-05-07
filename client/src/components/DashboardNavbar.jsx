@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Menu, X } from 'lucide-react';
 import '../pages/dashboard.css';
 
 export default function DashboardNavbar({ firstName }) {
@@ -10,6 +11,7 @@ export default function DashboardNavbar({ firstName }) {
   const [displayName, setDisplayName] = useState('');
   const [profilePicture, setProfilePicture] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const checkAuth = () => {
@@ -30,6 +32,7 @@ export default function DashboardNavbar({ firstName }) {
 
   const initial = (displayName || 'U').charAt(0).toUpperCase();
 
+  // Close avatar dropdown on outside click
   useEffect(() => {
     const close = (e) => {
       if (!e.target.closest('[data-avatar-menu]')) setShowMenu(false);
@@ -37,6 +40,23 @@ export default function DashboardNavbar({ firstName }) {
     document.addEventListener('click', close);
     return () => document.removeEventListener('click', close);
   }, []);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  // Close mobile menu on outside click
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const handleClickOutside = (e) => {
+      if (!e.target.closest('.db-mobile-menu') && !e.target.closest('.db-mobile-toggle')) {
+        setMobileMenuOpen(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [mobileMenuOpen]);
 
   const handleLogout = () => {
     localStorage.removeItem('userToken');
@@ -67,7 +87,7 @@ export default function DashboardNavbar({ firstName }) {
           <img src="/card-finder_logo.svg" alt="Card Finder" style={{ height: '36px', width: 'auto' }} />
         </Link>
 
-        {/* Center links */}
+        {/* Center links — hidden on mobile via CSS */}
         <div className="db-nav-links">
           {isLoggedIn && (
             <Link
@@ -99,8 +119,9 @@ export default function DashboardNavbar({ firstName }) {
           )}
         </div>
 
-        {/* Right: avatar if logged in, Log In button if not */}
+        {/* Right side */}
         <div className="db-nav-right">
+          {/* Avatar or Log In — always visible */}
           {isLoggedIn ? (
             <div style={{ position: 'relative' }} data-avatar-menu>
               <div
@@ -138,13 +159,7 @@ export default function DashboardNavbar({ firstName }) {
                 }}>
                   <div
                     onClick={() => { navigate('/profile'); setShowMenu(false); }}
-                    style={{
-                      padding: '10px 16px',
-                      cursor: 'pointer',
-                      fontFamily: 'Inter, sans-serif',
-                      fontSize: '14px',
-                      color: '#374151',
-                    }}
+                    style={{ padding: '10px 16px', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#374151' }}
                     onMouseEnter={(e) => { e.currentTarget.style.background = '#F3F4F5'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = 'white'; }}
                   >
@@ -152,14 +167,7 @@ export default function DashboardNavbar({ firstName }) {
                   </div>
                   <div
                     onClick={handleLogout}
-                    style={{
-                      padding: '10px 16px',
-                      cursor: 'pointer',
-                      fontFamily: 'Inter, sans-serif',
-                      fontSize: '14px',
-                      color: '#DC2626',
-                      borderTop: '1px solid #F3F4F5',
-                    }}
+                    style={{ padding: '10px 16px', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#DC2626', borderTop: '1px solid #F3F4F5' }}
                     onMouseEnter={(e) => { e.currentTarget.style.background = '#F3F4F5'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = 'white'; }}
                   >
@@ -171,22 +179,96 @@ export default function DashboardNavbar({ firstName }) {
           ) : (
             <button
               onClick={() => navigate('/login')}
-              style={{
-                background: '#C9920A',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '8px 16px',
-                fontFamily: 'Inter, sans-serif',
-                fontSize: '14px',
-                fontWeight: 600,
-                color: 'white',
-                cursor: 'pointer',
-              }}
+              style={{ background: '#C9920A', border: 'none', borderRadius: '8px', padding: '8px 16px', fontFamily: 'Inter, sans-serif', fontSize: '14px', fontWeight: 600, color: 'white', cursor: 'pointer' }}
             >
               Log In
             </button>
           )}
+
+          {/* Mobile hamburger button — shown on mobile via CSS */}
+          <button
+            className="db-mobile-toggle"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px', display: 'none' }}
+          >
+            {mobileMenuOpen ? <X size={24} color="white" /> : <Menu size={24} color="white" />}
+          </button>
         </div>
+
+        {/* Mobile drawer menu */}
+        {mobileMenuOpen && (
+          <div className="db-mobile-menu" style={{
+            position: 'fixed',
+            top: '60px',
+            left: 0,
+            right: 0,
+            background: 'white',
+            borderTop: '1px solid #E5E7EB',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+            padding: '20px',
+            zIndex: 999,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '4px',
+          }}>
+            {isLoggedIn && (
+              <Link
+                to="/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 600, color: '#001A3D', textDecoration: 'none', padding: '12px 0', borderBottom: '1px solid #F3F4F5' }}
+              >
+                My Dashboard
+              </Link>
+            )}
+            <button
+              onClick={(e) => { setMobileMenuOpen(false); handleCalculatorClick(e); }}
+              style={{ background: 'none', border: 'none', fontFamily: 'Inter', fontSize: '15px', fontWeight: 600, color: '#001A3D', textAlign: 'left', padding: '12px 0', borderBottom: '1px solid #F3F4F5', cursor: 'pointer' }}
+            >
+              Calculator
+            </button>
+            <Link
+              to="/compare"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 600, color: '#001A3D', textDecoration: 'none', padding: '12px 0', borderBottom: '1px solid #F3F4F5' }}
+            >
+              Compare Cards
+            </Link>
+            {isLoggedIn && (
+              <Link
+                to="/saved"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 600, color: '#001A3D', textDecoration: 'none', padding: '12px 0', borderBottom: '1px solid #F3F4F5' }}
+              >
+                Saved Calculations
+              </Link>
+            )}
+            {isLoggedIn && (
+              <Link
+                to="/profile"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 600, color: '#001A3D', textDecoration: 'none', padding: '12px 0', borderBottom: '1px solid #F3F4F5' }}
+              >
+                Profile
+              </Link>
+            )}
+            {isLoggedIn ? (
+              <button
+                onClick={() => { setMobileMenuOpen(false); handleLogout(); }}
+                style={{ background: 'none', border: '1.5px solid #E5E7EB', borderRadius: '8px', padding: '12px 24px', fontFamily: 'Manrope', fontSize: '14px', fontWeight: 700, color: '#DC2626', cursor: 'pointer', marginTop: '8px' }}
+              >
+                Logout
+              </button>
+            ) : (
+              <button
+                onClick={() => { setMobileMenuOpen(false); navigate('/login'); }}
+                style={{ background: '#C9920A', color: 'white', border: 'none', borderRadius: '8px', padding: '12px 24px', fontFamily: 'Manrope', fontSize: '14px', fontWeight: 700, cursor: 'pointer', marginTop: '8px' }}
+              >
+                Log In
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </nav>
   );

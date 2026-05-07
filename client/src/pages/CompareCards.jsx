@@ -41,6 +41,8 @@ export default function CompareCards() {
   const [breakdownOpen, setBreakdownOpen] = useState(true);
   const [rankingData, setRankingData] = useState([]);
   const [rankingLoading, setRankingLoading] = useState(true);
+  const [activeMobileTab, setActiveMobileTab] = useState(0);
+  const [mobileSwapOpen, setMobileSwapOpen] = useState(false);
 
   const slotRowRef = useRef(null);
 
@@ -188,10 +190,140 @@ export default function CompareCards() {
           </div>
         </div>
 
-        {/* ——— Card slot row ——— */}
+        {/* ——— Mobile tab-based view ——— */}
+        <div className="cc-mobile-tabs-view">
+          {/* Tab pills */}
+          <div className="cc-mobile-tabs">
+            {[0, 1, 2].map((i) => {
+              const card = slots[i];
+              if (!card) return null;
+              return (
+                <button
+                  key={i}
+                  className={`cc-mobile-tab${activeMobileTab === i ? ' active' : ''}`}
+                  onClick={() => { setActiveMobileTab(i); setMobileSwapOpen(false); }}
+                >
+                  {card.name.split(' ').slice(0, 2).join(' ')}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Card detail panel */}
+          {(() => {
+            const card = slots[activeMobileTab];
+            const d = getD(activeMobileTab);
+            if (!card) return null;
+            return (
+              <div className="cc-mobile-card-detail">
+                {/* Card image */}
+                <div className="cc-mobile-card-image">
+                  {card.image_url ? (
+                    <img src={card.image_url} alt={card.name} style={{ width: '100%', borderRadius: '8px', display: 'block' }} />
+                  ) : (
+                    <CardImage card={card} height={120} />
+                  )}
+                </div>
+
+                {/* Bank label */}
+                <p className="cc-mobile-card-bank">{card.bank || card.category_name || ''}</p>
+
+                {/* Card name */}
+                <h3 className="cc-mobile-card-name">{card.name}</h3>
+
+                {/* Stats */}
+                <div className="cc-mobile-stats">
+                  <div className="cc-mobile-stat-row">
+                    <span>Annual Fee</span>
+                    <span>{Number(card.annual_fee) === 0 ? 'Free' : fmtAED(card.annual_fee)}</span>
+                  </div>
+                  <div className="cc-mobile-stat-row">
+                    <span>Min. Income</span>
+                    <span>{card.min_salary ? fmtAED(card.min_salary) + '/mo' : '—'}</span>
+                  </div>
+                  <div className="cc-mobile-stat-row">
+                    <span>Annual Cashback</span>
+                    <span>{d ? fmtAED(d.total_annual_cashback) : '—'}</span>
+                  </div>
+                  <div className="cc-mobile-stat-row cc-mobile-stat-highlight">
+                    <span>Est. Net Annual Savings</span>
+                    <span>{d ? fmtAED(d.net_annual_savings) : '—'}</span>
+                  </div>
+                </div>
+
+                {/* Cashback rates */}
+                {(card.rates || []).filter((r) => r.category_name).length > 0 && (
+                  <div className="cc-mobile-rates">
+                    <h4>Cashback Rates</h4>
+                    {(card.rates || []).filter((r) => r.category_name).map((r, ri) => (
+                      <div key={ri} className="cc-mobile-rate-row">
+                        <span>{r.category_name}</span>
+                        <span>{(Number(r.cashback_rate) * 100).toFixed(1)}%</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Action buttons */}
+                <div className="cc-mobile-actions">
+                  <button
+                    className="cc-mobile-btn-primary"
+                    onClick={() => {
+                      if (card.apply_link) {
+                        let url = card.apply_link;
+                        if (!url.startsWith('http')) url = 'https://' + url;
+                        window.open(url, '_blank', 'noopener,noreferrer');
+                      }
+                    }}
+                  >
+                    Apply Now
+                  </button>
+                  <button
+                    className="cc-mobile-btn-secondary"
+                    onClick={() => navigate(`/cards/${card.id}${d ? `?net_savings=${d.net_annual_savings}` : ''}`)}
+                  >
+                    View Details
+                  </button>
+                  <button
+                    className="cc-mobile-btn-secondary"
+                    onClick={() => setMobileSwapOpen((v) => !v)}
+                  >
+                    ⇄ Swap This Card
+                  </button>
+
+                  {/* Inline swap picker */}
+                  {mobileSwapOpen && (
+                    <div className="cc-mobile-swap-picker">
+                      {allCards.map((ac) => (
+                        <button
+                          key={ac.id}
+                          className={`cc-dd-item${card.id === ac.id ? ' active' : ''}`}
+                          onClick={() => { handleSwap(activeMobileTab, ac); setMobileSwapOpen(false); }}
+                        >
+                          <span className="cc-dd-thumb" style={{ background: gradient(allCards.indexOf(ac)) }}>
+                            {abbr(ac.name)}
+                          </span>
+                          <span>
+                            {ac.name}
+                            <br />
+                            <span style={{ color: '#6B7280', fontSize: 11 }}>{ac.bank}</span>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+
+        {/* ——— Card slot row + table (horizontal scroll on mobile) ——— */}
+        <div className="cc-grid-wrapper">
+        <div className="cc-scroll-inner">
         <div className="cc-grid cc-slot-row" ref={slotRowRef}>
-          {/* empty label column */}
-          <div />
+          {/* empty label column — sticky on mobile */}
+          <div className="cc-label-col" />
 
           {[0, 1, 2].map((i) => {
             const card = slots[i];
@@ -200,6 +332,7 @@ export default function CompareCards() {
             return (
               <div
                 key={i}
+                className="cc-card-col"
                 style={{
                   background: 'white',
                   borderRadius: '12px',
@@ -559,9 +692,9 @@ export default function CompareCards() {
               {categories.map((cat) => (
                 <div key={cat.id} className="cc-trow cc-breakdown-row">
                   <div className="cc-td-label">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <CategoryIcon name={cat.icon} size={20} color="#94A3B8" />
-                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+                      <CategoryIcon name={cat.icon} size={16} color="#94A3B8" style={{ flexShrink: 0 }} />
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.04em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
                         {cat.label || cat.name}
                       </span>
                     </div>
@@ -701,6 +834,12 @@ export default function CompareCards() {
         }}>
           Card rewards data last updated 20/01/2026 · Savings estimates are indicative based on your spending inputs · Always verify rates on the bank&apos;s official website
         </p>
+
+        </div>{/* end cc-scroll-inner */}
+        </div>{/* end cc-grid-wrapper */}
+
+        <div className="cc-swipe-hint">← swipe to compare →</div>
+
       </div>
 
       <CardRankingTable rankingData={rankingData} loading={rankingLoading} />

@@ -103,15 +103,68 @@ export default function CardDetail() {
 
       <style>{`
         @media (max-width: 768px) {
-          .card-detail-hero { grid-template-columns: 1fr !important; }
-          .card-detail-stats { grid-template-columns: 1fr !important; }
-          .card-detail-hero h1 { font-size: 26px !important; }
-          .card-detail-stat-divider { display: none !important; }
+          .card-detail-hero {
+            grid-template-columns: 1fr !important;
+            padding: 24px !important;
+            gap: 24px !important;
+          }
+          .card-detail-hero h1 {
+            font-size: 26px !important;
+          }
+          .card-detail-stats {
+            grid-template-columns: 1fr !important;
+            gap: 16px !important;
+            padding: 16px !important;
+          }
+          .card-detail-stat-divider {
+            display: none !important;
+          }
+          .card-detail-stats > div {
+            padding: 12px 0;
+            border-bottom: 1px solid #E2E8F0;
+          }
+          .card-detail-stats > div:last-child {
+            border-bottom: none;
+          }
+          .card-detail-cashback-section {
+            padding: 24px !important;
+          }
+          .card-detail-cashback-header {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+          }
+          .card-detail-cta {
+            padding: 32px 24px !important;
+          }
+          .card-detail-cta h3 {
+            font-size: 20px !important;
+            line-height: 28px !important;
+          }
+          .card-detail-table-wrapper {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
+          }
+          .card-detail-section-padding {
+            padding: 0 16px 24px !important;
+          }
+          .card-detail-hero-section {
+            padding: 24px 16px !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .card-detail-hero h1 {
+            font-size: 22px !important;
+          }
+          .card-detail-cta h3 {
+            font-size: 18px !important;
+            line-height: 24px !important;
+          }
         }
       `}</style>
 
       {/* SECTION 1 — Hero */}
-      <section style={{ maxWidth: '1280px', margin: '0 auto', padding: '40px 24px' }}>
+      <section className="card-detail-hero-section" style={{ maxWidth: '1280px', margin: '0 auto', padding: '40px 24px' }}>
         <div
           className="card-detail-hero"
           style={{
@@ -249,10 +302,10 @@ export default function CardDetail() {
       </section>
 
       {/* SECTION 2 — Cashback and Rewards */}
-      <section style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px 40px' }}>
-        <div style={{ background: 'white', borderRadius: '20px', padding: '40px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+      <section className="card-detail-section-padding" style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px 40px' }}>
+        <div className="card-detail-cashback-section" style={{ background: 'white', borderRadius: '20px', padding: '40px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+          <div className="card-detail-cashback-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
             <div>
               <h2 style={{ fontFamily: 'Manrope', fontSize: '28px', fontWeight: 800, color: '#001A3D', margin: '0 0 8px' }}>
                 Cashback and Rewards
@@ -273,7 +326,7 @@ export default function CardDetail() {
               No cashback rates available for this card.
             </div>
           ) : (
-            <div style={{ border: '1px solid #E5E7EB', borderRadius: '12px', overflow: 'hidden' }}>
+            <div className="card-detail-table-wrapper" style={{ border: '1px solid #E5E7EB', borderRadius: '12px', overflow: 'hidden' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: '#F3F4F5' }}>
@@ -330,8 +383,8 @@ export default function CardDetail() {
       </section>
 
       {/* SECTION 3 — CTA Banner */}
-      <section style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px 60px' }}>
-        <div style={{
+      <section className="card-detail-section-padding" style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px 60px' }}>
+        <div className="card-detail-cta" style={{
           background: '#001A3D',
           borderRadius: '20px',
           padding: '48px 40px',

@@ -1270,3 +1270,24 @@ input[type='range'].cat-slider::-moz-range-thumb {
   border-color: rgba(255, 255, 255, 0.1);
   border-top-color: var(--cf-gold);
 }
+
+/* ——— Mobile hamburger (HomeNavbar) ——— */
+@media (max-width: 768px) {
+  .hn-links-desktop {
+    display: none !important;
+  }
+  .hn-mobile-toggle {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media (min-width: 769px) {
+  .hn-mobile-toggle {
+    display: none !important;
+  }
+  .hn-mobile-menu {
+    display: none !important;
+  }
+}
