@@ -1,8 +1,17 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Lock, CircleCheck } from 'lucide-react';
 import API_BASE from '../utils/api';
 import CategoryIcon from './CategoryIcon';
+import {
+  shouldBlockCalculation,
+  incrementCalculationCount,
+  isAuthenticated,
+  savePendingCalc,
+  getPendingCalc,
+  clearPendingCalc,
+} from '../utils/calculationGate';
 
 const incomeRangeToAed = (label) => {
   const map = { '10k': 10000, '15k': 15000, '25k': 25000, '40k': 40000, '60k+': 60000 };
@@ -37,6 +46,8 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
   const [loading, setLoading] = useState(false);
   const [initLoading, setInitLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showSignupGate, setShowSignupGate] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     Promise.all([
@@ -99,6 +110,24 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
     return () => window.removeEventListener('user-updated', handleUserUpdate);
   }, [brackets]);
 
+  // Restore pending calc data after user signs up / logs in
+  useEffect(() => {
+    if (!isAuthenticated()) return;
+    const pending = getPendingCalc();
+    if (!pending) return;
+    if (pending.income) setIncome(pending.income);
+    if (pending.spending) setSpending(pending.spending);
+    if (typeof pending.autoPopulate === 'boolean') setAutoPopulate(pending.autoPopulate);
+    clearPendingCalc();
+    setTimeout(() => {
+      if (pending.spending && pending.income) {
+        axios.post(`${API_BASE}/calculate`, { spending: pending.spending, income: pending.income })
+          .then((res) => onResults?.(res.data, { spending: pending.spending, income: pending.income }))
+          .catch((err) => console.error('Auto-calc error:', err));
+      }
+    }, 200);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const distributeIncome = (currentIncome, cats) => {
     const splits = {
       groceries:  0.12,
@@ -138,11 +167,17 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
   };
 
   const handleSubmit = async () => {
+    if (shouldBlockCalculation()) {
+      savePendingCalc({ income, spending, autoPopulate });
+      setShowSignupGate(true);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
       const res = await axios.post(`${API_BASE}/calculate`, { spending });
       onResults?.(res.data, { spending, income });
+      if (!isAuthenticated()) incrementCalculationCount();
       setTimeout(() => {
         document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' });
       }, 80);
@@ -509,6 +544,122 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
           </div>
         )}
       </div>
+      {showSignupGate && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.6)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px',
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            width: '100%',
+            maxWidth: '440px',
+            overflow: 'hidden',
+          }}>
+            <div style={{ background: '#FEF3C7', padding: '24px', textAlign: 'center' }}>
+              <div style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '50%',
+                background: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 12px',
+              }}>
+                <Lock size={26} color="#92400E" />
+              </div>
+              <h2 style={{ fontFamily: 'Manrope', fontSize: '20px', fontWeight: 700, color: '#92400E', margin: '0 0 4px' }}>
+                Sign up to continue
+              </h2>
+              <p style={{ fontFamily: 'Inter', fontSize: '13px', color: '#92400E', opacity: 0.85, margin: 0 }}>
+                Free account — see all your saved results
+              </p>
+            </div>
+
+            <div style={{ padding: '24px' }}>
+              <p style={{ fontFamily: 'Inter', fontSize: '14px', color: '#374151', margin: '0 0 16px', lineHeight: 1.5 }}>
+                You've already used your free calculation. Sign up or log in to:
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
+                {[
+                  'Run unlimited calculations',
+                  'Save your results across devices',
+                  'Get personalized card recommendations',
+                  'Compare cards side-by-side',
+                ].map((benefit, idx) => (
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <CircleCheck size={18} color="#10B981" strokeWidth={2} style={{ flexShrink: 0 }} />
+                    <span style={{ fontFamily: 'Inter', fontSize: '13px', color: '#0D1B2A', lineHeight: 1.4 }}>
+                      {benefit}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <p style={{ fontFamily: 'Inter', fontSize: '12px', color: '#6B7280', margin: '0 0 20px', textAlign: 'center', fontStyle: 'italic' }}>
+                No credit card required
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <button
+                  onClick={() => navigate('/signup')}
+                  style={{
+                    background: '#C9920A',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    fontFamily: 'Manrope',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    width: '100%',
+                  }}
+                >
+                  Sign Up Free
+                </button>
+                <button
+                  onClick={() => navigate('/login')}
+                  style={{
+                    background: 'white',
+                    color: '#0D1B2A',
+                    border: '1px solid #E5E7EB',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    fontFamily: 'Manrope',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    width: '100%',
+                  }}
+                >
+                  I already have an account
+                </button>
+                <button
+                  onClick={() => setShowSignupGate(false)}
+                  style={{
+                    background: 'transparent',
+                    color: '#6B7280',
+                    border: 'none',
+                    padding: '8px',
+                    fontFamily: 'Inter',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    marginTop: '4px',
+                  }}
+                >
+                  Maybe later
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

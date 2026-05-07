@@ -23,6 +23,7 @@ export default function LoginPage() {
       });
       localStorage.setItem('userToken', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
+      localStorage.removeItem('cf_calc_count');
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.error || 'Sign in failed. Please try again.');

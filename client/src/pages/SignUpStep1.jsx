@@ -105,6 +105,7 @@ export default function SignUpStep1() {
       clearUTMs();
       localStorage.setItem('userToken', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
+      localStorage.removeItem('cf_calc_count');
       navigate(res.data.reactivated ? '/dashboard?reactivated=true' : '/dashboard');
     } catch (err) {
       if (err.response?.status === 409 && err.response?.data?.requires_reactivation) {
@@ -139,6 +140,7 @@ export default function SignUpStep1() {
       clearUTMs();
       localStorage.setItem('userToken', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
+      localStorage.removeItem('cf_calc_count');
       setShowReactivateModal(false);
       navigate('/dashboard?reactivated=true');
     } catch (err) {

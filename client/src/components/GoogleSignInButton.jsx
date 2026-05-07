@@ -51,6 +51,7 @@ export default function GoogleSignInButton({ onSuccess, onError, mode = 'signup'
       clearUTMs()
       localStorage.setItem('userToken', result.data.token)
       localStorage.setItem('user', JSON.stringify(result.data.user))
+      localStorage.removeItem('cf_calc_count')
 
       if (onSuccess) {
         onSuccess(result.data.user, result.data.profile_complete)
@@ -88,6 +89,7 @@ export default function GoogleSignInButton({ onSuccess, onError, mode = 'signup'
       clearUTMs()
       localStorage.setItem('userToken', result.data.token)
       localStorage.setItem('user', JSON.stringify(result.data.user))
+      localStorage.removeItem('cf_calc_count')
       setShowReactivateModal(false)
 
       if (onSuccess) {
