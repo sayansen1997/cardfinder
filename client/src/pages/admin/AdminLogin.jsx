@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import API_BASE from '../../utils/api';
+import PasswordInput from '../../components/PasswordInput';
 import './admin.css';
 
 export default function AdminLogin() {
@@ -61,8 +62,7 @@ export default function AdminLogin() {
               value={form.email}
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
             />
-            <input
-              type="password"
+            <PasswordInput
               className="adm-input"
               placeholder="Password"
               required

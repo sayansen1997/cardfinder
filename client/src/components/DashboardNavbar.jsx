@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, User, LogOut } from 'lucide-react';
 import '../pages/dashboard.css';
 
 export default function DashboardNavbar({ firstName }) {
@@ -159,19 +159,19 @@ export default function DashboardNavbar({ firstName }) {
                 }}>
                   <div
                     onClick={() => { navigate('/profile'); setShowMenu(false); }}
-                    style={{ padding: '10px 16px', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#374151' }}
+                    style={{ padding: '10px 16px', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#374151', display: 'flex', alignItems: 'center', gap: '8px' }}
                     onMouseEnter={(e) => { e.currentTarget.style.background = '#F3F4F5'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = 'white'; }}
                   >
-                    👤 View Profile
+                    <User size={16} color="#6B7280" /> View Profile
                   </div>
                   <div
                     onClick={handleLogout}
-                    style={{ padding: '10px 16px', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#DC2626', borderTop: '1px solid #F3F4F5' }}
+                    style={{ padding: '10px 16px', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#DC2626', borderTop: '1px solid #F3F4F5', display: 'flex', alignItems: 'center', gap: '8px' }}
                     onMouseEnter={(e) => { e.currentTarget.style.background = '#F3F4F5'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = 'white'; }}
                   >
-                    🚪 Logout
+                    <LogOut size={16} color="#DC2626" /> Logout
                   </div>
                 </div>
               )}

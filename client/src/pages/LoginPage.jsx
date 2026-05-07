@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, BarChart3, Save, Award } from 'lucide-react';
 import API_BASE from '../utils/api';
 import GoogleSignInButton from '../components/GoogleSignInButton';
+import PasswordInput from '../components/PasswordInput';
 import './signup.css';
 
 export default function LoginPage() {
@@ -47,21 +48,21 @@ export default function LoginPage() {
 
         <div className="su-features">
           <div className="su-feature-item">
-            <div className="su-feature-icon">📊</div>
+            <div className="su-feature-icon"><BarChart3 size={24} color="#C9920A" strokeWidth={2} /></div>
             <div>
               <div className="su-feature-title">Smart Comparisons</div>
               <div className="su-feature-desc">Compare cashback rates, annual fees, and benefits across all UAE credit cards.</div>
             </div>
           </div>
           <div className="su-feature-item">
-            <div className="su-feature-icon">💾</div>
+            <div className="su-feature-icon"><Save size={24} color="#C9920A" strokeWidth={2} /></div>
             <div>
               <div className="su-feature-title">Save Calculations</div>
               <div className="su-feature-desc">Save your spending profile and results to revisit anytime.</div>
             </div>
           </div>
           <div className="su-feature-item">
-            <div className="su-feature-icon">🏆</div>
+            <div className="su-feature-icon"><Award size={24} color="#C9920A" strokeWidth={2} /></div>
             <div>
               <div className="su-feature-title">Personalized Rankings</div>
               <div className="su-feature-desc">Get a ranked list of cards tailored to your exact spending patterns.</div>
@@ -98,13 +99,14 @@ export default function LoginPage() {
               <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>
                 Password
               </label>
-              <input
-                type="password"
+              <PasswordInput
                 value={form.password}
                 onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                 placeholder="••••••••"
+                required
+                autoComplete="current-password"
                 style={{
-                  width: '100%', padding: '12px 14px', border: '1.5px solid #E5E7EB',
+                  padding: '12px 14px', border: '1.5px solid #E5E7EB',
                   borderRadius: '8px', fontSize: '14px', outline: 'none',
                   fontFamily: 'Inter, sans-serif', boxSizing: 'border-box',
                 }}

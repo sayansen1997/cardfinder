@@ -1,25 +1,26 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { RotateCw } from 'lucide-react';
+import { RotateCw, BarChart3, Save, Award } from 'lucide-react';
 import API_BASE from '../utils/api';
 import GoogleSignInButton from '../components/GoogleSignInButton';
+import PasswordInput from '../components/PasswordInput';
 import { getUTMs, clearUTMs } from '../utils/utm';
 import './signup.css';
 
 const FEATURES = [
   {
-    icon: '📊',
+    icon: <BarChart3 size={24} color="#C9920A" strokeWidth={2} />,
     title: 'Smart Comparisons',
     desc: 'Compare cashback rates, annual fees, and benefits across all UAE credit cards in one place.',
   },
   {
-    icon: '💾',
+    icon: <Save size={24} color="#C9920A" strokeWidth={2} />,
     title: 'Save calculations',
     desc: 'Save your spending profile and calculation results to revisit and update anytime.',
   },
   {
-    icon: '🏆',
+    icon: <Award size={24} color="#C9920A" strokeWidth={2} />,
     title: 'Access personalized rankings',
     desc: 'Get a ranked list of cards tailored to your exact spending patterns and income.',
   },
@@ -228,25 +229,25 @@ export default function SignUpStep1() {
                 Password *{' '}
                 <span style={{ fontWeight: 400, color: '#9CA3AF' }}>(min 8 characters)</span>
               </label>
-              <input
-                type="password"
+              <PasswordInput
                 required
                 minLength={8}
                 value={form.password}
                 onChange={set('password')}
                 placeholder="••••••••"
+                autoComplete="new-password"
                 style={INPUT_STYLE}
               />
             </div>
 
             <div>
               <label style={LABEL_STYLE}>Confirm Password *</label>
-              <input
-                type="password"
+              <PasswordInput
                 required
                 value={form.confirm_password}
                 onChange={set('confirm_password')}
                 placeholder="••••••••"
+                autoComplete="new-password"
                 style={INPUT_STYLE}
               />
             </div>

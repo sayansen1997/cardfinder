@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { Calendar, CreditCard } from 'lucide-react';
 import AdminNavbar from '../../components/admin/AdminNavbar';
 import API_BASE from '../../utils/api';
 import './admin.css';
@@ -244,7 +245,7 @@ export default function AdminAuditLog() {
               className="adm-filter-field adm-filter-clickable"
               onClick={() => setShowDateInputs((v) => !v)}
             >
-              <span className="adm-filter-field-icon">📅</span>
+              <Calendar size={16} color="#94A3B8" style={{ flexShrink: 0 }} />
               <span>{dateRangeLabel()}</span>
             </div>
             {showDateInputs && (
@@ -278,7 +279,7 @@ export default function AdminAuditLog() {
           <div className="adm-filter-col">
             <span className="adm-filter-label">CARD NAME</span>
             <div className="adm-filter-field">
-              <span className="adm-filter-field-icon">💳</span>
+              <CreditCard size={16} color="#94A3B8" style={{ flexShrink: 0 }} />
               <input
                 className="adm-filter-text-input"
                 placeholder="Search cards..."

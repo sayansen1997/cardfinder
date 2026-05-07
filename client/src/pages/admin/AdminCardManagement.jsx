@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, ArrowRight, Pencil, Plus, CloudUpload, Save } from 'lucide-react';
+import { Trash2, ArrowRight, Pencil, Plus, CloudUpload, Save, Search } from 'lucide-react';
 import AdminNavbar from '../../components/admin/AdminNavbar';
 import CardImage from '../../components/CardImage';
 import CategoryIcon from '../../components/CategoryIcon';
@@ -781,7 +781,7 @@ export default function AdminCardManagement() {
         {/* Filter bar */}
         <div className="adm-filter-bar">
           <div className="adm-search-wrap">
-            <span className="adm-search-icon">🔍</span>
+            <span className="adm-search-icon"><Search size={16} color="#94A3B8" /></span>
             <input
               className="adm-search-input"
               placeholder="Search card names, banks, or features..."
