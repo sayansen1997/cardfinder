@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RotateCw, Bookmark, GitCompareArrows, ArrowRight } from 'lucide-react';
 import CardImage from './CardImage';
+import { savePendingCalc, isAuthenticated } from '../utils/calculationGate';
 
 const RANK_LABELS = ['#1 Best Pick', '#2 Runner Up', '#3 Third Place'];
 
@@ -24,9 +25,9 @@ export default function TopResults({ results, spending, income, onRecalculate, o
   const [saveState, setSaveState] = useState('idle');
 
   const handleSave = async () => {
-    const token = localStorage.getItem('userToken');
-    if (!token) {
-      navigate('/signup', { state: { from: 'save-results' } });
+    if (!isAuthenticated()) {
+      savePendingCalc({ income, spending, saveAfterAuth: true });
+      navigate('/signup');
       return;
     }
     if (!onSave) return;

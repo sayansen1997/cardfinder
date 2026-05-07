@@ -122,7 +122,7 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
     setTimeout(() => {
       if (pending.spending && pending.income) {
         axios.post(`${API_BASE}/calculate`, { spending: pending.spending, income: pending.income })
-          .then((res) => onResults?.(res.data, { spending: pending.spending, income: pending.income }))
+          .then((res) => onResults?.(res.data, { spending: pending.spending, income: pending.income, saveAfterAuth: pending.saveAfterAuth }))
           .catch((err) => console.error('Auto-calc error:', err));
       }
     }, 200);

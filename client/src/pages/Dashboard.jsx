@@ -24,6 +24,7 @@ export default function Dashboard() {
   const [calcSpending, setCalcSpending] = useState({});
   const [calcIncome, setCalcIncome] = useState(0);
   const [showResults, setShowResults] = useState(false);
+  const [saveNotification, setSaveNotification] = useState({ visible: false, message: '' });
 
   const calculatorRef = useRef(null);
 
@@ -66,12 +67,24 @@ export default function Dashboard() {
       setCalcIncome(meta.income || 0);
     }
     setShowResults(true);
+
+    if (meta?.saveAfterAuth) {
+      handleSaveCalc(data, meta.spending, meta.income).then((ok) => {
+        if (ok) {
+          setSaveNotification({ visible: true, message: 'Calculation saved to your account!' });
+          setTimeout(() => setSaveNotification({ visible: false, message: '' }), 4000);
+        }
+      });
+    }
   };
 
-  const handleSaveCalc = async () => {
+  const handleSaveCalc = async (resultsData, spendingData, incomeData) => {
     const token = localStorage.getItem('userToken');
     if (!token) return false;
-    const top3 = calcResults.slice(0, 3).map((c) => ({
+    const results = resultsData || calcResults;
+    const spending = spendingData || calcSpending;
+    const income = incomeData || calcIncome;
+    const top3 = results.slice(0, 3).map((c) => ({
       id: c.id,
       name: c.name,
       bank: c.bank,
@@ -82,8 +95,8 @@ export default function Dashboard() {
       await axios.post(
         `${API_BASE}/users/calculations`,
         {
-          monthly_income: calcIncome,
-          spending: calcSpending,
+          monthly_income: income,
+          spending,
           top_cards: top3,
           net_savings: top3[0]?.net_annual_savings ?? 0,
         },
@@ -115,6 +128,31 @@ export default function Dashboard() {
     <div className="db-page">
       <DashboardNavbar firstName={userName} />
 
+      {saveNotification.visible && (
+        <div style={{
+          position: 'fixed',
+          top: '80px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#D1FAE5',
+          color: '#065F46',
+          padding: '12px 20px',
+          borderRadius: '8px',
+          fontFamily: 'Inter',
+          fontSize: '14px',
+          fontWeight: 600,
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+          whiteSpace: 'nowrap',
+        }}>
+          <CheckCircle size={18} color="#10B981" />
+          {saveNotification.message}
+        </div>
+      )}
+
       {showReactivatedNotice && (
         <div style={{ background: '#D1FAE5', border: '1px solid #6EE7B7', borderRadius: '8px', padding: '12px 16px', margin: '16px 20px', display: 'flex', alignItems: 'center', gap: '10px', fontFamily: 'Inter', fontSize: '14px', color: '#065F46', fontWeight: 600 }}>
           <CheckCircle size={20} color="#10B981" />
@@ -145,7 +183,13 @@ export default function Dashboard() {
       />
 
       {showResults && (
-        <TopResults results={calcResults} onRecalculate={handleRecalculate} onSave={handleSaveCalc} />
+        <TopResults
+          results={calcResults}
+          spending={calcSpending}
+          income={calcIncome}
+          onRecalculate={handleRecalculate}
+          onSave={handleSaveCalc}
+        />
       )}
 
       <CardRankingTable rankingData={rankingData} loading={rankingLoading} />
