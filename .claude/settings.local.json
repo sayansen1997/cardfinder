@@ -69,7 +69,8 @@
       "Bash(Get-Content \"C:\\\\Users\\\\sensa\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-sensa-cardfiner\\\\9d95b6a9-0918-4ba6-a7ab-5cff3ccd6c6f\\\\tasks\\\\bm8fttyq7.output\" -Wait -Tail 60)",
       "Bash(Select-Object -First 60)",
       "Bash(Start-Sleep -Seconds 5)",
-      "Bash(Get-Content \"C:\\\\Users\\\\sensa\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-sensa-cardfiner\\\\9d95b6a9-0918-4ba6-a7ab-5cff3ccd6c6f\\\\tasks\\\\bm8fttyq7.output\")"
+      "Bash(Get-Content \"C:\\\\Users\\\\sensa\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-sensa-cardfiner\\\\9d95b6a9-0918-4ba6-a7ab-5cff3ccd6c6f\\\\tasks\\\\bm8fttyq7.output\")",
+      "Bash(Get-Content *)"
     ]
   }
 }

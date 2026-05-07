@@ -229,7 +229,19 @@ export default function CompareCards() {
                 <p className="cc-mobile-card-bank">{card.bank || card.category_name || ''}</p>
 
                 {/* Card name */}
-                <h3 className="cc-mobile-card-name">{card.name}</h3>
+                <button
+                  onClick={() => navigate(`/cards/${card.id}${d ? `?net_savings=${d.net_annual_savings}` : ''}`)}
+                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', width: '100%', display: 'block' }}
+                >
+                  <h3
+                    className="cc-mobile-card-name"
+                    onMouseEnter={(e) => { e.currentTarget.style.color = '#C9920A'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = ''; }}
+                    style={{ transition: 'color 0.2s ease', cursor: 'pointer', margin: '0 0 16px' }}
+                  >
+                    {card.name}
+                  </h3>
+                </button>
 
                 {/* Stats */}
                 <div className="cc-mobile-stats">
@@ -275,8 +287,10 @@ export default function CompareCards() {
                         window.open(url, '_blank', 'noopener,noreferrer');
                       }
                     }}
+                    disabled={!card.apply_link}
+                    style={{ opacity: card.apply_link ? 1 : 0.6, cursor: card.apply_link ? 'pointer' : 'not-allowed' }}
                   >
-                    Apply Now
+                    {card.apply_link ? 'Apply Now' : 'Link Coming Soon'}
                   </button>
                   <button
                     className="cc-mobile-btn-secondary"
@@ -392,17 +406,30 @@ export default function CompareCards() {
                 </div>
 
                 {/* Card name */}
-                <h4 style={{
-                  color: '#001A3D',
-                  fontFamily: 'Manrope, sans-serif',
-                  fontSize: '18px',
-                  fontStyle: 'normal',
-                  fontWeight: 700,
-                  lineHeight: '28px',
-                  margin: 0,
-                }}>
-                  {card ? card.name : '—'}
-                </h4>
+                {card ? (
+                  <button
+                    onClick={() => navigate(`/cards/${card.id}${getD(i) ? `?net_savings=${getD(i).net_annual_savings}` : ''}`)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      padding: 0,
+                      cursor: 'pointer',
+                      color: '#001A3D',
+                      fontFamily: 'Manrope, sans-serif',
+                      fontSize: '18px',
+                      fontWeight: 700,
+                      lineHeight: '28px',
+                      textAlign: 'left',
+                      transition: 'color 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = '#C9920A'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = '#001A3D'; }}
+                  >
+                    {card.name}
+                  </button>
+                ) : (
+                  <h4 style={{ color: '#001A3D', fontFamily: 'Manrope, sans-serif', fontSize: '18px', fontWeight: 700, lineHeight: '28px', margin: 0 }}>—</h4>
+                )}
 
                 {/* Card category */}
                 <div style={{
@@ -508,9 +535,10 @@ export default function CompareCards() {
                         window.open(url, '_blank', 'noopener,noreferrer');
                       }
                     }}
+                    disabled={!card.apply_link}
                     style={{
                       width: '100%',
-                      background: buttonColor,
+                      background: card.apply_link ? buttonColor : '#D1D5DB',
                       color: 'white',
                       border: 'none',
                       borderRadius: '8px',
@@ -518,13 +546,13 @@ export default function CompareCards() {
                       fontFamily: 'Manrope, sans-serif',
                       fontSize: '15px',
                       fontWeight: 700,
-                      cursor: 'pointer',
+                      cursor: card.apply_link ? 'pointer' : 'not-allowed',
                       transition: 'background 0.15s ease',
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = buttonHoverColor; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = buttonColor; }}
+                    onMouseEnter={(e) => { if (card.apply_link) e.currentTarget.style.background = buttonHoverColor; }}
+                    onMouseLeave={(e) => { if (card.apply_link) e.currentTarget.style.background = buttonColor; }}
                   >
-                    Apply Now
+                    {card.apply_link ? 'Apply Now' : 'Link Coming Soon'}
                   </button>
                 )}
               </div>
@@ -795,9 +823,10 @@ export default function CompareCards() {
                               window.open(url, '_blank', 'noopener,noreferrer');
                             }
                           }}
+                          disabled={!slots[i].apply_link}
                           style={{
                             width: '100%',
-                            background: btnColor,
+                            background: slots[i].apply_link ? btnColor : '#D1D5DB',
                             color: 'white',
                             border: 'none',
                             borderRadius: '8px',
@@ -805,13 +834,13 @@ export default function CompareCards() {
                             fontFamily: 'Manrope, sans-serif',
                             fontSize: '15px',
                             fontWeight: 700,
-                            cursor: 'pointer',
+                            cursor: slots[i].apply_link ? 'pointer' : 'not-allowed',
                             transition: 'background 0.15s ease',
                           }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = btnHover; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = btnColor; }}
+                          onMouseEnter={(e) => { if (slots[i].apply_link) e.currentTarget.style.background = btnHover; }}
+                          onMouseLeave={(e) => { if (slots[i].apply_link) e.currentTarget.style.background = slots[i].apply_link ? btnColor : '#D1D5DB'; }}
                         >
-                          Apply Now
+                          {slots[i].apply_link ? 'Apply Now' : 'Link Coming Soon'}
                         </button>
                       ) : null}
                     </div>
@@ -838,7 +867,6 @@ export default function CompareCards() {
         </div>{/* end cc-scroll-inner */}
         </div>{/* end cc-grid-wrapper */}
 
-        <div className="cc-swipe-hint">← swipe to compare →</div>
 
       </div>
 

@@ -329,13 +329,12 @@ export default function TopResults({ results, spending, income, onRecalculate, o
                           url = 'https://' + url;
                         }
                         window.open(url, '_blank', 'noopener,noreferrer');
-                      } else {
-                        alert('Apply link not available for this card');
                       }
                     }}
+                    disabled={!card.apply_link}
                     style={{
                       width: '100%',
-                      background: buttonColor,
+                      background: card.apply_link ? buttonColor : '#D1D5DB',
                       color: 'white',
                       border: 'none',
                       borderRadius: '8px',
@@ -343,10 +342,10 @@ export default function TopResults({ results, spending, income, onRecalculate, o
                       fontFamily: 'Manrope, sans-serif',
                       fontSize: '15px',
                       fontWeight: 700,
-                      cursor: 'pointer',
+                      cursor: card.apply_link ? 'pointer' : 'not-allowed',
                     }}
                   >
-                    Apply Now
+                    {card.apply_link ? 'Apply Now' : 'Link Coming Soon'}
                   </button>
 
                   {/* How we calculated this — expandable */}

@@ -142,7 +142,15 @@ export default function CardDetail() {
           }
           .card-detail-table-wrapper {
             overflow-x: auto !important;
-            -webkit-overflow-scrolling: touch;
+            -webkit-overflow-scrolling: touch !important;
+          }
+          .card-detail-table-wrapper table td {
+            padding: 12px 14px !important;
+            font-size: 12px !important;
+          }
+          .card-detail-table-wrapper table th {
+            padding: 12px 14px !important;
+            font-size: 10px !important;
           }
           .card-detail-section-padding {
             padding: 0 16px 24px !important;
@@ -345,7 +353,7 @@ export default function CardDetail() {
                           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <CategoryIcon name={rate.category_icon} size={18} color="#94A3B8" />
                             <span style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: '#001A3D' }}>
-                              {rate.category_name}
+                              {rate.category_name?.replace(/\b\w/g, c => c.toUpperCase())}
                             </span>
                           </div>
                         </td>
@@ -357,17 +365,17 @@ export default function CardDetail() {
                         </td>
                         <td style={{ padding: '16px 20px' }}>
                           {tier === 'priority' && (
-                            <span style={{ background: '#001A3D', color: 'white', fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, padding: '4px 10px', borderRadius: '999px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                            <span style={{ background: '#001A3D', color: 'white', fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, padding: '4px 10px', borderRadius: '999px', textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap', display: 'inline-block' }}>
                               Priority Tier
                             </span>
                           )}
                           {tier === 'unlimited' && (
-                            <span style={{ background: '#D1FAE5', color: '#065F46', fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, padding: '4px 10px', borderRadius: '999px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                            <span style={{ background: '#D1FAE5', color: '#065F46', fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, padding: '4px 10px', borderRadius: '999px', textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap', display: 'inline-block' }}>
                               Unlimited
                             </span>
                           )}
                           {tier === 'standard' && (
-                            <span style={{ background: '#F3F4F5', color: '#6B7280', fontFamily: 'Inter', fontSize: '11px', fontWeight: 600, padding: '4px 10px', borderRadius: '999px' }}>
+                            <span style={{ background: '#F3F4F5', color: '#6B7280', fontFamily: 'Inter', fontSize: '11px', fontWeight: 600, padding: '4px 10px', borderRadius: '999px', whiteSpace: 'nowrap', display: 'inline-block' }}>
                               Standard
                             </span>
                           )}
