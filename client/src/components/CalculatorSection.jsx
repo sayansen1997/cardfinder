@@ -33,7 +33,7 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
   const [income, setIncome] = useState(0);
   const [activeBracket, setActiveBracket] = useState(null);
   const [spending, setSpending] = useState({});
-  const [autoPopulate, setAutoPopulate] = useState(false);
+  const [autoPopulate, setAutoPopulate] = useState(true);
   const [loading, setLoading] = useState(false);
   const [initLoading, setInitLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -60,12 +60,17 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
       setIncome(startIncome);
       setActiveBracket(startBracket?.id ?? null);
 
-      const defaultSpend = {};
-      cats.forEach((c) => { defaultSpend[c.slug] = Number(c.default_spend) || 0; });
-      setSpending(defaultSpend);
+      const initialSpend = autoPopulate
+        ? distributeIncome(startIncome, cats)
+        : (() => {
+            const fallback = {};
+            cats.forEach((c) => { fallback[c.slug] = Number(c.default_spend) || 0; });
+            return fallback;
+          })();
+      setSpending(initialSpend);
       setInitLoading(false);
 
-      axios.post(`${API_BASE}/calculate`, { spending: defaultSpend })
+      axios.post(`${API_BASE}/calculate`, { spending: initialSpend })
         .then((r) => onRankingUpdate?.(r.data))
         .catch(() => {});
     }).catch(() => setInitLoading(false));
@@ -74,6 +79,11 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
   useEffect(() => {
     document.querySelectorAll('input[type="range"].cat-slider').forEach(updateSlider);
   }, [spending]);
+
+  useEffect(() => {
+    if (!autoPopulate || !categories.length || !income) return;
+    setSpending(distributeIncome(income, categories));
+  }, [autoPopulate, income, categories]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!brackets.length) return;

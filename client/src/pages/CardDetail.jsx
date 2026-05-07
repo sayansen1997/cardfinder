@@ -371,12 +371,12 @@ export default function CardDetail() {
                           )}
                           {tier === 'unlimited' && (
                             <span style={{ background: '#D1FAE5', color: '#065F46', fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, padding: '4px 10px', borderRadius: '999px', textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap', display: 'inline-block' }}>
-                              Unlimited
+                              UNLIMITED
                             </span>
                           )}
                           {tier === 'standard' && (
-                            <span style={{ background: '#F3F4F5', color: '#6B7280', fontFamily: 'Inter', fontSize: '11px', fontWeight: 600, padding: '4px 10px', borderRadius: '999px', whiteSpace: 'nowrap', display: 'inline-block' }}>
-                              Standard
+                            <span style={{ background: '#F3F4F5', color: '#6B7280', fontFamily: 'Inter', fontSize: '11px', fontWeight: 700, padding: '4px 10px', borderRadius: '999px', textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap', display: 'inline-block' }}>
+                              STANDARD
                             </span>
                           )}
                         </td>
