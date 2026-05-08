@@ -42,6 +42,7 @@ export default function TopResults({ results, spending, income, onRecalculate, o
   const top3 = results.slice(0, 3);
   const toggle = (id) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
   const today = new Date().toLocaleDateString('en-GB');
+  const formatUpdatedAt = (ts) => ts ? new Date(ts).toLocaleDateString('en-GB') : today;
 
   return (
     <section className="cf-results" id="results-section">
@@ -463,7 +464,7 @@ export default function TopResults({ results, spending, income, onRecalculate, o
                     textAlign: 'center',
                     marginTop: '16px',
                   }}>
-                    Card rewards data last updated {today}
+                    Card rewards data last updated {formatUpdatedAt(card.updated_at)}
                   </div>
 
               </div>

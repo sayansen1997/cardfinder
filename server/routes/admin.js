@@ -245,6 +245,7 @@ router.put('/cards/:id/rates', auth, async (req, res) => {
       }
     }
 
+    await client.query('UPDATE cards SET updated_at = NOW() WHERE id = $1', [id]);
     await client.query('COMMIT');
     res.json({ success: true });
   } catch (err) {
@@ -303,8 +304,8 @@ router.post('/cards', auth, upload.single('image'), async (req, res) => {
     await client.query('BEGIN');
 
     const cardRes = await client.query(
-      `INSERT INTO cards (name, bank, card_category, annual_fee, min_salary, key_benefits, status, image_url, created_at)
-       VALUES ($1,$2,$3,$4,$5,$6,'active',$7,NOW()) RETURNING *`,
+      `INSERT INTO cards (name, bank, card_category, annual_fee, min_salary, key_benefits, status, image_url, created_at, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,'active',$7,NOW(),NOW()) RETURNING *`,
       [name, bank, card_category || 'cashback', Number(annual_fee) || 0, Number(min_salary) || 0, benefitsStr || null, image_url]
     );
     const card = cardRes.rows[0];

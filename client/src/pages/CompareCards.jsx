@@ -861,7 +861,11 @@ export default function CompareCards() {
           lineHeight: '15px',
           marginTop: '24px',
         }}>
-          Card rewards data last updated 20/01/2026 · Savings estimates are indicative based on your spending inputs · Always verify rates on the bank&apos;s official website
+          {(() => {
+            const dates = slots.filter(Boolean).map((s) => s.updated_at ? new Date(s.updated_at) : null).filter(Boolean);
+            const latest = dates.length ? new Date(Math.max(...dates)).toLocaleDateString('en-GB') : null;
+            return latest ? `Card rewards data last updated ${latest} · ` : '';
+          })()}Savings estimates are indicative based on your spending inputs · Always verify rates on the bank&apos;s official website
         </p>
 
         </div>{/* end cc-scroll-inner */}
