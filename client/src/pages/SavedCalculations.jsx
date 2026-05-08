@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, RotateCw, ArrowRight } from 'lucide-react';
+import { Trash2, RotateCw, ArrowRight, ClipboardList } from 'lucide-react';
 import API_BASE from '../utils/api';
 import DashboardNavbar from '../components/DashboardNavbar';
 import Footer from '../components/Footer';
@@ -236,7 +236,7 @@ export default function SavedCalculations() {
           </div>
         ) : calculations.length === 0 ? (
           <div className="sc-empty">
-            <div className="sc-empty-icon">📋</div>
+            <div className="sc-empty-icon"><ClipboardList size={48} color="#94A3B8" strokeWidth={1.5} /></div>
             <div className="sc-empty-title">No saved calculations yet.</div>
             <div className="sc-empty-sub">
               Run the calculator and save your results to see them here.
