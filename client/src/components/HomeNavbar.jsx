@@ -7,12 +7,23 @@ export default function HomeNavbar() {
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     const checkAuth = () => setIsLoggedIn(!!localStorage.getItem('userToken'));
     checkAuth();
     window.addEventListener('storage', checkAuth);
     return () => window.removeEventListener('storage', checkAuth);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const isScrolled = window.scrollY > 10;
+      console.log('Scroll Y:', window.scrollY, 'scrolled:', isScrolled);
+      setScrolled(isScrolled);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   useEffect(() => {
@@ -31,7 +42,7 @@ export default function HomeNavbar() {
   }, [mobileMenuOpen]);
 
   return (
-    <nav className="cf-navbar">
+    <nav className={`cf-navbar${scrolled ? ' cf-navbar-scrolled' : ''}`}>
       <div className="cf-navbar-inner">
         <Link to="/" className="cf-logo">
           <img src="/card-finder_logo.svg" alt="Card Finder" style={{ height: '36px', width: 'auto' }} />

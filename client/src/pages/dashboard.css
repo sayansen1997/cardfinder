@@ -5,12 +5,21 @@
 /* ——— Navbar ——— */
 
 .db-navbar {
-  background: #01142E;
   height: 60px;
   position: sticky;
   top: 0;
   z-index: 200;
+  background: #01142E;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.db-navbar-scrolled {
+  background: rgba(1, 20, 46, 0.75) !important;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-bottom-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.18);
 }
 
 .db-navbar-inner {
@@ -183,7 +192,6 @@
 
 .db-page {
   width: 100%;
-  overflow-x: hidden;
   font-family: 'Inter', sans-serif;
   background: white;
 }

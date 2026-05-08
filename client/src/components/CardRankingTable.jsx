@@ -76,6 +76,7 @@ export default function CardRankingTable({ rankingData, loading }) {
             overflow: 'hidden',
             marginTop: '24px',
             overflowX: 'auto',
+            WebkitOverflowScrolling: 'touch',
           }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
               <thead>

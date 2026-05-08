@@ -13,7 +13,6 @@
 
 .cf-page {
   width: 100%;
-  overflow-x: hidden;
   font-family: 'Inter', sans-serif;
   font-size: 16px;
   line-height: 1.5;
@@ -39,11 +38,20 @@
 
 /* ——— NAVBAR ——— */
 .cf-navbar {
-  background: #001C42;
   position: sticky;
   top: 0;
   z-index: 200;
+  background: #001C42;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cf-navbar-scrolled {
+  background: rgba(0, 28, 66, 0.75) !important;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-bottom-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.18);
 }
 
 .cf-navbar-inner {
@@ -1177,21 +1185,22 @@ input[type='range'].cat-slider::-moz-range-thumb {
   .cf-hero h1         { font-size: 40px; }
   .cf-curated-layout  { grid-template-columns: 1fr; }
   .cf-card-tiles      { grid-template-columns: repeat(2, 1fr); }
-  .cf-calc-grid       { grid-template-columns: 1fr; gap: 32px; }
+  .cf-calc-grid       { grid-template-columns: 1fr !important; gap: 32px; }
   .cf-result-cards    { grid-template-columns: repeat(2, 1fr); }
-  .cf-why-grid        { grid-template-columns: 1fr; gap: 28px; }
+  .cf-why-grid        { grid-template-columns: 1fr !important; gap: 28px; }
   .cf-section-header h2 { font-size: 30px; }
 }
 
 @media (max-width: 768px) {
   .cf-hero              { padding: 60px 0 80px; }
-  .cf-hero h1           { font-size: 28px; }
+  .cf-hero h1           { font-size: 28px !important; line-height: 1.2 !important; letter-spacing: 0 !important; }
   .cf-hero-sub          { font-size: 15px; }
   .cf-hero-ctas         { flex-direction: column; align-items: stretch; }
   .cf-btn-outline,
   .cf-btn-gold          { text-align: center; justify-content: center; }
-  .cf-card-tiles        { grid-template-columns: 1fr; }
-  .cf-result-cards      { grid-template-columns: 1fr; }
+  .cf-card-tiles        { grid-template-columns: 1fr; gap: 62px; }
+  .cf-result-cards      { grid-template-columns: 1fr !important; gap: 24px !important; }
+  .cf-result-cards > div { width: 100% !important; min-width: 0 !important; box-sizing: border-box !important; }
   .cf-results-header    { flex-direction: column; align-items: flex-start; }
   .cf-ranking-header    { flex-direction: column; align-items: flex-start; }
   .cf-why h2            { font-size: 26px; }
@@ -1204,6 +1213,87 @@ input[type='range'].cat-slider::-moz-range-thumb {
   .cf-table tbody td:nth-child(n+5):not(:last-child) { display: none; }
   .cf-spending-row      { flex-wrap: wrap; }
   .cf-spending-slider   { width: 100%; flex: none; order: 3; }
+
+  /* Calculator mobile tightening */
+  .cf-calc-grid         { gap: 16px !important; }
+  .cf-calc-panel        { padding: 16px !important; }
+  .cf-calc-column       { width: 100% !important; min-width: 0 !important; max-width: 100% !important; box-sizing: border-box; }
+  .cf-calc-column input,
+  .cf-calc-column select { width: 100% !important; box-sizing: border-box !important; }
+  .cf-income-input      { font-size: 22px !important; }
+  .cf-income-input-wrap > span { font-size: 18px !important; }
+  .cf-bracket-btn       { font-size: 12px !important; padding: 5px 10px !important; }
+
+  /* Curated section mobile */
+  .cf-curated-layout    { gap: 16px !important; }
+  .cf-curated-sidebar   { width: 100% !important; }
+
+  /* Spending categories stack */
+  .cf-spending-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  /* Spending totals stack */
+  .cf-spending-totals {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    padding: 16px !important;
+  }
+  .cf-spending-totals > div:first-child {
+    padding-right: 0 !important;
+    padding-bottom: 16px !important;
+    border-right: none !important;
+    border-bottom: 1px solid #E5E7EB !important;
+  }
+  .cf-spending-totals > div:last-child {
+    padding-left: 0 !important;
+  }
+
+  /* Monthly Spending header stack */
+  .cf-spending-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+    margin-bottom: 16px !important;
+  }
+  .cf-spending-header > span:first-child { font-size: 18px !important; }
+  .cf-spending-header > span:last-child  { font-size: 12px !important; }
+
+  /* Why section mobile */
+  .cf-why               { padding: 48px 0 !important; }
+  .cf-why-grid          { gap: 16px !important; }
+
+  /* TopResults header stacking */
+  .cf-top-results-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .cf-top-results-header > div:last-child {
+    width: 100%;
+    align-items: flex-start !important;
+  }
+  .cf-top-results-actions {
+    width: 100% !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .cf-top-results-actions button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Result card tiles */
+  .cf-result-tile         { padding: 20px 16px !important; }
+  .cf-result-tile-image   { margin-bottom: 12px !important; }
+  .cf-result-tile-name    { font-size: 18px !important; line-height: 1.3 !important; }
+  .cf-result-tile-bank    { font-size: 11px !important; margin-bottom: 8px !important; }
+  .cf-result-tile-cashback { font-size: 22px !important; white-space: normal !important; }
+  .cf-result-tile-subtitle { font-size: 10px !important; }
+  .cf-result-tile-stats   { margin-bottom: 12px !important; }
+  .cf-result-tile-actions { width: 100% !important; }
+  .cf-result-tile-actions button { width: 100% !important; }
 }
 
 /* ======================================================
@@ -1269,6 +1359,29 @@ input[type='range'].cat-slider::-moz-range-thumb {
 .cf-ranking .cf-spinner {
   border-color: rgba(255, 255, 255, 0.1);
   border-top-color: var(--cf-gold);
+}
+
+/* ——— 480px and below (small phones) ——— */
+@media (max-width: 480px) {
+  .cf-hero h1 { font-size: 24px !important; line-height: 1.25 !important; }
+}
+
+/* ——— Global mobile overflow guard ——— */
+@media (max-width: 768px) {
+  /* body/html overflow-x intentionally omitted — breaks position: sticky on navbar */
+  * { max-width: 100vw; }
+  .cf-table-wrapper,
+  .cc-grid-wrapper,
+  .card-detail-table-wrapper { max-width: none; }
+
+  /* Section-level overflow guard — safe for sticky since these are not navbar ancestors */
+  .cf-hero,
+  .cf-curated,
+  .cf-calculator,
+  .cf-results,
+  .cf-ranking,
+  .cf-why,
+  .cf-footer { overflow-x: hidden; }
 }
 
 /* ——— Mobile hamburger (HomeNavbar) ——— */

@@ -317,7 +317,7 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
                 }}>
 
                   {/* Heading row */}
-                  <div style={{
+                  <div className="cf-spending-header" style={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
@@ -341,7 +341,7 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
                   </div>
 
                   {/* Category grid — no individual cards, just rows */}
-                  <div style={{
+                  <div className="cf-spending-grid" style={{
                     display: 'grid',
                     gridTemplateColumns: '1fr 1fr',
                     rowGap: '20px',
@@ -419,7 +419,7 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
                   </div>
 
                   {/* Totals box — light grey inset, 2-column */}
-                  <div style={{
+                  <div className="cf-spending-totals" style={{
                     borderRadius: '12px',
                     border: '1px solid #E2E8F0',
                     background: '#F8FAFC',
@@ -560,6 +560,7 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
             borderRadius: '12px',
             width: '100%',
             maxWidth: '440px',
+            margin: '0 16px',
             overflow: 'hidden',
           }}>
             <div style={{ background: '#FEF3C7', padding: '24px', textAlign: 'center' }}>

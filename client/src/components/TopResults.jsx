@@ -48,7 +48,7 @@ export default function TopResults({ results, spending, income, onRecalculate, o
     <section className="cf-results" id="results-section">
       <div className="cf-container">
         {/* ── Section header ── */}
-        <div style={{
+        <div className="cf-top-results-header" style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'flex-start',
@@ -88,7 +88,7 @@ export default function TopResults({ results, spending, income, onRecalculate, o
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px', flexShrink: 0 }}>
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <div className="cf-top-results-actions" style={{ display: 'flex', gap: '12px' }}>
               <button
                 onClick={handleSave}
                 disabled={saveState === 'saving' || saveState === 'saved'}
@@ -155,7 +155,7 @@ export default function TopResults({ results, spending, income, onRecalculate, o
         </div>
 
         {/* ── Cards grid ── */}
-        <div style={{
+        <div className="cf-result-cards" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
           gap: '20px',
@@ -168,7 +168,7 @@ export default function TopResults({ results, spending, income, onRecalculate, o
             const savingsBoxBg = i === 0 ? '#FEF8E1' : '#F3F4F5';
             const savingsValueColor = i === 0 ? '#C9920A' : '#011B3E';
             return (
-              <div key={card.id} style={{
+              <div key={card.id} className="cf-result-tile" style={{
                 background: 'white',
                 borderRadius: '12px',
                 padding: '20px',
@@ -178,7 +178,7 @@ export default function TopResults({ results, spending, income, onRecalculate, o
               }}>
 
                   {/* Image block — grey container with TOP PICK overlay */}
-                  <div style={{
+                  <div className="cf-result-tile-image" style={{
                     background: '#F3F4F5',
                     borderRadius: '10px',
                     padding: '16px',
@@ -213,6 +213,7 @@ export default function TopResults({ results, spending, income, onRecalculate, o
                   {/* Card name + bank */}
                   <div>
                     <button
+                      className="cf-result-tile-name"
                       onClick={() => {
                         const params = new URLSearchParams()
                         if (card.net_annual_savings !== undefined) params.append('net_savings', card.net_annual_savings)
@@ -225,7 +226,7 @@ export default function TopResults({ results, spending, income, onRecalculate, o
                     >
                       {card.name}
                     </button>
-                    <div style={{
+                    <div className="cf-result-tile-bank" style={{
                       fontFamily: 'Inter, sans-serif',
                       fontSize: '13px',
                       color: '#6B7280',
@@ -242,7 +243,7 @@ export default function TopResults({ results, spending, income, onRecalculate, o
                     padding: '14px 18px',
                     marginBottom: '16px',
                   }}>
-                    <div style={{
+                    <div className="cf-result-tile-subtitle" style={{
                       fontFamily: 'Inter, sans-serif',
                       fontSize: '10px',
                       fontWeight: 600,
@@ -253,7 +254,7 @@ export default function TopResults({ results, spending, income, onRecalculate, o
                     }}>
                       Estimated Net Annual Savings
                     </div>
-                    <div style={{
+                    <div className="cf-result-tile-cashback" style={{
                       fontFamily: 'Manrope, sans-serif',
                       fontSize: '24px',
                       fontWeight: 800,
@@ -266,7 +267,7 @@ export default function TopResults({ results, spending, income, onRecalculate, o
                   </div>
 
                   {/* Annual Fee + Min Income rows */}
-                  <div>
+                  <div className="cf-result-tile-stats">
                     <div style={{
                       display: 'flex',
                       justifyContent: 'space-between',
@@ -323,6 +324,7 @@ export default function TopResults({ results, spending, income, onRecalculate, o
                   <div style={{ flex: 1 }} />
 
                   {/* Apply Now */}
+                  <div className="cf-result-tile-actions">
                   <button
                     onClick={() => {
                       if (card.apply_link) {
@@ -349,6 +351,7 @@ export default function TopResults({ results, spending, income, onRecalculate, o
                   >
                     {card.apply_link ? 'Apply Now' : 'Link Coming Soon'}
                   </button>
+                  </div>
 
                   {/* How we calculated this — expandable */}
                   <button

@@ -12,6 +12,7 @@ export default function DashboardNavbar({ firstName }) {
   const [profilePicture, setProfilePicture] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     const checkAuth = () => {
@@ -58,6 +59,12 @@ export default function DashboardNavbar({ firstName }) {
     return () => document.removeEventListener('click', handleClickOutside);
   }, [mobileMenuOpen]);
 
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem('userToken');
     localStorage.removeItem('userName');
@@ -80,7 +87,7 @@ export default function DashboardNavbar({ firstName }) {
   };
 
   return (
-    <nav className="db-navbar">
+    <nav className={`db-navbar${scrolled ? ' db-navbar-scrolled' : ''}`}>
       <div className="db-navbar-inner">
         {/* Logo */}
         <Link to="/" className="db-logo">
