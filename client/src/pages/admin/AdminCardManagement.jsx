@@ -412,6 +412,8 @@ const RULE_TYPE_LABELS = {
   total_spend_below:  'Hide if total spending BELOW threshold',
   total_spend_above:  'Hide if total spending ABOVE threshold',
   total_spend_range:  'Hide if total spending NOT in range',
+  age_above:          'Hide if user age ABOVE threshold',
+  age_below:          'Hide if user age BELOW threshold',
 };
 
 function HideRulesModal({ card, categories, onClose }) {
@@ -436,6 +438,8 @@ function HideRulesModal({ card, categories, onClose }) {
     total_spend_below:  { threshold: '' },
     total_spend_above:  { threshold: '' },
     total_spend_range:  { min: '', max: '' },
+    age_above:          { threshold: '' },
+    age_below:          { threshold: '' },
   };
 
   const existingRuleTypes = new Set(rules.map((r) => r.rule_type));
@@ -633,6 +637,20 @@ function HideRulesModal({ card, categories, onClose }) {
                     type="number"
                     value={newRule.rule_config.max || ''}
                     onChange={(e) => setNewRule({ ...newRule, rule_config: { ...newRule.rule_config, max: Number(e.target.value) } })}
+                    style={{ ...inputStyle, marginBottom: '12px' }}
+                  />
+                </>
+              )}
+
+              {(newRule.rule_type === 'age_above' || newRule.rule_type === 'age_below') && (
+                <>
+                  <label style={labelStyle}>Age threshold (years)</label>
+                  <input
+                    type="number"
+                    min="18"
+                    max="100"
+                    value={newRule.rule_config.threshold || ''}
+                    onChange={(e) => setNewRule({ ...newRule, rule_config: { ...newRule.rule_config, threshold: Number(e.target.value) } })}
                     style={{ ...inputStyle, marginBottom: '12px' }}
                   />
                 </>

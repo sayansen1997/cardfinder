@@ -37,6 +37,7 @@ export default function Profile() {
   const [fullName, setFullName] = useState('');
   const [incomeRange, setIncomeRange] = useState('');
   const [nationality, setNationality] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
   const [profilePicture, setProfilePicture] = useState('');
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -62,6 +63,7 @@ export default function Profile() {
       setIncomeRange(data.income_range || '');
       setNationality(data.nationality || '');
       setProfilePicture(data.profile_picture || '');
+      setDateOfBirth(data.date_of_birth ? data.date_of_birth.split('T')[0] : '');
     }).catch(() => navigate('/login'));
 
     fetch(`${API_BASE}/income-brackets`)
@@ -85,7 +87,7 @@ export default function Profile() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('userToken')}`,
         },
-        body: JSON.stringify({ full_name: fullName, income_range: incomeRange, nationality }),
+        body: JSON.stringify({ full_name: fullName, income_range: incomeRange, nationality, date_of_birth: dateOfBirth || null }),
       });
       if (!res.ok) {
         const err = await res.json();
@@ -301,6 +303,19 @@ export default function Profile() {
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             placeholder="Your full name"
+          />
+
+          {/* Date of Birth */}
+          <label className="pr-label" style={{ marginTop: '16px' }}>
+            Date of Birth{' '}
+            <span style={{ fontSize: '11px', fontWeight: 400, color: '#94A3B8' }}>(used for card eligibility)</span>
+          </label>
+          <input
+            type="date"
+            className="pr-input"
+            value={dateOfBirth}
+            onChange={(e) => setDateOfBirth(e.target.value)}
+            max={new Date().toISOString().split('T')[0]}
           />
 
           {/* Email — read-only */}

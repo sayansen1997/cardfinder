@@ -17,7 +17,7 @@ app.use(express.json());
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 app.use('/api/cards', cardsRouter);
-app.post('/api/calculate', cardsRouter.calculateHandler);
+app.post('/api/calculate', cardsRouter.optionalUserAuth, cardsRouter.calculateHandler);
 app.post('/api/compare', cardsRouter.compareHandler);
 app.use('/api/categories', categoriesRouter);
 app.use('/api/income-brackets', incomeBracketsRouter);

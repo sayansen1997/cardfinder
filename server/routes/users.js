@@ -6,8 +6,9 @@ const bcrypt = require('bcryptjs');
 const { OAuth2Client } = require('google-auth-library');
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const { upload } = require('../config/cloudinary');
+const { JWT_SECRET } = require('../config/auth');
 
-const USER_SECRET = process.env.JWT_SECRET || 'cardfiner_user_secret';
+const USER_SECRET = JWT_SECRET;
 
 const userAuth = (req, res, next) => {
   const token = req.headers['authorization']?.split(' ')[1];
@@ -80,7 +81,7 @@ router.get('/me', userAuth, async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT u.id, u.email, u.full_name, u.profile_picture,
-        u.income_range, u.nationality, u.auth_provider, u.created_at,
+        u.income_range, u.nationality, u.auth_provider, u.created_at, u.date_of_birth,
         COUNT(uc.id)::int AS calculations_count
        FROM users u
        LEFT JOIN user_calculations uc ON uc.user_id = u.id
@@ -97,18 +98,19 @@ router.get('/me', userAuth, async (req, res) => {
   }
 });
 
-// PUT /me — update full_name, income_range, nationality
+// PUT /me — update full_name, income_range, nationality, date_of_birth
 router.put('/me', userAuth, async (req, res) => {
-  const { income_range, nationality, full_name } = req.body;
+  const { income_range, nationality, full_name, date_of_birth } = req.body;
   try {
     const result = await pool.query(
       `UPDATE users SET
-        income_range = COALESCE($1, income_range),
-        nationality  = COALESCE($2, nationality),
-        full_name    = COALESCE($3, full_name)
+        income_range   = COALESCE($1, income_range),
+        nationality    = COALESCE($2, nationality),
+        full_name      = COALESCE($3, full_name),
+        date_of_birth  = COALESCE($5, date_of_birth)
        WHERE id = $4
-       RETURNING id, email, full_name, profile_picture, income_range, nationality`,
-      [income_range || null, nationality || null, full_name || null, req.user.id]
+       RETURNING id, email, full_name, profile_picture, income_range, nationality, date_of_birth`,
+      [income_range || null, nationality || null, full_name || null, req.user.id, date_of_birth || null]
     );
     if (!result.rows.length) return res.status(404).json({ error: 'User not found' });
     res.json(result.rows[0]);
@@ -203,7 +205,7 @@ router.post('/login', async (req, res) => {
 
     const token = jwt.sign(
       { id: user.id, email: user.email },
-      process.env.JWT_SECRET || 'cardfinder_secret_2024',
+      JWT_SECRET,
       { expiresIn: '7d' }
     );
 
@@ -304,7 +306,7 @@ router.post('/me/profile-picture', userAuth, upload.single('image'), async (req,
 
 // POST /register
 router.post('/register', async (req, res) => {
-  const { email, password, full_name, income_range, nationality, consent, utm_source, utm_medium, utm_campaign } = req.body;
+  const { email, password, full_name, income_range, nationality, date_of_birth, consent, utm_source, utm_medium, utm_campaign } = req.body;
 
   if (!email || !password || !full_name) {
     return res.status(400).json({ error: 'Email, password, and full name are required' });
@@ -376,7 +378,7 @@ router.post('/register', async (req, res) => {
 
       const token = jwt.sign(
         { id: user.id, email: user.email },
-        process.env.JWT_SECRET || 'cardfinder_secret_2024',
+        JWT_SECRET,
         { expiresIn: '7d' }
       );
 
@@ -399,19 +401,19 @@ router.post('/register', async (req, res) => {
 
     const result = await pool.query(
       `INSERT INTO users
-        (email, password, full_name, income_range, nationality, auth_provider,
+        (email, password, full_name, income_range, nationality, date_of_birth, auth_provider,
          utm_source, utm_medium, utm_campaign, created_at)
-       VALUES ($1, $2, $3, $4, $5, 'email', $6, $7, $8, NOW())
-       RETURNING id, email, full_name, income_range, nationality, profile_picture`,
+       VALUES ($1, $2, $3, $4, $5, $6, 'email', $7, $8, $9, NOW())
+       RETURNING id, email, full_name, income_range, nationality, date_of_birth, profile_picture`,
       [normalizedEmail, passwordHash, full_name, income_range || null, nationality || null,
-       utm_source || null, utm_medium || null, utm_campaign || null]
+       date_of_birth || null, utm_source || null, utm_medium || null, utm_campaign || null]
     );
 
     const user = result.rows[0];
 
     const token = jwt.sign(
       { id: user.id, email: user.email },
-      process.env.JWT_SECRET || 'cardfinder_secret_2024',
+      JWT_SECRET,
       { expiresIn: '7d' }
     );
 
@@ -425,6 +427,7 @@ router.post('/register', async (req, res) => {
         profile_picture: user.profile_picture,
         income_range: user.income_range,
         nationality: user.nationality,
+        date_of_birth: user.date_of_birth || null,
       },
     });
   } catch (err) {
@@ -547,7 +550,7 @@ router.post('/google-auth', async (req, res) => {
 
     const token = jwt.sign(
       { id: user.id, email: user.email },
-      process.env.JWT_SECRET || 'cardfinder_secret_2024',
+      JWT_SECRET,
       { expiresIn: '7d' }
     );
 
@@ -562,6 +565,7 @@ router.post('/google-auth', async (req, res) => {
         profile_picture: user.profile_picture,
         income_range: user.income_range,
         nationality: user.nationality,
+        date_of_birth: user.date_of_birth || null,
       },
       profile_complete: !!(user.income_range && user.nationality),
     });

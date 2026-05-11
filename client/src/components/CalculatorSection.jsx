@@ -36,6 +36,11 @@ function updateSlider(el) {
   el.style.background = `linear-gradient(to right, #C9920A ${pct}%, #E5E7EB ${pct}%)`;
 }
 
+const authHeaders = () => {
+  const t = localStorage.getItem('userToken');
+  return t ? { Authorization: `Bearer ${t}` } : {};
+};
+
 export default function CalculatorSection({ ref, onResults, onRankingUpdate, initialIncome }) {
   const [categories, setCategories] = useState([]);
   const [brackets, setBrackets] = useState([]);
@@ -81,7 +86,7 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
       setSpending(initialSpend);
       setInitLoading(false);
 
-      axios.post(`${API_BASE}/calculate`, { spending: initialSpend, income: startIncome })
+      axios.post(`${API_BASE}/calculate`, { spending: initialSpend, income: startIncome }, { headers: authHeaders() })
         .then((r) => onRankingUpdate?.(r.data?.ranking_cards || r.data?.all_cards || r.data?.cards || r.data || []))
         .catch(() => {});
     }).catch(() => setInitLoading(false));
@@ -121,7 +126,7 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
     clearPendingCalc();
     setTimeout(() => {
       if (pending.spending && pending.income) {
-        axios.post(`${API_BASE}/calculate`, { spending: pending.spending, income: pending.income })
+        axios.post(`${API_BASE}/calculate`, { spending: pending.spending, income: pending.income }, { headers: authHeaders() })
           .then((res) => {
             onResults?.(res.data, { spending: pending.spending, income: pending.income, saveAfterAuth: pending.saveAfterAuth });
             onRankingUpdate?.(res.data?.ranking_cards || res.data?.all_cards || res.data?.cards || res.data || []);
@@ -178,7 +183,7 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.post(`${API_BASE}/calculate`, { spending, income });
+      const res = await axios.post(`${API_BASE}/calculate`, { spending, income }, { headers: authHeaders() });
       onResults?.(res.data, { spending, income });
       onRankingUpdate?.(res.data?.ranking_cards || res.data?.all_cards || res.data?.cards || res.data || []);
       if (!isAuthenticated()) incrementCalculationCount();

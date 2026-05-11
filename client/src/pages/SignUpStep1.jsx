@@ -54,6 +54,7 @@ export default function SignUpStep1() {
     email: '',
     password: '',
     confirm_password: '',
+    date_of_birth: '',
     income_range: '',
     nationality: '',
     consent: false,
@@ -98,6 +99,7 @@ export default function SignUpStep1() {
         email: form.email,
         password: form.password,
         full_name: form.full_name,
+        date_of_birth: form.date_of_birth || null,
         income_range: form.income_range,
         nationality: form.nationality,
         consent: form.consent,
@@ -132,6 +134,7 @@ export default function SignUpStep1() {
         email: form.email,
         password: form.password,
         full_name: form.full_name,
+        date_of_birth: form.date_of_birth || null,
         income_range: form.income_range,
         nationality: form.nationality,
         consent: form.consent,
@@ -208,6 +211,20 @@ export default function SignUpStep1() {
                 value={form.full_name}
                 onChange={set('full_name')}
                 placeholder="John Doe"
+                style={INPUT_STYLE}
+              />
+            </div>
+
+            <div>
+              <label style={LABEL_STYLE}>
+                Date of Birth{' '}
+                <span style={{ fontWeight: 400, color: '#9CA3AF' }}>(used for card eligibility)</span>
+              </label>
+              <input
+                type="date"
+                value={form.date_of_birth}
+                onChange={set('date_of_birth')}
+                max={new Date().toISOString().split('T')[0]}
                 style={INPUT_STYLE}
               />
             </div>

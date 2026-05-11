@@ -30,6 +30,26 @@ const SUPPORTED_RULE_TYPES = {
       .reduce((a, b) => a + (Number(b) || 0), 0);
     return total < Number(config.min) || total > Number(config.max);
   },
+
+  age_above: (config, user) => {
+    if (!user.date_of_birth) return false;
+    const dob = new Date(user.date_of_birth);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) age--;
+    return age > Number(config.threshold);
+  },
+
+  age_below: (config, user) => {
+    if (!user.date_of_birth) return false;
+    const dob = new Date(user.date_of_birth);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const monthDiff = today.getMonth() - dob.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) age--;
+    return age < Number(config.threshold);
+  },
 };
 
 async function getRulesForCard(cardId) {

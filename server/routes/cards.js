@@ -1,7 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
+const jwt = require('jsonwebtoken');
+const { JWT_SECRET } = require('../config/auth');
 const { isHardEligible, evaluateHideRules } = require('../services/recommendationEngine');
+
+const optionalUserAuth = (req, res, next) => {
+  const token = req.headers['authorization']?.split(' ')[1];
+  if (token) {
+    try { req.user = jwt.verify(token, JWT_SECRET); } catch { /* ignore invalid token */ }
+  }
+  next();
+};
 
 // GET all active cards with their rates
 router.get('/', async (req, res) => {
@@ -192,7 +202,13 @@ const calculateHandler = async (req, res) => {
 
     const allRanked = [...allResults].sort((a, b) => b.net_annual_savings - a.net_annual_savings);
 
-    const userContext = { income, spending };
+    let userDob = null;
+    if (req.user?.id) {
+      const dobRes = await pool.query('SELECT date_of_birth FROM users WHERE id = $1', [req.user.id]);
+      userDob = dobRes.rows[0]?.date_of_birth || null;
+    }
+
+    const userContext = { income, spending, date_of_birth: userDob };
     const top3Cards = [];
     const rankingCards = [];
     const hiddenFromTop3 = [];
@@ -232,7 +248,7 @@ const calculateHandler = async (req, res) => {
   }
 };
 
-router.post('/calculate', calculateHandler);
+router.post('/calculate', optionalUserAuth, calculateHandler);
 
 // POST /api/compare — calculate for specific card_ids only
 const compareHandler = async (req, res) => {
@@ -338,5 +354,6 @@ router.get('/card-categories', async (req, res) => {
 });
 
 module.exports = router;
+module.exports.optionalUserAuth = optionalUserAuth;
 module.exports.calculateHandler = calculateHandler;
 module.exports.compareHandler = compareHandler;

@@ -29,6 +29,7 @@ export default function CompleteProfile() {
   const navigate = useNavigate();
   const [incomeRange, setIncomeRange] = useState('');
   const [nationality, setNationality] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
   const [incomeBrackets, setIncomeBrackets] = useState([]);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -70,11 +71,11 @@ export default function CompleteProfile() {
       const token = localStorage.getItem('userToken');
       await axios.put(
         `${API_BASE}/users/me`,
-        { income_range: incomeRange, nationality },
+        { income_range: incomeRange, nationality, date_of_birth: dateOfBirth || null },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      const updatedUser = { ...user, income_range: incomeRange, nationality };
+      const updatedUser = { ...user, income_range: incomeRange, nationality, date_of_birth: dateOfBirth || null };
       localStorage.setItem('user', JSON.stringify(updatedUser));
       window.dispatchEvent(new Event('user-updated'));
 
@@ -130,6 +131,20 @@ export default function CompleteProfile() {
         </p>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
+            <label style={LABEL_STYLE}>
+              Date of Birth{' '}
+              <span style={{ fontWeight: 400, color: '#9CA3AF' }}>(used for card eligibility)</span>
+            </label>
+            <input
+              type="date"
+              value={dateOfBirth}
+              onChange={(e) => setDateOfBirth(e.target.value)}
+              max={new Date().toISOString().split('T')[0]}
+              style={INPUT_STYLE}
+            />
+          </div>
+
           <div>
             <label style={LABEL_STYLE}>Monthly Income Range *</label>
             <select
