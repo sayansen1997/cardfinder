@@ -1177,4 +1177,89 @@ router.put('/leads/:id', auth, async (req, res) => {
   }
 });
 
+// ——— Hide Rules CRUD ———
+
+router.get('/cards/:id/hide-rules', auth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, rule_type, rule_config, description, created_at FROM card_hide_rules WHERE card_id = $1 ORDER BY id',
+      [req.params.id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/cards/:id/hide-rules', auth, async (req, res) => {
+  const { rule_type, rule_config, description } = req.body;
+
+  const validTypes = ['category_sum_below', 'category_sum_above',
+    'total_spend_below', 'total_spend_above', 'total_spend_range'];
+
+  if (!validTypes.includes(rule_type)) {
+    return res.status(400).json({ error: 'Invalid rule type' });
+  }
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO card_hide_rules (card_id, rule_type, rule_config, description)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [req.params.id, rule_type, JSON.stringify(rule_config), description || null]
+    );
+
+    await pool.query(
+      `INSERT INTO audit_log
+        (admin_user, table_name, field_name, old_value, new_value, action_type, card_id, changed_at)
+       VALUES ($1, 'card_hide_rules', 'rule', '', $2, 'HIDE RULE ADDED', $3, NOW())`,
+      [req.admin.email, JSON.stringify(rule_config), req.params.id]
+    );
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/cards/:id/hide-rules/:ruleId', auth, async (req, res) => {
+  const { rule_type, rule_config, description } = req.body;
+
+  try {
+    const result = await pool.query(
+      `UPDATE card_hide_rules
+       SET rule_type = $1, rule_config = $2, description = $3, updated_at = NOW()
+       WHERE id = $4 AND card_id = $5 RETURNING *`,
+      [rule_type, JSON.stringify(rule_config), description, req.params.ruleId, req.params.id]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: 'Rule not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/cards/:id/hide-rules/:ruleId', auth, async (req, res) => {
+  try {
+    await pool.query(
+      'DELETE FROM card_hide_rules WHERE id = $1 AND card_id = $2',
+      [req.params.ruleId, req.params.id]
+    );
+
+    await pool.query(
+      `INSERT INTO audit_log
+        (admin_user, table_name, field_name, old_value, new_value, action_type, card_id, changed_at)
+       VALUES ($1, 'card_hide_rules', 'rule', 'deleted', '', 'HIDE RULE REMOVED', $2, NOW())`,
+      [req.admin.email, req.params.id]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

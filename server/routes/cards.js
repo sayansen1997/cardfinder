@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
+const { isHardEligible, evaluateHideRules } = require('../services/recommendationEngine');
 
 // GET all active cards with their rates
 router.get('/', async (req, res) => {
@@ -125,7 +126,7 @@ router.get('/benchmarks/:bracket', async (req, res) => {
 // POST /api/calculate — rank all active cards by net annual savings for a given spending profile
 const calculateHandler = async (req, res) => {
   try {
-    const { spending } = req.body;
+    const { spending, income } = req.body;
     if (!spending || typeof spending !== 'object') {
       return res.status(400).json({ error: 'spending object is required' });
     }
@@ -148,7 +149,7 @@ const calculateHandler = async (req, res) => {
         GROUP BY c.id, cc.name`
     );
 
-    const results = cards.map((card) => {
+    const allResults = cards.map((card) => {
       const rates = (card.rates || []).filter((r) => r.category_slug !== null);
       const breakdown = {};
       let totalAnnualCashback = 0;
@@ -189,9 +190,43 @@ const calculateHandler = async (req, res) => {
       };
     });
 
-    results.sort((a, b) => b.net_annual_savings - a.net_annual_savings);
+    const allRanked = [...allResults].sort((a, b) => b.net_annual_savings - a.net_annual_savings);
 
-    res.json(results);
+    const userContext = { income, spending };
+    const top3Cards = [];
+    const rankingCards = [];
+    const hiddenFromTop3 = [];
+
+    for (const card of allRanked) {
+      const hardCheck = await isHardEligible(card, userContext);
+      if (!hardCheck.eligible) {
+        hiddenFromTop3.push({ id: card.id, name: card.name, reason: hardCheck.reason });
+        continue;
+      }
+
+      rankingCards.push(card);
+
+      const softCheck = await evaluateHideRules(card, userContext);
+      if (softCheck.hidden) {
+        hiddenFromTop3.push({ id: card.id, name: card.name, reason: softCheck.reason, soft: true });
+      } else {
+        top3Cards.push(card);
+      }
+    }
+
+    const minSalaryRes = await pool.query(
+      "SELECT MIN(min_salary) AS min_salary FROM cards WHERE status = 'active' AND min_salary > 0"
+    );
+    const platformMinSalary = minSalaryRes.rows[0]?.min_salary || 5000;
+
+    res.json({
+      cards: top3Cards,
+      ranking_cards: rankingCards,
+      all_cards: allRanked,
+      hidden_cards: hiddenFromTop3,
+      hidden_count: hiddenFromTop3.length,
+      platform_min_salary: Number(platformMinSalary),
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

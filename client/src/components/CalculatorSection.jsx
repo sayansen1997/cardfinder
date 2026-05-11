@@ -81,8 +81,8 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
       setSpending(initialSpend);
       setInitLoading(false);
 
-      axios.post(`${API_BASE}/calculate`, { spending: initialSpend })
-        .then((r) => onRankingUpdate?.(r.data))
+      axios.post(`${API_BASE}/calculate`, { spending: initialSpend, income: startIncome })
+        .then((r) => onRankingUpdate?.(r.data?.ranking_cards || r.data?.all_cards || r.data?.cards || r.data || []))
         .catch(() => {});
     }).catch(() => setInitLoading(false));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -122,7 +122,10 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
     setTimeout(() => {
       if (pending.spending && pending.income) {
         axios.post(`${API_BASE}/calculate`, { spending: pending.spending, income: pending.income })
-          .then((res) => onResults?.(res.data, { spending: pending.spending, income: pending.income, saveAfterAuth: pending.saveAfterAuth }))
+          .then((res) => {
+            onResults?.(res.data, { spending: pending.spending, income: pending.income, saveAfterAuth: pending.saveAfterAuth });
+            onRankingUpdate?.(res.data?.ranking_cards || res.data?.all_cards || res.data?.cards || res.data || []);
+          })
           .catch((err) => console.error('Auto-calc error:', err));
       }
     }, 200);
@@ -175,8 +178,9 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.post(`${API_BASE}/calculate`, { spending });
+      const res = await axios.post(`${API_BASE}/calculate`, { spending, income });
       onResults?.(res.data, { spending, income });
+      onRankingUpdate?.(res.data?.ranking_cards || res.data?.all_cards || res.data?.cards || res.data || []);
       if (!isAuthenticated()) incrementCalculationCount();
       setTimeout(() => {
         document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' });

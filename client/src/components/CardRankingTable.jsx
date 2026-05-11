@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, AlertTriangle } from 'lucide-react';
 
 const formatIncome = (val) =>
   `AED ${val >= 1000 ? Math.floor(val / 1000) + 'k' : val}`;
@@ -35,7 +35,7 @@ const TD_MUTED = {
   color: '#D6C4AD',
 };
 
-export default function CardRankingTable({ rankingData, loading }) {
+export default function CardRankingTable({ rankingData, loading, hiddenCardIds = new Set() }) {
   const navigate = useNavigate();
 
   const sorted = [...(rankingData || [])].sort(
@@ -93,17 +93,18 @@ export default function CardRankingTable({ rankingData, loading }) {
               <tbody>
                 {sorted.map((card, i) => {
                   const isTop3 = i < 3;
+                  const isNotRecommended = hiddenCardIds.has(card.id);
                   const rowBg = isTop3 ? '#FFBD4926' : (i % 2 === 0 ? '#14213D' : '#1A2B47');
                   return (
                     <tr
                       key={card.id}
-                      style={{ background: rowBg, borderBottom: '1px solid #01142E' }}
+                      style={{ background: rowBg, borderBottom: '1px solid #01142E', opacity: isNotRecommended ? 0.75 : 1 }}
                       onMouseEnter={(e) => { e.currentTarget.style.background = '#233250'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.background = rowBg; }}
                     >
                       {/* CARD */}
                       <td style={{ ...TD_BASE }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                           {isTop3 && (
                             <span style={{ color: '#C9920A', fontSize: '14px', lineHeight: 1 }}>★</span>
                           )}
@@ -120,6 +121,18 @@ export default function CardRankingTable({ rankingData, loading }) {
                           >
                             {card.name}
                           </button>
+                          {isNotRecommended && (
+                            <span style={{
+                              display: 'inline-flex', alignItems: 'center', gap: '3px',
+                              background: '#451A03', color: '#FED7AA',
+                              fontSize: '10px', fontWeight: 600, fontFamily: 'Inter, sans-serif',
+                              padding: '2px 6px', borderRadius: '4px', letterSpacing: '0.04em',
+                              whiteSpace: 'nowrap',
+                            }}>
+                              <AlertTriangle size={10} strokeWidth={2} />
+                              Not recommended
+                            </span>
+                          )}
                         </div>
                       </td>
 

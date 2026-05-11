@@ -123,9 +123,10 @@ export default function CompareCards() {
   useEffect(() => {
     if (Object.keys(spending).length === 0) return;
     axios
-      .post(`${API_BASE}/calculate`, { spending })
+      .post(`${API_BASE}/calculate`, { spending, income })
       .then((res) => {
-        setRankingData(res.data || []);
+        const data = res.data;
+        setRankingData(Array.isArray(data) ? data : (data?.ranking_cards || data?.all_cards || data?.cards || []));
         setRankingLoading(false);
       })
       .catch(() => setRankingLoading(false));

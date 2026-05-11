@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, ArrowRight, Pencil, Plus, CloudUpload, Save, Search } from 'lucide-react';
+import { Trash2, ArrowRight, Pencil, Plus, CloudUpload, Save, Search, ShieldAlert } from 'lucide-react';
 import AdminNavbar from '../../components/admin/AdminNavbar';
 import CardImage from '../../components/CardImage';
 import CategoryIcon from '../../components/CategoryIcon';
@@ -404,6 +404,278 @@ function EditCardModal({ cardId, categories, cardCategories, onClose, onSaved })
   );
 }
 
+// ——— Hide Rules Modal ———
+
+const RULE_TYPE_LABELS = {
+  category_sum_below: 'Hide if category sum BELOW threshold',
+  category_sum_above: 'Hide if category sum ABOVE threshold',
+  total_spend_below:  'Hide if total spending BELOW threshold',
+  total_spend_above:  'Hide if total spending ABOVE threshold',
+  total_spend_range:  'Hide if total spending NOT in range',
+};
+
+function HideRulesModal({ card, categories, onClose }) {
+  const [rules, setRules] = useState([]);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newRule, setNewRule] = useState({
+    rule_type: 'category_sum_below',
+    rule_config: { categories: [], threshold: '' },
+    description: '',
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const loadRules = () =>
+    adminAxios().get(`/admin/cards/${card.id}/hide-rules`).then((res) => setRules(res.data));
+
+  useEffect(() => { loadRules(); }, [card.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const configDefaults = {
+    category_sum_below: { categories: [], threshold: '' },
+    category_sum_above: { categories: [], threshold: '' },
+    total_spend_below:  { threshold: '' },
+    total_spend_above:  { threshold: '' },
+    total_spend_range:  { min: '', max: '' },
+  };
+
+  const existingRuleTypes = new Set(rules.map((r) => r.rule_type));
+  const availableRuleTypes = Object.entries(RULE_TYPE_LABELS)
+    .filter(([val]) => !existingRuleTypes.has(val));
+
+  const handleOpenAddForm = () => {
+    const firstType = availableRuleTypes[0]?.[0] || 'category_sum_below';
+    setNewRule({ rule_type: firstType, rule_config: configDefaults[firstType] || {}, description: '' });
+    setShowAddForm(true);
+  };
+
+  const handleAddRule = async () => {
+    setSaving(true);
+    setError('');
+    try {
+      await adminAxios().post(`/admin/cards/${card.id}/hide-rules`, newRule);
+      await loadRules();
+      setShowAddForm(false);
+      const nextType = availableRuleTypes[0]?.[0] || 'category_sum_below';
+      setNewRule({ rule_type: nextType, rule_config: configDefaults[nextType] || {}, description: '' });
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to save rule.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteRule = async (ruleId) => {
+    if (!window.confirm('Delete this rule?')) return;
+    await adminAxios().delete(`/admin/cards/${card.id}/hide-rules/${ruleId}`);
+    await loadRules();
+  };
+
+  const setRuleType = (type) => {
+    setNewRule({ ...newRule, rule_type: type, rule_config: configDefaults[type] || {} });
+  };
+
+  const toggleCategory = (slug, checked) => {
+    const current = newRule.rule_config.categories || [];
+    setNewRule({
+      ...newRule,
+      rule_config: {
+        ...newRule.rule_config,
+        categories: checked ? [...current, slug] : current.filter((c) => c !== slug),
+      },
+    });
+  };
+
+  const inputStyle = {
+    width: '100%', padding: '8px 10px', border: '1px solid #E5E7EB',
+    borderRadius: '6px', fontFamily: 'Inter', fontSize: '13px',
+    boxSizing: 'border-box',
+  };
+  const labelStyle = {
+    fontFamily: 'Inter', fontSize: '12px', fontWeight: 600,
+    display: 'block', marginBottom: '4px', color: '#374151',
+  };
+
+  return (
+    <div className="adm-modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="adm-modal" style={{ width: '640px', maxHeight: '90vh', overflow: 'auto' }}>
+        <div className="adm-modal-header">
+          <div>
+            <div className="adm-modal-title">Hide Rules — {card.name}</div>
+            <div className="adm-modal-subtitle">Configure when this card should be hidden from recommendations</div>
+          </div>
+          <button className="adm-modal-close" onClick={onClose}>✕</button>
+        </div>
+
+        <div className="adm-modal-body">
+          {rules.length === 0 && !showAddForm && (
+            <div style={{ textAlign: 'center', padding: '20px', color: '#6B7280', fontFamily: 'Inter', fontSize: '13px' }}>
+              No hide rules configured. This card will show for all eligible users.
+            </div>
+          )}
+
+          {rules.map((rule) => (
+            <div key={rule.id} style={{
+              background: '#F9FAFB', borderRadius: '8px', padding: '12px 16px',
+              marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+            }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#0D1B2A' }}>
+                  {RULE_TYPE_LABELS[rule.rule_type] || rule.rule_type}
+                </div>
+                <div style={{ fontFamily: 'Inter', fontSize: '12px', color: '#6B7280', marginTop: '2px' }}>
+                  {rule.description || JSON.stringify(rule.rule_config)}
+                </div>
+                <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#9CA3AF', marginTop: '4px' }}>
+                  Config: {JSON.stringify(rule.rule_config)}
+                </div>
+              </div>
+              <button
+                onClick={() => handleDeleteRule(rule.id)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#DC2626', padding: '4px', marginLeft: '8px' }}
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          ))}
+
+          {!showAddForm && availableRuleTypes.length > 0 && (
+            <button
+              onClick={handleOpenAddForm}
+              style={{
+                background: '#C9920A', color: 'white', border: 'none',
+                borderRadius: '8px', padding: '10px 16px', fontFamily: 'Manrope',
+                fontSize: '13px', fontWeight: 700, cursor: 'pointer', marginTop: '12px',
+                display: 'flex', alignItems: 'center', gap: '6px',
+              }}
+            >
+              <Plus size={14} /> Add Hide Rule
+            </button>
+          )}
+
+          {!showAddForm && availableRuleTypes.length === 0 && rules.length > 0 && (
+            <div style={{
+              padding: '12px 16px', background: '#F3F4F5', borderRadius: '8px',
+              fontFamily: 'Inter', fontSize: '13px', color: '#6B7280',
+              marginTop: '12px', textAlign: 'center',
+            }}>
+              All rule types have been added for this card.
+            </div>
+          )}
+
+          {showAddForm && (
+            <div style={{ border: '1px solid #E5E7EB', borderRadius: '8px', padding: '16px', marginTop: '16px', background: '#FAFAFA' }}>
+              <div style={{ fontFamily: 'Manrope', fontSize: '15px', fontWeight: 700, marginBottom: '12px' }}>New Hide Rule</div>
+
+              <label style={labelStyle}>Rule Type</label>
+              <select
+                value={newRule.rule_type}
+                onChange={(e) => setRuleType(e.target.value)}
+                style={{ ...inputStyle, marginBottom: '12px' }}
+              >
+                {availableRuleTypes.map(([val, label]) => (
+                  <option key={val} value={val}>{label}</option>
+                ))}
+              </select>
+
+              {(newRule.rule_type === 'category_sum_below' || newRule.rule_type === 'category_sum_above') && (
+                <>
+                  <label style={labelStyle}>Categories (select all that apply)</label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+                    {categories.map((cat) => (
+                      <label key={cat.slug} style={{
+                        display: 'flex', alignItems: 'center', gap: '4px',
+                        fontFamily: 'Inter', fontSize: '12px', cursor: 'pointer',
+                        padding: '4px 8px', background: 'white',
+                        border: '1px solid #E5E7EB', borderRadius: '4px',
+                      }}>
+                        <input
+                          type="checkbox"
+                          checked={(newRule.rule_config.categories || []).includes(cat.slug)}
+                          onChange={(e) => toggleCategory(cat.slug, e.target.checked)}
+                        />
+                        {cat.label || cat.name}
+                      </label>
+                    ))}
+                  </div>
+                  <label style={labelStyle}>Threshold (AED/month)</label>
+                  <input
+                    type="number"
+                    value={newRule.rule_config.threshold || ''}
+                    onChange={(e) => setNewRule({ ...newRule, rule_config: { ...newRule.rule_config, threshold: Number(e.target.value) } })}
+                    style={{ ...inputStyle, marginBottom: '12px' }}
+                  />
+                </>
+              )}
+
+              {(newRule.rule_type === 'total_spend_below' || newRule.rule_type === 'total_spend_above') && (
+                <>
+                  <label style={labelStyle}>Threshold (AED/month)</label>
+                  <input
+                    type="number"
+                    value={newRule.rule_config.threshold || ''}
+                    onChange={(e) => setNewRule({ ...newRule, rule_config: { ...newRule.rule_config, threshold: Number(e.target.value) } })}
+                    style={{ ...inputStyle, marginBottom: '12px' }}
+                  />
+                </>
+              )}
+
+              {newRule.rule_type === 'total_spend_range' && (
+                <>
+                  <label style={labelStyle}>Min (AED/month)</label>
+                  <input
+                    type="number"
+                    value={newRule.rule_config.min || ''}
+                    onChange={(e) => setNewRule({ ...newRule, rule_config: { ...newRule.rule_config, min: Number(e.target.value) } })}
+                    style={{ ...inputStyle, marginBottom: '12px' }}
+                  />
+                  <label style={labelStyle}>Max (AED/month)</label>
+                  <input
+                    type="number"
+                    value={newRule.rule_config.max || ''}
+                    onChange={(e) => setNewRule({ ...newRule, rule_config: { ...newRule.rule_config, max: Number(e.target.value) } })}
+                    style={{ ...inputStyle, marginBottom: '12px' }}
+                  />
+                </>
+              )}
+
+              <label style={labelStyle}>Description (shown to user when card is hidden)</label>
+              <input
+                type="text"
+                value={newRule.description}
+                onChange={(e) => setNewRule({ ...newRule, description: e.target.value })}
+                placeholder="e.g., Card requires more grocery + dining spending"
+                style={{ ...inputStyle, marginBottom: '16px' }}
+              />
+
+              {error && <p style={{ color: '#DC2626', fontFamily: 'Inter', fontSize: '12px', marginBottom: '8px' }}>{error}</p>}
+
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={() => { setShowAddForm(false); setError(''); }}
+                  style={{ background: '#E5E7EB', color: '#374151', border: 'none', borderRadius: '6px', padding: '8px 16px', fontFamily: 'Inter', fontSize: '13px', cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddRule}
+                  disabled={saving}
+                  style={{ background: '#C9920A', color: 'white', border: 'none', borderRadius: '6px', padding: '8px 16px', fontFamily: 'Manrope', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
+                >
+                  {saving ? 'Saving…' : 'Save Rule'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="adm-modal-footer">
+          <button className="adm-btn-save" onClick={onClose}>Done</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ——— Add New Card Modal ———
 
 function AddCardModal({ categories, cardCategories, onClose, onSaved }) {
@@ -680,6 +952,7 @@ export default function AdminCardManagement() {
   const [editingCardId, setEditingCardId] = useState(null);
   const [editCard, setEditCard] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [hideRulesCard, setHideRulesCard] = useState(null);
 
   const searchTimer = useRef(null);
 
@@ -903,6 +1176,14 @@ export default function AdminCardManagement() {
                         </button>
                         <button
                           className="adm-action-icon"
+                          title="Hide rules"
+                          onClick={() => setHideRulesCard(card)}
+                          style={{ border: '1px solid #E5E7EB', borderRadius: '6px', padding: '4px 8px' }}
+                        >
+                          <ShieldAlert size={15} color="#6B7280" />
+                        </button>
+                        <button
+                          className="adm-action-icon"
                           title="Delete card"
                           onClick={() => handleDeleteCard(card.id, card.name)}
                           style={{ color: '#DC2626' }}
@@ -963,6 +1244,14 @@ export default function AdminCardManagement() {
           cardCategories={cardCategories}
           onClose={() => setShowAdd(false)}
           onSaved={handleAddSaved}
+        />
+      )}
+
+      {hideRulesCard && (
+        <HideRulesModal
+          card={hideRulesCard}
+          categories={categories}
+          onClose={() => setHideRulesCard(null)}
         />
       )}
     </>

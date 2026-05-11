@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { RotateCw, Bookmark, GitCompareArrows, ArrowRight } from 'lucide-react';
+import { RotateCw, Bookmark, GitCompareArrows, ArrowRight, Info } from 'lucide-react';
 import CardImage from './CardImage';
 import { savePendingCalc, isAuthenticated } from '../utils/calculationGate';
 
@@ -19,10 +19,11 @@ function getBenefits(card) {
   return [];
 }
 
-export default function TopResults({ results, spending, income, onRecalculate, onSave }) {
+export default function TopResults({ results, hiddenCards = [], hiddenCount = 0, platformMinSalary, spending, income, onRecalculate, onSave }) {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState({});
   const [saveState, setSaveState] = useState('idle');
+  const [showHiddenDetails, setShowHiddenDetails] = useState(false);
 
   const handleSave = async () => {
     if (!isAuthenticated()) {
@@ -37,7 +38,122 @@ export default function TopResults({ results, spending, income, onRecalculate, o
     if (ok) setTimeout(() => setSaveState('idle'), 5000);
   };
 
-  if (!results?.length) return null;
+  if (!results?.length) {
+    return (
+      <section className="cf-results-section" id="results-section">
+        <div style={{
+          maxWidth: '720px',
+          margin: '40px auto',
+          padding: '40px 32px',
+          background: 'white',
+          borderRadius: '16px',
+          textAlign: 'center',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        }}>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            borderRadius: '50%',
+            background: '#FEF3C7',
+            margin: '0 auto 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <Info size={28} color="#92400E" />
+          </div>
+
+          <h2 style={{
+            fontFamily: 'Manrope, sans-serif',
+            fontSize: '22px',
+            fontWeight: 700,
+            color: '#0D1B2A',
+            margin: '0 0 12px',
+          }}>
+            No cards match your current profile
+          </h2>
+
+          <p style={{
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '14px',
+            color: '#6B7280',
+            lineHeight: 1.6,
+            margin: '0 0 24px',
+            maxWidth: '440px',
+            marginLeft: 'auto',
+            marginRight: 'auto',
+          }}>
+            The UAE credit cards available on our platform require a minimum
+            monthly income of AED {platformMinSalary ? Number(platformMinSalary).toLocaleString() : '5,000'} or above.
+            Try adjusting your income to see eligible cards.
+          </p>
+
+          {hiddenCount > 0 && (
+            <>
+              <div style={{
+                background: '#FEF3C7',
+                borderRadius: '8px',
+                padding: '12px 16px',
+                display: 'inline-block',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '13px',
+                color: '#92400E',
+                fontWeight: 600,
+                marginBottom: '12px',
+                cursor: 'pointer',
+              }}
+                onClick={() => setShowHiddenDetails((v) => !v)}
+              >
+                {hiddenCount} card{hiddenCount !== 1 ? 's' : ''} hidden — {showHiddenDetails ? 'hide details' : 'see why'}
+              </div>
+
+              {showHiddenDetails && (
+                <div style={{
+                  background: '#FFFBEB',
+                  borderRadius: '8px',
+                  padding: '12px 16px',
+                  marginTop: '4px',
+                  fontFamily: 'Inter, sans-serif',
+                  fontSize: '13px',
+                  color: '#92400E',
+                  textAlign: 'left',
+                }}>
+                  {hiddenCards.map((c) => (
+                    <div key={c.id} style={{ padding: '6px 0', borderBottom: '1px solid #FEF3C7' }}>
+                      <strong>{c.name}</strong> — {c.reason}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          <div style={{ marginTop: '24px' }}>
+            <button
+              onClick={onRecalculate}
+              style={{
+                background: '#C9920A',
+                border: 'none',
+                color: 'white',
+                borderRadius: '8px',
+                padding: '10px 24px',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '14px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <RotateCw size={16} color="#fff" />
+              Adjust & Recalculate
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   const top3 = results.slice(0, 3);
   const toggle = (id) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -153,6 +269,51 @@ export default function TopResults({ results, spending, income, onRecalculate, o
             )}
           </div>
         </div>
+
+        {/* ── Hidden cards indicator ── */}
+        {hiddenCount > 0 && (
+          <>
+            <div style={{
+              background: '#FEF3C7',
+              border: '1px solid #FDE68A',
+              borderRadius: '8px',
+              padding: '12px 16px',
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '13px',
+              color: '#92400E',
+            }}>
+              <Info size={16} style={{ flexShrink: 0 }} />
+              <span>{hiddenCount} card{hiddenCount !== 1 ? 's' : ''} filtered based on your profile</span>
+              <button
+                onClick={() => setShowHiddenDetails((v) => !v)}
+                style={{
+                  background: 'none', border: 'none', color: '#92400E',
+                  textDecoration: 'underline', cursor: 'pointer',
+                  fontFamily: 'Inter, sans-serif', fontSize: '13px', padding: 0,
+                }}
+              >
+                {showHiddenDetails ? 'Hide' : 'See why'}
+              </button>
+            </div>
+
+            {showHiddenDetails && (
+              <div style={{
+                background: '#FFFBEB', borderRadius: '8px', padding: '12px 16px',
+                marginBottom: '20px', fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#92400E',
+              }}>
+                {hiddenCards.map((c) => (
+                  <div key={c.id} style={{ padding: '6px 0', borderBottom: '1px solid #FEF3C7' }}>
+                    <strong>{c.name}</strong> — {c.reason}
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
 
         {/* ── Cards grid ── */}
         <div className="cf-result-cards" style={{

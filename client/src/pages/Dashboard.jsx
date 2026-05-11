@@ -21,8 +21,11 @@ export default function Dashboard() {
   const [rankingData, setRankingData] = useState([]);
   const [rankingLoading, setRankingLoading] = useState(true);
   const [calcResults, setCalcResults] = useState([]);
+  const [calcHiddenCards, setCalcHiddenCards] = useState([]);
+  const [calcHiddenCount, setCalcHiddenCount] = useState(0);
   const [calcSpending, setCalcSpending] = useState({});
   const [calcIncome, setCalcIncome] = useState(0);
+  const [platformMinSalary, setPlatformMinSalary] = useState(null);
   const [showResults, setShowResults] = useState(false);
   const [saveNotification, setSaveNotification] = useState({ visible: false, message: '' });
 
@@ -61,7 +64,11 @@ export default function Dashboard() {
   }, []);
 
   const handleResults = (data, meta) => {
-    setCalcResults(data);
+    const cards = Array.isArray(data) ? data : (data?.cards || []);
+    setCalcResults(cards);
+    setCalcHiddenCards(Array.isArray(data) ? [] : (data?.hidden_cards || []));
+    setCalcHiddenCount(Array.isArray(data) ? 0 : (data?.hidden_count || 0));
+    setPlatformMinSalary(Array.isArray(data) ? null : (data?.platform_min_salary || null));
     if (meta) {
       setCalcSpending(meta.spending || {});
       setCalcIncome(meta.income || 0);
@@ -69,7 +76,7 @@ export default function Dashboard() {
     setShowResults(true);
 
     if (meta?.saveAfterAuth) {
-      handleSaveCalc(data, meta.spending, meta.income).then((ok) => {
+      handleSaveCalc(cards, meta.spending, meta.income).then((ok) => {
         if (ok) {
           setSaveNotification({ visible: true, message: 'Calculation saved to your account!' });
           setTimeout(() => setSaveNotification({ visible: false, message: '' }), 4000);
@@ -81,10 +88,11 @@ export default function Dashboard() {
   const handleSaveCalc = async (resultsData, spendingData, incomeData) => {
     const token = localStorage.getItem('userToken');
     if (!token) return false;
-    const results = resultsData || calcResults;
+    const raw = resultsData || calcResults;
+    const cards = Array.isArray(raw) ? raw : (raw?.cards || []);
     const spending = spendingData || calcSpending;
     const income = incomeData || calcIncome;
-    const top3 = results.slice(0, 3).map((c) => ({
+    const top3 = cards.slice(0, 3).map((c) => ({
       id: c.id,
       name: c.name,
       bank: c.bank,
@@ -109,13 +117,15 @@ export default function Dashboard() {
   };
 
   const handleRankingUpdate = (data) => {
-    setRankingData(data);
+    setRankingData(Array.isArray(data) ? data : (data?.cards || []));
     setRankingLoading(false);
   };
 
   const handleRecalculate = () => {
     setShowResults(false);
     setCalcResults([]);
+    setCalcHiddenCards([]);
+    setCalcHiddenCount(0);
     calculatorRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
@@ -185,6 +195,9 @@ export default function Dashboard() {
       {showResults && (
         <TopResults
           results={calcResults}
+          hiddenCards={calcHiddenCards}
+          hiddenCount={calcHiddenCount}
+          platformMinSalary={platformMinSalary}
           spending={calcSpending}
           income={calcIncome}
           onRecalculate={handleRecalculate}
@@ -192,7 +205,11 @@ export default function Dashboard() {
         />
       )}
 
-      <CardRankingTable rankingData={rankingData} loading={rankingLoading} />
+      <CardRankingTable
+        rankingData={rankingData}
+        loading={rankingLoading}
+        hiddenCardIds={new Set((calcHiddenCards || []).filter(h => h.soft).map(h => h.id))}
+      />
 
       <Footer />
     </div>

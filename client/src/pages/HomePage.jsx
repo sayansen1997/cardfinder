@@ -17,8 +17,11 @@ export default function HomePage() {
   const [rankingData, setRankingData] = useState([]);
   const [rankingLoading, setRankingLoading] = useState(true);
   const [calcResults, setCalcResults] = useState([]);
+  const [calcHiddenCards, setCalcHiddenCards] = useState([]);
+  const [calcHiddenCount, setCalcHiddenCount] = useState(0);
   const [calcSpending, setCalcSpending] = useState({});
   const [calcIncome, setCalcIncome] = useState(0);
+  const [platformMinSalary, setPlatformMinSalary] = useState(null);
   const [showResults, setShowResults] = useState(false);
 
   const calculatorRef = useRef(null);
@@ -34,7 +37,11 @@ export default function HomePage() {
   };
 
   const handleResults = (data, meta) => {
-    setCalcResults(data);
+    const cards = Array.isArray(data) ? data : (data.cards || []);
+    setCalcResults(cards);
+    setCalcHiddenCards(Array.isArray(data) ? [] : (data.hidden_cards || []));
+    setCalcHiddenCount(Array.isArray(data) ? 0 : (data.hidden_count || 0));
+    setPlatformMinSalary(Array.isArray(data) ? null : (data.platform_min_salary || null));
     if (meta) {
       setCalcSpending(meta.spending || {});
       setCalcIncome(meta.income || 0);
@@ -72,13 +79,15 @@ export default function HomePage() {
   };
 
   const handleRankingUpdate = (data) => {
-    setRankingData(data);
+    setRankingData(Array.isArray(data) ? data : (data.cards || data));
     setRankingLoading(false);
   };
 
   const handleRecalculate = () => {
     setShowResults(false);
     setCalcResults([]);
+    setCalcHiddenCards([]);
+    setCalcHiddenCount(0);
     scrollToCalculator();
   };
 
@@ -109,6 +118,9 @@ export default function HomePage() {
       {showResults && (
         <TopResults
           results={calcResults}
+          hiddenCards={calcHiddenCards}
+          hiddenCount={calcHiddenCount}
+          platformMinSalary={platformMinSalary}
           spending={calcSpending}
           income={calcIncome}
           onRecalculate={handleRecalculate}
@@ -116,7 +128,11 @@ export default function HomePage() {
         />
       )}
 
-      <CardRankingTable rankingData={rankingData} loading={rankingLoading} />
+      <CardRankingTable
+        rankingData={rankingData}
+        loading={rankingLoading}
+        hiddenCardIds={new Set((calcHiddenCards || []).filter(h => h.soft).map(h => h.id))}
+      />
 
       <WhySection />
 
