@@ -624,7 +624,7 @@ router.get('/spending-categories', auth, async (req, res) => {
 });
 
 router.post('/spending-categories', auth, async (req, res) => {
-  const { slug, name, icon, min_spend, max_spend, default_spend, sort_order } = req.body;
+  const { slug, name, icon, min_spend, max_spend, default_spend, sort_order, tooltip } = req.body;
   if (!slug || !name) {
     return res.status(400).json({ error: 'slug and name are required' });
   }
@@ -632,8 +632,8 @@ router.post('/spending-categories', auth, async (req, res) => {
   try {
     await client.query('BEGIN');
     const catRes = await client.query(
-      `INSERT INTO categories (slug, name, label, icon, min_spend, max_spend, default_spend, display_order, is_active)
-       VALUES ($1, $2, $2, $3, $4, $5, $6, $7, true) RETURNING *`,
+      `INSERT INTO categories (slug, name, label, icon, min_spend, max_spend, default_spend, display_order, is_active, tooltip)
+       VALUES ($1, $2, $2, $3, $4, $5, $6, $7, true, $8) RETURNING *`,
       [
         slug.toLowerCase().replace(/\s+/g, '_'),
         name,
@@ -642,6 +642,7 @@ router.post('/spending-categories', auth, async (req, res) => {
         max_spend ?? 5000,
         default_spend ?? 500,
         sort_order ?? 0,
+        tooltip ?? null,
       ]
     );
     const newCat = catRes.rows[0];
@@ -668,7 +669,7 @@ router.post('/spending-categories', auth, async (req, res) => {
 
 router.put('/spending-categories/:id', auth, async (req, res) => {
   const { id } = req.params;
-  const { name, icon, min_spend, max_spend, default_spend, sort_order } = req.body;
+  const { name, icon, min_spend, max_spend, default_spend, sort_order, tooltip } = req.body;
   try {
     await pool.query(
       `UPDATE categories SET
@@ -678,9 +679,10 @@ router.put('/spending-categories/:id', auth, async (req, res) => {
         min_spend   = COALESCE($3, min_spend),
         max_spend   = COALESCE($4, max_spend),
         default_spend = COALESCE($5, default_spend),
-        display_order = COALESCE($6, display_order)
-       WHERE id = $7`,
-      [name, icon, min_spend, max_spend, default_spend, sort_order, id]
+        display_order = COALESCE($6, display_order),
+        tooltip     = $7
+       WHERE id = $8`,
+      [name, icon, min_spend, max_spend, default_spend, sort_order, tooltip ?? null, id]
     );
     res.json({ success: true });
   } catch (err) {
@@ -1195,7 +1197,8 @@ router.post('/cards/:id/hide-rules', auth, async (req, res) => {
   const { rule_type, rule_config, description } = req.body;
 
   const validTypes = ['category_sum_below', 'category_sum_above',
-    'total_spend_below', 'total_spend_above', 'total_spend_range'];
+    'total_spend_below', 'total_spend_above', 'total_spend_range',
+    'age_above', 'age_below'];
 
   if (!validTypes.includes(rule_type)) {
     return res.status(400).json({ error: 'Invalid rule type' });

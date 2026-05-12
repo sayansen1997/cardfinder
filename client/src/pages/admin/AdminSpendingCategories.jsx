@@ -15,7 +15,7 @@ function adminAxios() {
 
 const EMPTY_FORM = {
   slug: '', name: '', icon: 'Circle',
-  min_spend: 0, max_spend: 5000, default_spend: 500, sort_order: 0,
+  min_spend: 0, max_spend: 5000, default_spend: 500, sort_order: 0, tooltip: '',
 };
 
 function Field({ label, hint, children }) {
@@ -74,6 +74,7 @@ export default function AdminSpendingCategories() {
       max_spend: cat.max_spend ?? 5000,
       default_spend: cat.default_spend ?? 500,
       sort_order: cat.display_order ?? 0,
+      tooltip: cat.tooltip || '',
     });
     setError('');
     setShowModal(true);
@@ -91,6 +92,7 @@ export default function AdminSpendingCategories() {
           max_spend: Number(form.max_spend),
           default_spend: Number(form.default_spend),
           sort_order: Number(form.sort_order),
+          tooltip: form.tooltip || null,
         });
       } else {
         await adminAxios().post('/admin/spending-categories', {
@@ -101,6 +103,7 @@ export default function AdminSpendingCategories() {
           max_spend: Number(form.max_spend),
           default_spend: Number(form.default_spend),
           sort_order: Number(form.sort_order),
+          tooltip: form.tooltip || null,
         });
       }
       setShowModal(false);
@@ -238,6 +241,20 @@ export default function AdminSpendingCategories() {
                   <CategoryIcon name={form.icon} size={22} color="#94A3B8" />
                 </div>
               </div>
+            </Field>
+
+            <Field label="Tooltip (description shown to users)">
+              <textarea
+                value={form.tooltip || ''}
+                onChange={(e) => set('tooltip', e.target.value)}
+                placeholder="E.g., Supermarkets and grocery stores — Carrefour, Lulu, Spinneys"
+                rows={2}
+                maxLength={250}
+                style={{ ...INPUT, resize: 'vertical' }}
+              />
+              <p style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '4px', marginBottom: 0 }}>
+                {(form.tooltip || '').length}/250 characters
+              </p>
             </Field>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowRight, Lock, CircleCheck } from 'lucide-react';
+import { ArrowRight, Lock, CircleCheck, Info } from 'lucide-react';
 import API_BASE from '../utils/api';
 import CategoryIcon from './CategoryIcon';
 import {
@@ -40,6 +40,52 @@ const authHeaders = () => {
   const t = localStorage.getItem('userToken');
   return t ? { Authorization: `Bearer ${t}` } : {};
 };
+
+function CategoryTooltip({ text }) {
+  const [show, setShow] = useState(false);
+  return (
+    <div
+      style={{ position: 'relative', display: 'inline-flex' }}
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+      onClick={() => setShow((s) => !s)}
+    >
+      <Info size={13} color="#94A3B8" style={{ cursor: 'help' }} />
+      {show && (
+        <div style={{
+          position: 'absolute',
+          bottom: 'calc(100% + 8px)',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#0D1B2A',
+          color: 'white',
+          padding: '8px 12px',
+          borderRadius: '6px',
+          fontFamily: 'Inter',
+          fontSize: '12px',
+          lineHeight: 1.4,
+          width: '240px',
+          zIndex: 100,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          pointerEvents: 'none',
+        }}>
+          {text}
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 0,
+            height: 0,
+            borderLeft: '6px solid transparent',
+            borderRight: '6px solid transparent',
+            borderTop: '6px solid #0D1B2A',
+          }} />
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function CalculatorSection({ ref, onResults, onRankingUpdate, initialIncome }) {
   const [categories, setCategories] = useState([]);
@@ -140,11 +186,12 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
     const splits = {
       groceries:  0.12,
       dining:     0.08,
-      travel:     0.10,
+      travel:     0.08,
       fuel:       0.06,
-      shopping:   0.15,
+      shopping:   0.12,
       utilities:  0.10,
       car_rental: 0.05,
+      online:     0.08,
     };
     const newSpending = {};
     cats.forEach((cat) => {
@@ -376,6 +423,7 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
                             }}>
                               {cat.label}
                             </span>
+                            {cat.tooltip && <CategoryTooltip text={cat.tooltip} />}
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <input

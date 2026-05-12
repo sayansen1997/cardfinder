@@ -75,7 +75,11 @@
       "Bash(Select-Object FullName)",
       "PowerShell(cd C:\\\\Users\\\\sensa\\\\cardfiner\\\\server; node -e \"const bcrypt = require\\('bcryptjs'\\); const { Pool } = require\\('pg'\\); const pool = new Pool\\({ user: 'postgres', password: 'hi2u_Postgres', host: 'localhost', database: 'cardfiner', port: 5432 }\\); bcrypt.hash\\('password', 10\\).then\\(async hash => { const r = await pool.query\\('UPDATE users SET password=\\\\$1 WHERE email=\\\\$2 RETURNING id, email', [hash, 'olduser@test.com']\\); console.log\\('Updated:', r.rows\\); await pool.end\\(\\); }\\);\")",
       "PowerShell($login = Invoke-RestMethod -Method POST -Uri \"http://localhost:5000/api/users/login\" -ContentType \"application/json\" -Body '{\"email\":\"olduser@test.com\",\"password\":\"password\"}'; Write-Host \"Token:\" $login.token; Write-Host \"User:\" \\($login.user | ConvertTo-Json\\))",
-      "PowerShell(Receive-Job *)"
+      "PowerShell(Receive-Job *)",
+      "PowerShell(curl *)",
+      "PowerShell(Invoke-RestMethod -Uri \"http://localhost:5000/api/categories\" | Select-Object slug, tooltip | Format-Table -AutoSize)",
+      "PowerShell(Start-Process -FilePath \"node\" -ArgumentList \"index.js\" -WorkingDirectory \"C:\\\\Users\\\\sensa\\\\cardfiner\\\\server\" -RedirectStandardOutput \"C:\\\\Users\\\\sensa\\\\cardfiner\\\\server\\\\server.log\" -RedirectStandardError \"C:\\\\Users\\\\sensa\\\\cardfiner\\\\server\\\\server.err\" -WindowStyle Hidden; Start-Sleep -Seconds 3; Get-Content \"C:\\\\Users\\\\sensa\\\\cardfiner\\\\server\\\\server.log\")",
+      "PowerShell(Invoke-RestMethod -Uri \"http://localhost:5000/api/categories\" | Select-Object slug, label, tooltip | Format-Table -AutoSize)"
     ]
   }
 }

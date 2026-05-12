@@ -5,7 +5,7 @@ const pool = require('../db');
 router.get('/', async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT id, name, slug, label, icon, default_spend, min_spend, max_spend
+      `SELECT id, name, slug, label, icon, default_spend, min_spend, max_spend, tooltip
        FROM categories
        WHERE is_active = true
        ORDER BY display_order ASC`
@@ -32,10 +32,10 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, label, display_order, is_active } = req.body;
+    const { name, label, display_order, is_active, tooltip } = req.body;
     const result = await pool.query(
-      'UPDATE categories SET name=$1, label=$2, display_order=$3, is_active=$4 WHERE id=$5 RETURNING *',
-      [name, label, display_order, is_active, id]
+      'UPDATE categories SET name=$1, label=$2, display_order=$3, is_active=$4, tooltip=$5 WHERE id=$6 RETURNING *',
+      [name, label, display_order, is_active, tooltip ?? null, id]
     );
     res.json(result.rows[0]);
   } catch (err) {
