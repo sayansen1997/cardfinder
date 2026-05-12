@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-import { CircleCheckBig, RotateCw } from 'lucide-react';
+import { CircleCheckBig, RotateCw, Info, Calculator, CheckCircle } from 'lucide-react';
 import API_BASE from '../utils/api';
 import DashboardNavbar from '../components/DashboardNavbar';
 import CardImage from '../components/CardImage';
@@ -30,12 +30,14 @@ export default function CompareCards() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const paramId = searchParams.get('cards');
+  const paramIds = searchParams.get('ids');
+  const token = localStorage.getItem('userToken');
   const [allCards, setAllCards] = useState([]);
   const [categories, setCategories] = useState([]);
   const [slots, setSlots] = useState([null, null, null]);
   const [compareData, setCompareData] = useState([]);
   const [spending, setSpending] = useState({});
-  const [income] = useState(location.state?.income || 0);
+  const [income, setPageIncome] = useState(location.state?.income || 0);
   const [topResults] = useState(location.state?.topResults || []);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [breakdownOpen, setBreakdownOpen] = useState(true);
@@ -43,6 +45,10 @@ export default function CompareCards() {
   const [rankingLoading, setRankingLoading] = useState(true);
   const [activeMobileTab, setActiveMobileTab] = useState(0);
   const [mobileSwapOpen, setMobileSwapOpen] = useState(false);
+  const [hybridLoading, setHybridLoading] = useState(true);
+  const [autoLoadedCards, setAutoLoadedCards] = useState(null);
+  const [showAnonymousPrompt, setShowAnonymousPrompt] = useState(false);
+  const [hasPersonalizedData, setHasPersonalizedData] = useState(false);
 
   const slotRowRef = useRef(null);
 
@@ -72,24 +78,54 @@ export default function CompareCards() {
 
       const defaultSpending = {};
       cats.forEach((c) => {
-        defaultSpending[c.name] = Number(c.default_spend) || 0;
+        defaultSpending[c.slug] = Number(c.default_spend) || 0;
       });
-      const passedSpending = location.state?.spending;
-      setSpending(
-        passedSpending && Object.keys(passedSpending).length > 0
-          ? passedSpending
-          : defaultSpending
-      );
+
+      let resolvedSpending = null;
+      let resolvedIncome = null;
+
+      // Priority 1: React Router state (from TopResults Compare button)
+      if (location.state?.spending && Object.keys(location.state.spending).length > 0) {
+        resolvedSpending = location.state.spending;
+        resolvedIncome = location.state.income || 0;
+      } else {
+        // Priority 2: sessionStorage (recent manual calc)
+        try {
+          const stored = sessionStorage.getItem('lastCalcResults');
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (parsed?.spending && Object.keys(parsed.spending).length > 0) {
+              resolvedSpending = parsed.spending;
+              resolvedIncome = parsed.income || 0;
+            }
+          }
+        } catch (e) { /* ignore */ }
+      }
+
+      if (resolvedSpending) {
+        setHasPersonalizedData(true);
+        setSpending(resolvedSpending);
+        if (resolvedIncome) setPageIncome(resolvedIncome);
+      } else {
+        setSpending(defaultSpending);
+      }
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  /* ——— Assign slots when cards load OR paramId changes ——— */
+  /* ——— Assign slots when cards load OR params change ——— */
   useEffect(() => {
     if (allCards.length === 0) return;
     const stateIds = location.state?.cardIds || [];
     let initialSlots;
-    if (paramId) {
-      // explicit card selected — paramId wins so same-page navigation works
+    if (paramIds) {
+      // ids=topPickId,cardId[,thirdId] — slot 0 is always the locked top pick
+      const idArr = paramIds.split(',').map(Number).filter(Boolean);
+      const ordered = idArr.map((id) => allCards.find((c) => c.id === id)).filter(Boolean);
+      const usedSet = new Set(ordered.map((c) => c.id));
+      const remaining = allCards.filter((c) => !usedSet.has(c.id));
+      initialSlots = [ordered[0] || null, ordered[1] || null, ordered[2] || remaining[0] || null];
+    } else if (paramId) {
+      // legacy single-card param — card goes to slot 0 (locked)
       const target = allCards.find((c) => c.id === Number(paramId));
       const rest = allCards
         .filter((c) => c.id !== Number(paramId))
@@ -98,11 +134,16 @@ export default function CompareCards() {
     } else if (stateIds.length > 0) {
       const ordered = stateIds.map((id) => allCards.find((c) => c.id === id)).filter(Boolean);
       initialSlots = [ordered[0] || null, ordered[1] || null, ordered[2] || null];
+    } else if (autoLoadedCards?.length > 0) {
+      const ordered = autoLoadedCards.map((c) => allCards.find((ac) => ac.id === c.id)).filter(Boolean);
+      const usedSet = new Set(ordered.map((c) => c.id));
+      const remaining = allCards.filter((c) => !usedSet.has(c.id));
+      initialSlots = [ordered[0] || null, ordered[1] || null, ordered[2] || remaining[0] || null];
     } else {
       initialSlots = [allCards[0] || null, allCards[1] || null, allCards[2] || null];
     }
     setSlots(initialSlots);
-  }, [allCards, paramId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [allCards, paramId, paramIds, autoLoadedCards]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ——— Run compare whenever slots or spending change ——— */
   const runCompare = useCallback(async (currentSlots, currentSpending) => {
@@ -138,6 +179,106 @@ export default function CompareCards() {
     runCompare(slots, spending);
   }, [slots, spending, runCompare]);
 
+  /* ——— Auto-calculate for logged-in users with no nav data ——— */
+  const autoCalculateForLoggedInUser = async () => {
+    try {
+      const userRes = await axios.get(`${API_BASE}/users/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const incomeRange = userRes.data?.income_range;
+
+      const incomeMap = {
+        'AED 3,000 - 5,000': 4000,
+        'AED 5,000 - 10,000': 7500,
+        'AED 10,000 - 15,000': 12500,
+        'AED 15,000 - 25,000': 20000,
+        'AED 25,000 - 40,000': 32500,
+        'AED 40,000 - 60,000': 50000,
+        'AED 60,000+': 60000,
+        '10k': 10000,
+        '15k': 15000,
+        '25k': 25000,
+        '40k': 40000,
+        '60k+': 60000,
+      };
+
+      const autoIncome = incomeMap[incomeRange] || 10000;
+
+      const distribution = {
+        groceries: 0.12,
+        dining: 0.08,
+        travel: 0.08,
+        fuel: 0.06,
+        shopping: 0.12,
+        utilities: 0.10,
+        car_rental: 0.05,
+        online: 0.08,
+      };
+
+      const autoSpending = {};
+      for (const [cat, pct] of Object.entries(distribution)) {
+        autoSpending[cat] = Math.round(autoIncome * pct / 50) * 50;
+      }
+
+      const calcRes = await axios.post(
+        `${API_BASE}/calculate`,
+        { income: autoIncome, spending: autoSpending },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const cards = Array.isArray(calcRes.data)
+        ? calcRes.data
+        : (calcRes.data?.cards || []);
+
+      if (cards.length >= 1) {
+        setAutoLoadedCards(cards.slice(0, 3));
+      } else {
+        setShowAnonymousPrompt(true);
+      }
+      setHybridLoading(false);
+    } catch (err) {
+      console.error('Auto-calculate failed:', err);
+      setShowAnonymousPrompt(true);
+      setHybridLoading(false);
+    }
+  };
+
+  /* ——— Hybrid loading: spending data → auto-calc → prompt ——— */
+  /* URL params alone are NOT enough — spending data is required.       */
+  useEffect(() => {
+    // Priority 1: location.state carries spending (from Compare button)
+    if (location.state?.spending && Object.keys(location.state.spending).length > 0) {
+      setHybridLoading(false);
+      return;
+    }
+
+    // Priority 2: sessionStorage has spending from a recent calc
+    try {
+      const stored = sessionStorage.getItem('lastCalcResults');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed?.spending && Object.keys(parsed.spending).length > 0) {
+          setAutoLoadedCards(parsed.cards?.slice(0, 3) || null);
+          setHybridLoading(false);
+          return;
+        }
+      }
+    } catch (e) {
+      // ignore parse errors, fall through
+    }
+
+    // Priority 3: logged-in user — auto-calc with profile income
+    if (token) {
+      autoCalculateForLoggedInUser();
+      return;
+    }
+
+    // Priority 4: anonymous with no spending data — prompt, even if ?ids= is in URL
+    setShowAnonymousPrompt(true);
+    setHybridLoading(false);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleRecalculate = () => {
     navigate('/');
     setTimeout(() => {
@@ -146,6 +287,7 @@ export default function CompareCards() {
   };
 
   const handleSwap = (slotIdx, card) => {
+    if (slotIdx === 0) return;
     const next = [...slots];
     next[slotIdx] = card;
     setSlots(next);
@@ -164,6 +306,48 @@ export default function CompareCards() {
   };
 
   const activeSlots = slots.filter(Boolean);
+
+  if (hybridLoading) {
+    return (
+      <div className="cc-page">
+        <DashboardNavbar />
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#6B7280' }}>
+            Loading…
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (showAnonymousPrompt) {
+    return (
+      <div className="cc-page">
+        <DashboardNavbar />
+        <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
+          <div style={{ maxWidth: '520px', width: '100%', background: 'white', borderRadius: '16px', padding: '40px 32px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#FEF3C7', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Calculator size={28} color="#92400E" />
+            </div>
+            <h2 style={{ fontFamily: 'Manrope, sans-serif', fontSize: '22px', fontWeight: 700, color: '#0D1B2A', margin: '0 0 12px' }}>
+              Run the calculator first
+            </h2>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '14px', color: '#6B7280', lineHeight: 1.6, margin: '0 0 24px' }}>
+              To compare credit cards, please run the cashback calculator first. We'll determine your top pick based on your spending profile.
+            </p>
+            <button
+              onClick={() => navigate('/')}
+              style={{ background: '#C9920A', color: 'white', border: 'none', borderRadius: '8px', padding: '12px 24px', fontFamily: 'Manrope, sans-serif', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}
+            >
+              Go to Calculator
+            </button>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="cc-page">
@@ -225,6 +409,25 @@ export default function CompareCards() {
                     <CardImage card={card} height={120} />
                   )}
                 </div>
+
+                {/* Top Pick badge (mobile, slot 0 only) */}
+                {activeMobileTab === 0 && (
+                  <div style={{
+                    display: 'inline-block',
+                    background: '#FEF3C7',
+                    color: '#92400E',
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    padding: '4px 12px',
+                    borderRadius: '999px',
+                    marginBottom: '8px',
+                  }}>
+                    Top Pick
+                  </div>
+                )}
 
                 {/* Bank label */}
                 <p className="cc-mobile-card-bank">{card.bank || card.category_name || ''}</p>
@@ -299,32 +502,42 @@ export default function CompareCards() {
                   >
                     View Details
                   </button>
-                  <button
-                    className="cc-mobile-btn-secondary"
-                    onClick={() => setMobileSwapOpen((v) => !v)}
-                  >
-                    ⇄ Swap This Card
-                  </button>
+                  {activeMobileTab !== 0 && (
+                    <button
+                      className="cc-mobile-btn-secondary"
+                      onClick={() => setMobileSwapOpen((v) => !v)}
+                    >
+                      ⇄ Swap This Card
+                    </button>
+                  )}
 
                   {/* Inline swap picker */}
-                  {mobileSwapOpen && (
+                  {mobileSwapOpen && activeMobileTab !== 0 && (
                     <div className="cc-mobile-swap-picker">
-                      {allCards.map((ac) => (
-                        <button
-                          key={ac.id}
-                          className={`cc-dd-item${card.id === ac.id ? ' active' : ''}`}
-                          onClick={() => { handleSwap(activeMobileTab, ac); setMobileSwapOpen(false); }}
-                        >
-                          <span className="cc-dd-thumb" style={{ background: gradient(allCards.indexOf(ac)) }}>
-                            {abbr(ac.name)}
-                          </span>
-                          <span>
-                            {ac.name}
-                            <br />
-                            <span style={{ color: '#6B7280', fontSize: 11 }}>{ac.bank}</span>
-                          </span>
-                        </button>
-                      ))}
+                      {(() => {
+                        const takenIds = new Set(slots.filter(Boolean).map((s) => s.id));
+                        const available = allCards.filter((ac) => !takenIds.has(ac.id));
+                        return available.length === 0 ? (
+                          <div style={{ padding: '24px', textAlign: 'center', fontFamily: 'Inter', fontSize: '13px', color: '#6B7280' }}>
+                            No other cards available to swap with.
+                          </div>
+                        ) : available.map((ac) => (
+                          <button
+                            key={ac.id}
+                            className="cc-dd-item"
+                            onClick={() => { handleSwap(activeMobileTab, ac); setMobileSwapOpen(false); }}
+                          >
+                            <span className="cc-dd-thumb" style={{ background: gradient(allCards.indexOf(ac)) }}>
+                              {abbr(ac.name)}
+                            </span>
+                            <span>
+                              {ac.name}
+                              <br />
+                              <span style={{ color: '#6B7280', fontSize: 11 }}>{ac.bank}</span>
+                            </span>
+                          </button>
+                        ));
+                      })()}
                     </div>
                   )}
                 </div>
@@ -447,8 +660,26 @@ export default function CompareCards() {
                   {card?.category_name || card?.card_category || ''}
                 </div>
 
-                {/* Swap Card + Top Pick row */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                {/* Top Pick badge (slot 0, locked) or Swap button (slots 1 & 2) */}
+                {i === 0 ? (
+                  activeSlots.length > 0 && (
+                    <div style={{
+                      background: '#FEF3C7',
+                      color: '#92400E',
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      padding: '4px 12px',
+                      borderRadius: '999px',
+                      whiteSpace: 'nowrap',
+                      display: 'inline-block',
+                    }}>
+                      Top Pick
+                    </div>
+                  )
+                ) : (
                   <div style={{ position: 'relative' }}>
                     <button
                       style={{
@@ -485,46 +716,37 @@ export default function CompareCards() {
                         maxHeight: '400px',
                         overflowY: 'auto',
                       }}>
-                        {allCards.map((ac) => (
-                          <button
-                            key={ac.id}
-                            className={`cc-dd-item${card && card.id === ac.id ? ' active' : ''}`}
-                            onClick={() => handleSwap(i, ac)}
-                          >
-                            <span
-                              className="cc-dd-thumb"
-                              style={{ background: gradient(allCards.indexOf(ac)) }}
+                        {(() => {
+                          const takenIds = new Set(slots.filter(Boolean).map((s) => s.id));
+                          const available = allCards.filter((ac) => !takenIds.has(ac.id));
+                          return available.length === 0 ? (
+                            <div style={{ padding: '24px', textAlign: 'center', fontFamily: 'Inter', fontSize: '13px', color: '#6B7280' }}>
+                              No other cards available to swap with.
+                            </div>
+                          ) : available.map((ac) => (
+                            <button
+                              key={ac.id}
+                              className="cc-dd-item"
+                              onClick={() => handleSwap(i, ac)}
                             >
-                              {abbr(ac.name)}
-                            </span>
-                            <span>
-                              {ac.name}
-                              <br />
-                              <span style={{ color: '#6B7280', fontSize: 11 }}>{ac.bank}</span>
-                            </span>
-                          </button>
-                        ))}
+                              <span
+                                className="cc-dd-thumb"
+                                style={{ background: gradient(allCards.indexOf(ac)) }}
+                              >
+                                {abbr(ac.name)}
+                              </span>
+                              <span>
+                                {ac.name}
+                                <br />
+                                <span style={{ color: '#6B7280', fontSize: 11 }}>{ac.bank}</span>
+                              </span>
+                            </button>
+                          ));
+                        })()}
                       </div>
                     )}
                   </div>
-
-                  {i === 0 && activeSlots.length > 0 && (
-                    <div style={{
-                      background: '#FEF3C7',
-                      color: '#92400E',
-                      fontFamily: 'Inter, sans-serif',
-                      fontSize: '11px',
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                      padding: '4px 12px',
-                      borderRadius: '999px',
-                      whiteSpace: 'nowrap',
-                    }}>
-                      Top Pick
-                    </div>
-                  )}
-                </div>
+                )}
 
                 {/* Apply Now */}
                 {card && (
@@ -559,6 +781,63 @@ export default function CompareCards() {
               </div>
             );
           })}
+        </div>
+
+        {/* ——— Helper note ——— */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
+          <div style={{
+            padding: '12px 16px',
+            background: '#F8FAFC',
+            borderRadius: '8px',
+            border: '1px solid #E5E7EB',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '13px',
+            color: '#6B7280',
+          }}>
+            <Info size={14} color="#9CA3AF" style={{ flexShrink: 0 }} />
+            <span>Your top pick is locked. Swap the other two cards to compare alternatives with your best recommendation.</span>
+          </div>
+
+          {hasPersonalizedData ? (
+            <div style={{
+              padding: '12px 16px',
+              background: '#ECFDF5',
+              borderRadius: '8px',
+              border: '1px solid #A7F3D0',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '8px',
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '13px',
+              color: '#065F46',
+            }}>
+              <CheckCircle size={14} color="#065F46" style={{ marginTop: '3px', flexShrink: 0 }} />
+              <span>Cashback figures shown below are personalized based on your spending profile.</span>
+            </div>
+          ) : (
+            <div style={{
+              padding: '12px 16px',
+              background: '#FEF3C7',
+              borderRadius: '8px',
+              border: '1px solid #FDE68A',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '8px',
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '13px',
+              color: '#92400E',
+            }}>
+              <Info size={14} color="#92400E" style={{ marginTop: '5px', flexShrink: 0 }} />
+              <span>
+                Cashback figures shown here use average spending for general comparison.
+                For personalized recommendations based on your actual spending, use the
+                calculator on the homepage.
+              </span>
+            </div>
+          )}
         </div>
 
         {/* ——— Comparison table ——— */}
@@ -875,7 +1154,7 @@ export default function CompareCards() {
 
       </div>
 
-      <CardRankingTable rankingData={rankingData} loading={rankingLoading} />
+      <CardRankingTable rankingData={rankingData} loading={rankingLoading} topPickId={slots[0]?.id} />
       <Footer />
     </div>
   );

@@ -66,6 +66,7 @@ export default function DashboardNavbar({ firstName }) {
   }, []);
 
   const handleLogout = () => {
+    sessionStorage.removeItem('lastCalcResults');
     localStorage.removeItem('userToken');
     localStorage.removeItem('userName');
     localStorage.removeItem('user');

@@ -600,7 +600,19 @@ export default function TopResults({ results, hiddenCards = [], hiddenCount = 0,
                         <span>AED {Number(card.net_annual_savings).toLocaleString()}</span>
                       </div>
                       <button
-                        onClick={() => navigate(`/compare?cards=${card.id}`)}
+                        onClick={() => {
+                          const topPickId = top3[0]?.id;
+                          const idStr = topPickId && card.id !== topPickId
+                            ? `${topPickId},${card.id}`
+                            : `${card.id}`;
+                          navigate(`/compare?ids=${idStr}`, {
+                            state: {
+                              cardIds: idStr.split(',').map(Number),
+                              spending: spending || {},
+                              income: income || 0,
+                            },
+                          });
+                        }}
                         style={{
                           width: '100%',
                           background: 'white',

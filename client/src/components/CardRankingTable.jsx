@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, AlertTriangle } from 'lucide-react';
+import { ArrowRight, AlertTriangle, Award } from 'lucide-react';
 
 const formatIncome = (val) =>
   `AED ${val >= 1000 ? Math.floor(val / 1000) + 'k' : val}`;
@@ -9,6 +9,18 @@ const formatAED = (val) =>
 
 const formatFee = (val) =>
   `AED ${Number(val) === 0 ? '0' : Number(val).toLocaleString()}`;
+
+const TABLE_BTN_STYLE = {
+  background: 'none',
+  border: 'none',
+  color: '#FFBD49',
+  fontFamily: 'Inter, sans-serif',
+  fontSize: '14px',
+  fontWeight: 600,
+  cursor: 'pointer',
+  padding: 0,
+  whiteSpace: 'nowrap',
+};
 
 const TH_STYLE = {
   padding: '14px 20px',
@@ -35,7 +47,7 @@ const TD_MUTED = {
   color: '#D6C4AD',
 };
 
-export default function CardRankingTable({ rankingData, loading, hiddenCardIds = new Set() }) {
+export default function CardRankingTable({ rankingData, loading, hiddenCardIds = new Set(), topPickId, spending, income }) {
   const navigate = useNavigate();
 
   const sorted = [...(rankingData || [])].sort(
@@ -165,24 +177,51 @@ export default function CardRankingTable({ rankingData, loading, hiddenCardIds =
                         {formatIncome(card.min_salary)}
                       </td>
 
-                      {/* COMPARE */}
+                      {/* COMPARE / VIEW DETAILS / TOP PICK */}
                       <td style={{ ...TD_BASE }}>
-                        <button
-                          onClick={() => navigate(`/compare?cards=${card.id}`)}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            color: '#FFBD49',
-                            fontFamily: 'Inter, sans-serif',
-                            fontSize: '14px',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            padding: 0,
+                        {!topPickId ? (
+                          <button
+                            onClick={() => navigate(`/cards/${card.id}`)}
+                            style={TABLE_BTN_STYLE}
+                          >
+                            View Details
+                          </button>
+                        ) : card.id === topPickId ? (
+                          <span style={{
+                            background: '#FEF3C7',
+                            color: '#92400E',
+                            fontFamily: 'Inter',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            padding: '4px 10px',
+                            borderRadius: '999px',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
                             whiteSpace: 'nowrap',
-                          }}
-                        >
-                          Compare <ArrowRight size={16} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: '4px' }} />
-                        </button>
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                          }}>
+                            <Award size={11} />
+                            Top Pick
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              const third = (rankingData || []).find(
+                                (c) => c.id !== topPickId && c.id !== card.id
+                              )?.id;
+                              const idArr = [topPickId, card.id, third].filter(Boolean);
+                              const navOpts = (spending && Object.keys(spending).length > 0)
+                                ? { state: { cardIds: idArr, spending, income: income || 0 } }
+                                : undefined;
+                              navigate(`/compare?ids=${idArr.join(',')}`, navOpts);
+                            }}
+                            style={TABLE_BTN_STYLE}
+                          >
+                            Compare <ArrowRight size={16} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: '4px' }} />
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );

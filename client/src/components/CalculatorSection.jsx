@@ -176,6 +176,10 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
           .then((res) => {
             onResults?.(res.data, { spending: pending.spending, income: pending.income, saveAfterAuth: pending.saveAfterAuth });
             onRankingUpdate?.(res.data?.ranking_cards || res.data?.all_cards || res.data?.cards || res.data || []);
+            try {
+              const calcCards = Array.isArray(res.data) ? res.data : (res.data?.cards || res.data?.ranking_cards || []);
+              sessionStorage.setItem('lastCalcResults', JSON.stringify({ cards: calcCards, spending: pending.spending, income: pending.income, timestamp: Date.now() }));
+            } catch (e) { /* ignore */ }
           })
           .catch((err) => console.error('Auto-calc error:', err));
       }
@@ -234,6 +238,12 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
       onResults?.(res.data, { spending, income });
       onRankingUpdate?.(res.data?.ranking_cards || res.data?.all_cards || res.data?.cards || res.data || []);
       if (!isAuthenticated()) incrementCalculationCount();
+      try {
+        const calcCards = Array.isArray(res.data) ? res.data : (res.data?.cards || res.data?.ranking_cards || []);
+        sessionStorage.setItem('lastCalcResults', JSON.stringify({ cards: calcCards, spending, income, timestamp: Date.now() }));
+      } catch (e) {
+        // ignore quota errors
+      }
       setTimeout(() => {
         document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' });
       }, 80);

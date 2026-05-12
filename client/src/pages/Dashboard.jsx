@@ -209,6 +209,9 @@ export default function Dashboard() {
         rankingData={rankingData}
         loading={rankingLoading}
         hiddenCardIds={new Set((calcHiddenCards || []).filter(h => h.soft).map(h => h.id))}
+        topPickId={calcResults[0]?.id}
+        spending={calcSpending}
+        income={calcIncome}
       />
 
       <Footer />
