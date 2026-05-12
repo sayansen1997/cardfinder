@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import CardImage from './CardImage';
 
 const LIFESTYLE_CATEGORIES = [
@@ -48,11 +49,145 @@ function sortCards(cards, category) {
   return arr.slice(0, 3);
 }
 
-function parseBenefits(text) {
-  return (text || '')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
+function parseBenefits(raw) {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed;
+  } catch {}
+  if (raw.includes('\n')) return raw.split('\n').map((s) => s.trim()).filter(Boolean);
+  return raw.split(',').map((s) => s.trim()).filter(Boolean);
+}
+
+function CuratedCardTile({ card, index }) {
+  const navigate = useNavigate();
+  const [showAll, setShowAll] = useState(false);
+  const benefits = parseBenefits(card.key_benefits);
+  const displayed = showAll ? benefits : benefits.slice(0, 2);
+  const hasMore = benefits.length > 2;
+
+  return (
+    <div
+      onClick={() => navigate(`/cards/${card.id}`)}
+      style={{
+        background: 'white',
+        borderRadius: '12px',
+        padding: '20px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+        height: '100%',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        transition: 'all 0.2s ease',
+        cursor: 'pointer',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-3px)';
+        e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.08)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)';
+      }}
+    >
+      {/* Image wrapper */}
+      <div style={{
+        borderRadius: '10px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+        flexShrink: 0,
+      }}>
+        {card.image_url ? (
+          <img
+            src={card.image_url}
+            alt={card.name}
+            style={{ width: '100%', objectFit: 'cover', borderRadius: '8px', display: 'block' }}
+          />
+        ) : (
+          <CardImage card={card} height={140} />
+        )}
+      </div>
+
+      {/* Card name */}
+      <h4
+        onClick={() => navigate(`/cards/${card.id}`)}
+        style={{ fontFamily: 'Manrope, sans-serif', fontSize: '18px', fontWeight: 700, lineHeight: '28px', color: '#001A3D', margin: 0, cursor: 'pointer', transition: 'color 0.2s ease' }}
+        onMouseEnter={(e) => { e.currentTarget.style.color = '#C9920A'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = '#001A3D'; }}
+      >
+        {card.name}
+      </h4>
+
+      {/* Card category */}
+      <div style={{
+        color: '#E5A00D',
+        fontFamily: 'Inter, sans-serif',
+        fontSize: '12px',
+        fontWeight: 600,
+        letterSpacing: '0.6px',
+        textTransform: 'uppercase',
+        marginTop: '-8px',
+      }}>
+        {card.category_name || card.card_category}
+      </div>
+
+      {/* Benefits list */}
+      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {displayed.map((benefit, j) => (
+          <li key={j} style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '8px',
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '14px',
+            color: '#44474E',
+            lineHeight: 1.5,
+          }}>
+            <span style={{ color: '#C9920A', fontWeight: 700, flexShrink: 0 }}>✓</span>
+            <span>{benefit}</span>
+          </li>
+        ))}
+      </ul>
+
+      {hasMore && (
+        <button
+          onClick={(e) => { e.stopPropagation(); setShowAll((s) => !s); }}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#C9920A',
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '12px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            padding: '4px 0',
+            marginTop: '-8px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+          }}
+        >
+          {showAll ? 'Show less' : `See ${benefits.length - 2} more`}
+          {showAll ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+        </button>
+      )}
+
+      <div style={{ flex: 1 }} />
+
+      {/* Select Card button */}
+      <button
+        onClick={(e) => { e.stopPropagation(); navigate(`/cards/${card.id}`); }}
+        style={{ width: '100%', background: 'white', border: '1.5px solid #0D1B2A', borderRadius: '8px', padding: '12px', fontFamily: 'Inter, sans-serif', fontSize: '14px', fontWeight: 600, color: '#0D1B2A', cursor: 'pointer', transition: 'all 0.15s ease' }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = '#0D1B2A'; e.currentTarget.style.color = 'white'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = 'white'; e.currentTarget.style.color = '#0D1B2A'; }}
+      >
+        View Details
+      </button>
+    </div>
+  );
 }
 
 export default function CuratedSection({ cards, loading }) {
@@ -114,7 +249,6 @@ export default function CuratedSection({ cards, loading }) {
                   }}
                 >
                   <span>{cat.label}</span>
-                  {isActive && <span style={{ color: '#9CA3AF', fontSize: '14px' }}>›</span>}
                 </button>
               );
             })}
@@ -127,118 +261,8 @@ export default function CuratedSection({ cards, loading }) {
                 <p>Loading cards…</p>
               </div>
             ) : (
-              topCards.map((card) => (
-                <div
-                  key={card.id}
-                  onClick={() => navigate(`/cards/${card.id}`)}
-                  style={{
-                    background: 'white',
-                    borderRadius: '12px',
-                    padding: '20px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '16px',
-                    height: '100%',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                    transition: 'all 0.2s ease',
-                    cursor: 'pointer',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-3px)';
-                    e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.08)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)';
-                  }}
-                >
-                  {/* Image wrapper */}
-                  <div style={{
-                    borderRadius: '10px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    overflow: 'hidden',
-                    flexShrink: 0,
-                  }}>
-                    {card.image_url ? (
-                      <img
-                        src={card.image_url}
-                        alt={card.name}
-                        style={{
-                          width: '100%',
-                          objectFit: 'cover',
-                          borderRadius: '8px',
-                          display: 'block',
-                        }}
-                      />
-                    ) : (
-                      <CardImage card={card} height={140} />
-                    )}
-                  </div>
-
-                  {/* Card name */}
-                  <h4
-                    onClick={() => navigate(`/cards/${card.id}`)}
-                    style={{ fontFamily: 'Manrope, sans-serif', fontSize: '18px', fontStyle: 'normal', fontWeight: 700, lineHeight: '28px', color: '#001A3D', margin: 0, cursor: 'pointer', transition: 'color 0.2s ease' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.color = '#C9920A' }}
-                    onMouseLeave={(e) => { e.currentTarget.style.color = '#001A3D' }}
-                  >
-                    {card.name}
-                  </h4>
-
-                  {/* Card category — below card name */}
-                  <div style={{
-                    color: '#E5A00D',
-                    fontFamily: 'Inter, sans-serif',
-                    fontSize: '12px',
-                    fontStyle: 'normal',
-                    fontWeight: 600,
-                    lineHeight: '16px',
-                    letterSpacing: '0.6px',
-                    textTransform: 'uppercase',
-                    marginTop: '-8px',
-                  }}>
-                    {card.category_name || card.card_category}
-                  </div>
-
-                  {/* Benefits list */}
-                  <ul style={{
-                    listStyle: 'none',
-                    padding: 0,
-                    margin: 0,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px',
-                  }}>
-                    {parseBenefits(card.key_benefits).slice(0, 3).map((benefit, j) => (
-                      <li key={j} style={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: '8px',
-                        fontFamily: 'Inter, sans-serif',
-                        fontSize: '14px',
-                        color: '#44474E',
-                        lineHeight: 1.5,
-                      }}>
-                        <span style={{ color: '#C9920A', fontWeight: 700, flexShrink: 0 }}>✓</span>
-                        <span>{benefit}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <div style={{ flex: 1 }} />
-
-                  {/* Select Card button */}
-                  <button
-                    onClick={() => navigate(`/cards/${card.id}`)}
-                    style={{ width: '100%', background: 'white', border: '1.5px solid #0D1B2A', borderRadius: '8px', padding: '12px', fontFamily: 'Inter, sans-serif', fontSize: '14px', fontWeight: 600, color: '#0D1B2A', cursor: 'pointer', transition: 'all 0.15s ease' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = '#0D1B2A'; e.currentTarget.style.color = 'white'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = 'white'; e.currentTarget.style.color = '#0D1B2A'; }}
-                  >
-                    Select Card
-                  </button>
-                </div>
+              topCards.map((card, i) => (
+                <CuratedCardTile key={card.id} card={card} index={i} />
               ))
             )}
           </div>
