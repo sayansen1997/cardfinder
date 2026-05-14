@@ -324,7 +324,7 @@ export default function CardDetail() {
             </div>
             {card.max_cap && (
               <div style={{ background: '#F3F4F5', border: '1px solid #E5E7EB', borderRadius: '999px', padding: '8px 16px', fontFamily: 'Inter', fontSize: '13px', fontWeight: 600, color: '#7F5700' }}>
-                Annual Cashback Cap: AED {Number(card.max_cap).toLocaleString()}
+                Monthly Cashback Cap: AED {Number(card.max_cap).toLocaleString()}
               </div>
             )}
           </div>

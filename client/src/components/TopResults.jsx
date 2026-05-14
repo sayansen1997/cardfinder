@@ -537,100 +537,146 @@ export default function TopResults({ results, hiddenCards = [], hiddenCount = 0,
                     How we calculated this {expanded[card.id] ? '▲' : '▼'}
                   </button>
 
-                  {expanded[card.id] && card.cashback_breakdown && (
-                    <div style={{
-                      background: '#F8FAFC',
-                      borderRadius: '8px',
-                      padding: '16px',
-                      fontFamily: 'Inter, sans-serif',
-                      fontSize: '13px',
-                    }}>
-                      <p style={{
+                  {expanded[card.id] && card.cashback_breakdown && (() => {
+                    const sumCategoryCapped = Object.values(card.cashback_breakdown).reduce((s, v) => s + v, 0);
+                    const cardCapActive = card.max_cap > 0 && card.total_annual_cashback < sumCategoryCapped - 0.01;
+                    return (
+                      <div style={{
+                        background: '#F8FAFC',
+                        borderRadius: '8px',
+                        padding: '16px',
                         fontFamily: 'Inter, sans-serif',
-                        fontSize: '14px',
-                        fontWeight: 700,
-                        color: '#0D1B2A',
-                        lineHeight: 1.5,
-                        margin: '0 0 12px',
+                        fontSize: '13px',
                       }}>
-                        You'd earn most with this card based on your top spending categories.
-                      </p>
-                      {Object.entries(card.cashback_breakdown)
-                        .sort((a, b) => b[1] - a[1])
-                        .map(([cat, val]) => (
-                          <div key={cat} style={{
-                            display: 'flex',
-                            gap: '8px',
-                            lineHeight: 1.5,
-                            marginBottom: '8px',
-                          }}>
-                            <span style={{ color: '#C9920A', flexShrink: 0 }}>•</span>
-                            <span style={{ flex: 1, color: '#374151' }}>
-                              {cat.charAt(0).toUpperCase() + cat.slice(1).replace(/_/g, ' ')} cashback
-                            </span>
-                            <span style={{ fontWeight: 600, color: '#0D1B2A', flexShrink: 0 }}>
-                              AED {Number(val).toLocaleString()}
-                            </span>
-                          </div>
-                        ))}
-                      <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        borderTop: '1px solid #E5E7EB',
-                        marginTop: '8px',
-                        paddingTop: '8px',
-                        fontWeight: 700,
-                        color: '#0D1B2A',
-                      }}>
-                        <span>Total Cashback / yr</span>
-                        <span>AED {Number(card.total_annual_cashback).toLocaleString()}</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', color: '#6B7280', padding: '4px 0' }}>
-                        <span>Annual Fee</span>
-                        <span>− AED {Number(card.annual_fee).toLocaleString()}</span>
-                      </div>
-                      <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        fontWeight: 700,
-                        color: '#C9920A',
-                        padding: '4px 0',
-                      }}>
-                        <span>Net Savings</span>
-                        <span>AED {Number(card.net_annual_savings).toLocaleString()}</span>
-                      </div>
-                      <button
-                        onClick={() => {
-                          const topPickId = top3[0]?.id;
-                          const idStr = topPickId && card.id !== topPickId
-                            ? `${topPickId},${card.id}`
-                            : `${card.id}`;
-                          navigate(`/compare?ids=${idStr}`, {
-                            state: {
-                              cardIds: idStr.split(',').map(Number),
-                              spending: spending || {},
-                              income: income || 0,
-                            },
-                          });
-                        }}
-                        style={{
-                          width: '100%',
-                          background: 'white',
-                          border: '1px solid #E5E7EB',
-                          color: '#0D1B2A',
-                          borderRadius: '8px',
-                          padding: '12px',
+                        <p style={{
                           fontFamily: 'Inter, sans-serif',
                           fontSize: '14px',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          marginTop: '16px',
-                        }}
-                      >
-                        See full savings breakdown <ArrowRight size={14} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: '4px' }} />
-                      </button>
-                    </div>
-                  )}
+                          fontWeight: 700,
+                          color: '#0D1B2A',
+                          lineHeight: 1.5,
+                          margin: '0 0 12px',
+                        }}>
+                          You'd earn most with this card based on your top spending categories.
+                        </p>
+                        {Object.entries(card.cashback_breakdown)
+                          .sort((a, b) => b[1] - a[1])
+                          .map(([cat, val]) => {
+                            const uncappedVal = card.cashback_breakdown_uncapped?.[cat];
+                            const catCapped = uncappedVal != null && val < uncappedVal - 0.01;
+                            const monthlyCap = catCapped ? Math.round(val / 12) : null;
+                            return (
+                              <div key={cat} style={{
+                                display: 'flex',
+                                gap: '8px',
+                                lineHeight: 1.5,
+                                marginBottom: '8px',
+                                alignItems: 'flex-start',
+                              }}>
+                                <span style={{ color: '#C9920A', flexShrink: 0 }}>•</span>
+                                <span style={{ flex: 1, color: '#374151' }}>
+                                  {cat.charAt(0).toUpperCase() + cat.slice(1).replace(/_/g, ' ')} cashback
+                                  {catCapped && (
+                                    <span style={{ fontSize: '11px', color: '#9CA3AF', marginLeft: '6px' }}>
+                                      (capped at AED {monthlyCap.toLocaleString()}/mo)
+                                    </span>
+                                  )}
+                                </span>
+                                <span style={{ fontWeight: 600, color: '#0D1B2A', flexShrink: 0 }}>
+                                  AED {Number(val).toLocaleString()}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        {cardCapActive && (
+                          <div style={{
+                            background: '#FEF3C7',
+                            border: '1px solid #FDE68A',
+                            borderRadius: '6px',
+                            padding: '8px 12px',
+                            margin: '8px 0',
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: '6px',
+                            fontSize: '12px',
+                            color: '#92400E',
+                            lineHeight: 1.4,
+                          }}>
+                            <Info size={13} color="#92400E" style={{ marginTop: '2px', flexShrink: 0 }} />
+                            <span>
+                              This card has a total monthly cap of AED {Number(card.max_cap).toLocaleString()} (AED {(Number(card.max_cap) * 12).toLocaleString()}/yr). Your potential cashback of AED {Math.round(sumCategoryCapped).toLocaleString()} is capped at this limit.
+                            </span>
+                          </div>
+                        )}
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          borderTop: '1px solid #E5E7EB',
+                          marginTop: '8px',
+                          paddingTop: '8px',
+                          fontWeight: 700,
+                          color: '#0D1B2A',
+                        }}>
+                          <span>Total Cashback / yr</span>
+                          <span>AED {Number(card.total_annual_cashback).toLocaleString()}</span>
+                        </div>
+                        {cardCapActive && (
+                          <div style={{
+                            fontSize: '11px',
+                            color: '#6B7280',
+                            fontStyle: 'italic',
+                            marginTop: '2px',
+                            textAlign: 'right',
+                          }}>
+                            After applying monthly cap
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#6B7280', padding: '4px 0' }}>
+                          <span>Annual Fee</span>
+                          <span>− AED {Number(card.annual_fee).toLocaleString()}</span>
+                        </div>
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          fontWeight: 700,
+                          color: '#C9920A',
+                          padding: '4px 0',
+                        }}>
+                          <span>Net Savings</span>
+                          <span>AED {Number(card.net_annual_savings).toLocaleString()}</span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const topPickId = top3[0]?.id;
+                            const idStr = topPickId && card.id !== topPickId
+                              ? `${topPickId},${card.id}`
+                              : `${card.id}`;
+                            navigate(`/compare?ids=${idStr}`, {
+                              state: {
+                                cardIds: idStr.split(',').map(Number),
+                                spending: spending || {},
+                                income: income || 0,
+                              },
+                            });
+                          }}
+                          style={{
+                            width: '100%',
+                            background: 'white',
+                            border: '1px solid #E5E7EB',
+                            color: '#0D1B2A',
+                            borderRadius: '8px',
+                            padding: '12px',
+                            fontFamily: 'Inter, sans-serif',
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            marginTop: '16px',
+                          }}
+                        >
+                          See full savings breakdown <ArrowRight size={14} strokeWidth={2} style={{ display: 'inline', verticalAlign: 'middle', marginLeft: '4px' }} />
+                        </button>
+                      </div>
+                    );
+                  })()}
 
                   {/* Timestamp */}
                   <div style={{

@@ -93,9 +93,8 @@ router.get('/cards', auth, async (req, res) => {
     const [countRes, dataRes] = await Promise.all([
       pool.query(`SELECT COUNT(*) FROM cards c ${where}`, params),
       pool.query(
-        `SELECT c.id, c.name, c.bank, c.card_category, c.annual_fee, c.min_salary, c.status, c.created_at, c.image_url,
-          cc.name AS category_name,
-          (SELECT MAX(cr.monthly_cap) FROM card_rates cr WHERE cr.card_id = c.id) AS max_cap
+        `SELECT c.id, c.name, c.bank, c.card_category, c.annual_fee, c.min_salary, c.max_cap, c.status, c.created_at, c.image_url,
+          cc.name AS category_name
          FROM cards c
          LEFT JOIN card_categories cc ON cc.slug = c.card_category
          ${where}
@@ -281,7 +280,7 @@ router.delete('/cards/:id', auth, async (req, res) => {
 
 // POST /api/admin/cards
 router.post('/cards', auth, upload.single('image'), async (req, res) => {
-  const { name, bank, card_category, annual_fee, min_salary, key_benefits, rates } = req.body;
+  const { name, bank, card_category, annual_fee, min_salary, max_cap, key_benefits, rates } = req.body;
 
   if (!name || !bank) {
     return res.status(400).json({ error: 'name and bank are required' });
@@ -304,9 +303,9 @@ router.post('/cards', auth, upload.single('image'), async (req, res) => {
     await client.query('BEGIN');
 
     const cardRes = await client.query(
-      `INSERT INTO cards (name, bank, card_category, annual_fee, min_salary, key_benefits, status, image_url, created_at, updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,'active',$7,NOW(),NOW()) RETURNING *`,
-      [name, bank, card_category || 'cashback', Number(annual_fee) || 0, Number(min_salary) || 0, benefitsStr || null, image_url]
+      `INSERT INTO cards (name, bank, card_category, annual_fee, min_salary, max_cap, key_benefits, status, image_url, created_at, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,'active',$8,NOW(),NOW()) RETURNING *`,
+      [name, bank, card_category || 'cashback', Number(annual_fee) || 0, Number(min_salary) || 0, max_cap ? Number(max_cap) : null, benefitsStr || null, image_url]
     );
     const card = cardRes.rows[0];
 

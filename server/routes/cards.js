@@ -142,7 +142,7 @@ const calculateHandler = async (req, res) => {
     }
 
     const { rows: cards } = await pool.query(
-      `SELECT c.id, c.name, c.bank, c.card_category, c.annual_fee, c.fee_notes, c.min_salary, c.image_url, c.apply_link, c.updated_at,
+      `SELECT c.id, c.name, c.bank, c.card_category, c.annual_fee, c.fee_notes, c.min_salary, c.max_cap, c.image_url, c.apply_link, c.updated_at,
           cc.name AS category_name,
           json_agg(
             json_build_object(
@@ -162,23 +162,23 @@ const calculateHandler = async (req, res) => {
     const allResults = cards.map((card) => {
       const rates = (card.rates || []).filter((r) => r.category_slug !== null);
       const breakdown = {};
-      let totalAnnualCashback = 0;
+      const breakdownUncapped = {};
+      let totalMonthlyCashback = 0;
 
       for (const [category, monthlySpend] of Object.entries(spending)) {
         const rate = rates.find((r) => r.category_slug === category);
         if (!rate) continue;
 
         const monthlyCap = rate.monthly_cap != null ? Number(rate.monthly_cap) : Infinity;
-        const monthlyCashback = Math.min(
-          Number(monthlySpend) * Number(rate.cashback_rate),
-          monthlyCap
-        );
-        const annualCashback = monthlyCashback * 12;
-        breakdown[category] = parseFloat(annualCashback.toFixed(2));
-        totalAnnualCashback += annualCashback;
+        const raw = Number(monthlySpend) * Number(rate.cashback_rate);
+        const monthlyCashback = Math.min(raw, monthlyCap);
+        breakdown[category] = parseFloat((monthlyCashback * 12).toFixed(2));
+        breakdownUncapped[category] = parseFloat((raw * 12).toFixed(2));
+        totalMonthlyCashback += monthlyCashback;
       }
 
-      totalAnnualCashback = parseFloat(totalAnnualCashback.toFixed(2));
+      const cardMaxCap = card.max_cap != null && Number(card.max_cap) > 0 ? Number(card.max_cap) : Infinity;
+      const totalAnnualCashback = parseFloat((Math.min(totalMonthlyCashback, cardMaxCap) * 12).toFixed(2));
       const annualFee = Number(card.annual_fee) || 0;
       const netAnnualSavings = parseFloat((totalAnnualCashback - annualFee).toFixed(2));
 
@@ -191,12 +191,14 @@ const calculateHandler = async (req, res) => {
         annual_fee: card.annual_fee,
         fee_notes: card.fee_notes,
         min_salary: card.min_salary,
+        max_cap: card.max_cap || null,
         image_url: card.image_url,
         apply_link: card.apply_link,
         updated_at: card.updated_at,
         net_annual_savings: netAnnualSavings,
         total_annual_cashback: totalAnnualCashback,
         cashback_breakdown: breakdown,
+        cashback_breakdown_uncapped: breakdownUncapped,
       };
     });
 
@@ -260,7 +262,7 @@ const compareHandler = async (req, res) => {
     }
 
     let query = `
-      SELECT c.id, c.name, c.bank, c.card_category, c.annual_fee, c.fee_notes, c.min_salary, c.key_benefits, c.image_url, c.apply_link, c.updated_at,
+      SELECT c.id, c.name, c.bank, c.card_category, c.annual_fee, c.fee_notes, c.min_salary, c.max_cap, c.key_benefits, c.image_url, c.apply_link, c.updated_at,
         cc.name AS category_name,
         json_agg(
           json_build_object(
@@ -293,8 +295,8 @@ const compareHandler = async (req, res) => {
       const rates = (card.rates || []).filter((r) => r.category_slug !== null);
       const breakdown = {};
       const breakdownUncapped = {};
-      let totalCapped = 0;
-      let totalUncapped = 0;
+      let totalMonthlyCapped = 0;
+      let totalMonthlyUncapped = 0;
 
       for (const [category, monthlySpend] of Object.entries(spending)) {
         const rate = rates.find((r) => r.category_slug === category);
@@ -306,9 +308,13 @@ const compareHandler = async (req, res) => {
 
         breakdown[category] = parseFloat((monthlyCashback * 12).toFixed(2));
         breakdownUncapped[category] = parseFloat((raw * 12).toFixed(2));
-        totalCapped += monthlyCashback * 12;
-        totalUncapped += raw * 12;
+        totalMonthlyCapped += monthlyCashback;
+        totalMonthlyUncapped += raw;
       }
+
+      const cardMaxCap = card.max_cap != null && Number(card.max_cap) > 0 ? Number(card.max_cap) : Infinity;
+      const totalCapped = parseFloat((Math.min(totalMonthlyCapped, cardMaxCap) * 12).toFixed(2));
+      const totalUncapped = parseFloat((totalMonthlyUncapped * 12).toFixed(2));
 
       const annualFee = Number(card.annual_fee) || 0;
 

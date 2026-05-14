@@ -703,6 +703,7 @@ function AddCardModal({ categories, cardCategories, onClose, onSaved }) {
     card_category: '',
     annual_fee: '',
     min_salary: '',
+    max_cap: '',
     key_benefits: '',
   });
   const [rates, setRates] = useState({});
@@ -738,6 +739,7 @@ function AddCardModal({ categories, cardCategories, onClose, onSaved }) {
       formData.append('card_category', form.card_category);
       formData.append('annual_fee', form.annual_fee || '0');
       formData.append('min_salary', form.min_salary || '0');
+      formData.append('max_cap', form.max_cap || '');
       formData.append('key_benefits', form.key_benefits || '');
       const ratesPayload = {};
       Object.entries(rates).forEach(([slug, val]) => {
@@ -870,8 +872,8 @@ function AddCardModal({ categories, cardCategories, onClose, onSaved }) {
                 type="number"
                 min="0"
                 placeholder="Unlimited"
-                value={form.monthly_cap || ''}
-                onChange={(e) => setForm((f) => ({ ...f, monthly_cap: e.target.value }))}
+                value={form.max_cap || ''}
+                onChange={(e) => setForm((f) => ({ ...f, max_cap: e.target.value }))}
               />
             </div>
           </div>
