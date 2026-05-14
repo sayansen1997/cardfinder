@@ -785,6 +785,8 @@
 
 .adm-modal {
   background: white;
+  color: #0D1B2A;
+  color-scheme: light;
   border-radius: 12px;
   width: 520px;
   max-width: 100%;
@@ -1059,6 +1061,7 @@
   outline: none;
   transition: border-color 0.2s;
   background: white;
+  color-scheme: light;
   width: 100%;
   box-sizing: border-box;
 }

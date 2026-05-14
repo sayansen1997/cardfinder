@@ -495,7 +495,7 @@ function HideRulesModal({ card, categories, onClose }) {
   const inputStyle = {
     width: '100%', padding: '8px 10px', border: '1px solid #E5E7EB',
     borderRadius: '6px', fontFamily: 'Inter', fontSize: '13px',
-    boxSizing: 'border-box',
+    boxSizing: 'border-box', background: 'white', color: '#0D1B2A', colorScheme: 'light',
   };
   const labelStyle = {
     fontFamily: 'Inter', fontSize: '12px', fontWeight: 600,
@@ -592,8 +592,8 @@ function HideRulesModal({ card, categories, onClose }) {
                       <label key={cat.slug} style={{
                         display: 'flex', alignItems: 'center', gap: '4px',
                         fontFamily: 'Inter', fontSize: '12px', cursor: 'pointer',
-                        padding: '4px 8px', background: 'white',
-                        border: '1px solid #E5E7EB', borderRadius: '4px',
+                        padding: '4px 8px', background: 'white', color: '#0D1B2A',
+                        border: '1px solid #E5E7EB', borderRadius: '4px', colorScheme: 'light',
                       }}>
                         <input
                           type="checkbox"
