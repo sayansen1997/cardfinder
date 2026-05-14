@@ -357,9 +357,12 @@ function EditCardModal({ cardId, categories, cardCategories, onClose, onSaved })
           {/* Row 4: Max Cap | Apply Link */}
           <div className="adm-form-row2" style={{ marginBottom: 20 }}>
             <div className="adm-form-group">
-              <label className="adm-form-label">Max Cap (AED/Month, blank = unlimited)</label>
+              <label className="adm-form-label">Total Monthly Cashback Cap (AED/Month, blank = unlimited)</label>
               <input className="adm-form-input" type="number" min="0" placeholder="Unlimited"
                 value={form.max_cap} onChange={(e) => set('max_cap', e.target.value)} />
+              <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#9CA3AF', marginTop: '4px' }}>
+                Caps total cashback per month across all categories combined. Use only if the bank has a total monthly limit.
+              </div>
             </div>
             <div className="adm-form-group">
               <label className="adm-form-label">Apply Link URL</label>
@@ -866,7 +869,7 @@ function AddCardModal({ categories, cardCategories, onClose, onSaved }) {
               />
             </div>
             <div className="adm-form-group">
-              <label className="adm-form-label">Maximum Cap (AED/Month)</label>
+              <label className="adm-form-label">Total Monthly Cashback Cap (AED/Month, blank = unlimited)</label>
               <input
                 className="adm-form-input"
                 type="number"
@@ -875,6 +878,9 @@ function AddCardModal({ categories, cardCategories, onClose, onSaved }) {
                 value={form.max_cap || ''}
                 onChange={(e) => setForm((f) => ({ ...f, max_cap: e.target.value }))}
               />
+              <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#9CA3AF', marginTop: '4px' }}>
+                Caps total cashback per month across all categories combined. Use only if the bank has a total monthly limit.
+              </div>
             </div>
           </div>
 
