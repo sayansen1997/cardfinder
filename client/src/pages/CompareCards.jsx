@@ -1059,7 +1059,7 @@ export default function CompareCards() {
                     const card = slots[i];
                     const d = getD(i);
                     const rate = card ? getRate(card, cat.name) : null;
-                    const annualAmt = d?.cashback_breakdown?.[cat.name];
+                    const annualAmt = d?.cashback_breakdown?.[cat.slug];
                     return (
                       <div key={i} className="cc-td cc-rate-cell">
                         {rate ? (
