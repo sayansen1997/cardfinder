@@ -280,7 +280,7 @@ router.delete('/cards/:id', auth, async (req, res) => {
 
 // POST /api/admin/cards
 router.post('/cards', auth, upload.single('image'), async (req, res) => {
-  const { name, bank, card_category, annual_fee, min_salary, max_cap, key_benefits, rates } = req.body;
+  const { name, bank, card_category, annual_fee, min_salary, max_cap, key_benefits, rates, card_notes } = req.body;
 
   if (!name || !bank) {
     return res.status(400).json({ error: 'name and bank are required' });
@@ -292,7 +292,7 @@ router.post('/cards', auth, upload.single('image'), async (req, res) => {
     .split('\n')
     .map((s) => s.trim())
     .filter(Boolean)
-    .join(', ');
+    .join('\n');
 
   const ratesObj = rates
     ? (typeof rates === 'string' ? JSON.parse(rates) : rates)
@@ -303,9 +303,9 @@ router.post('/cards', auth, upload.single('image'), async (req, res) => {
     await client.query('BEGIN');
 
     const cardRes = await client.query(
-      `INSERT INTO cards (name, bank, card_category, annual_fee, min_salary, max_cap, key_benefits, status, image_url, created_at, updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,'active',$8,NOW(),NOW()) RETURNING *`,
-      [name, bank, card_category || 'cashback', Number(annual_fee) || 0, Number(min_salary) || 0, max_cap ? Number(max_cap) : null, benefitsStr || null, image_url]
+      `INSERT INTO cards (name, bank, card_category, annual_fee, min_salary, max_cap, key_benefits, card_notes, status, image_url, created_at, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'active',$9,NOW(),NOW()) RETURNING *`,
+      [name, bank, card_category || 'cashback', Number(annual_fee) || 0, Number(min_salary) || 0, max_cap ? Number(max_cap) : null, benefitsStr || null, card_notes || null, image_url]
     );
     const card = cardRes.rows[0];
 
@@ -354,7 +354,7 @@ router.put('/cards/:id', auth, upload.single('image'), async (req, res) => {
   const { id } = req.params;
   const {
     name, bank, card_category, annual_fee, min_salary, max_cap,
-    status, apply_link, fee_notes, key_benefits, eligibility_notes,
+    status, apply_link, fee_notes, key_benefits, eligibility_notes, card_notes,
   } = req.body;
 
   try {
@@ -367,7 +367,7 @@ router.put('/cards/:id', auth, upload.single('image'), async (req, res) => {
 
     const image_url = req.file ? req.file.path : old.image_url;
     const benefitsStr = key_benefits != null
-      ? (key_benefits || '').split('\n').map((s) => s.trim()).filter(Boolean).join(', ')
+      ? (key_benefits || '').split('\n').map((s) => s.trim()).filter(Boolean).join('\n')
       : null;
 
     await pool.query(
@@ -383,9 +383,10 @@ router.put('/cards/:id', auth, upload.single('image'), async (req, res) => {
         fee_notes = $9,
         key_benefits = $10,
         eligibility_notes = $11,
-        image_url = $12,
+        card_notes = $12,
+        image_url = $13,
         updated_at = NOW()
-       WHERE id = $13`,
+       WHERE id = $14`,
       [
         name || null, bank || null, card_category || null,
         annual_fee ? Number(annual_fee) : null,
@@ -393,7 +394,7 @@ router.put('/cards/:id', auth, upload.single('image'), async (req, res) => {
         max_cap ? Number(max_cap) : null,
         status || null, apply_link || null,
         fee_notes || null, benefitsStr,
-        eligibility_notes || null, image_url, id,
+        eligibility_notes || null, card_notes || null, image_url, id,
       ]
     );
 
@@ -404,7 +405,7 @@ router.put('/cards/:id', auth, upload.single('image'), async (req, res) => {
     const fieldsToTrack = [
       'name', 'bank', 'card_category', 'annual_fee', 'min_salary',
       'max_cap', 'status', 'apply_link', 'fee_notes',
-      'key_benefits', 'eligibility_notes', 'image_url',
+      'key_benefits', 'eligibility_notes', 'card_notes', 'image_url',
     ];
 
     for (const field of fieldsToTrack) {

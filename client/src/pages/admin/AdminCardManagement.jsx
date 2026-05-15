@@ -186,8 +186,9 @@ function EditCardModal({ cardId, categories, cardCategories, onClose, onSaved })
           status: c.status || 'active',
           apply_link: c.apply_link || '',
           fee_notes: c.fee_notes || '',
-          key_benefits: (c.key_benefits || '').split(',').map((s) => s.trim()).filter(Boolean).join('\n'),
+          key_benefits: (c.key_benefits || '').split('\n').map((s) => s.trim()).filter(Boolean).join('\n'),
           eligibility_notes: c.eligibility_notes || '',
+          card_notes: c.card_notes || '',
           existing_image_url: c.image_url || null,
         });
         setLoading(false);
@@ -227,6 +228,7 @@ function EditCardModal({ cardId, categories, cardCategories, onClose, onSaved })
       formData.append('fee_notes', form.fee_notes || '');
       formData.append('key_benefits', form.key_benefits || '');
       formData.append('eligibility_notes', form.eligibility_notes || '');
+      formData.append('card_notes', form.card_notes || '');
       if (imageFile) formData.append('image', imageFile);
 
       const resp = await fetch(`${API_BASE}/admin/cards/${cardId}`, {
@@ -386,11 +388,28 @@ function EditCardModal({ cardId, categories, cardCategories, onClose, onSaved })
           </div>
 
           {/* Eligibility Notes */}
-          <div className="adm-form-group" style={{ marginBottom: 20 }}>
+          <div className="adm-form-group" style={{ marginBottom: 16 }}>
             <label className="adm-form-label">Eligibility Notes</label>
             <textarea className="adm-form-input adm-form-textarea" rows={2}
               value={form.eligibility_notes}
               onChange={(e) => set('eligibility_notes', e.target.value)} />
+          </div>
+
+          {/* Card Notes */}
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+              Card Notes
+            </label>
+            <textarea
+              value={form.card_notes || ''}
+              onChange={(e) => set('card_notes', e.target.value)}
+              rows={4}
+              placeholder="One note per line. E.g., Cashback ranges from 3% to 10% based on total monthly spending."
+              style={{ width: '100%', padding: '8px 10px', border: '1px solid #E5E7EB', borderRadius: '6px', fontFamily: 'Inter', fontSize: '13px', resize: 'vertical', boxSizing: 'border-box', background: 'white', color: '#0D1B2A', colorScheme: 'light' }}
+            />
+            <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#9CA3AF', marginTop: '4px' }}>
+              Each line displays as a separate note on Card Detail and Compare pages. Use for tier information, special conditions, or disclaimers.
+            </div>
           </div>
 
           {error && <p className="adm-modal-error">{error}</p>}
@@ -708,6 +727,7 @@ function AddCardModal({ categories, cardCategories, onClose, onSaved }) {
     min_salary: '',
     max_cap: '',
     key_benefits: '',
+    card_notes: '',
   });
   const [rates, setRates] = useState({});
   const [imageFile, setImageFile] = useState(null);
@@ -744,6 +764,7 @@ function AddCardModal({ categories, cardCategories, onClose, onSaved }) {
       formData.append('min_salary', form.min_salary || '0');
       formData.append('max_cap', form.max_cap || '');
       formData.append('key_benefits', form.key_benefits || '');
+      formData.append('card_notes', form.card_notes || '');
       const ratesPayload = {};
       Object.entries(rates).forEach(([slug, val]) => {
         const rate = typeof val === 'object' ? val.rate : val;
@@ -885,7 +906,7 @@ function AddCardModal({ categories, cardCategories, onClose, onSaved }) {
           </div>
 
           {/* Key Benefits */}
-          <div className="adm-form-group" style={{ marginBottom: '20px' }}>
+          <div className="adm-form-group" style={{ marginBottom: '16px' }}>
             <label className="adm-form-label">Key Benefits (one per line)</label>
             <textarea
               className="adm-form-input adm-form-textarea"
@@ -894,6 +915,23 @@ function AddCardModal({ categories, cardCategories, onClose, onSaved }) {
               value={form.key_benefits}
               onChange={(e) => setForm((f) => ({ ...f, key_benefits: e.target.value }))}
             />
+          </div>
+
+          {/* Card Notes */}
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ fontFamily: 'Inter', fontSize: '12px', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '4px' }}>
+              Card Notes
+            </label>
+            <textarea
+              value={form.card_notes || ''}
+              onChange={(e) => setForm((f) => ({ ...f, card_notes: e.target.value }))}
+              rows={4}
+              placeholder="One note per line. E.g., Cashback ranges from 3% to 10% based on total monthly spending."
+              style={{ width: '100%', padding: '8px 10px', border: '1px solid #E5E7EB', borderRadius: '6px', fontFamily: 'Inter', fontSize: '13px', resize: 'vertical', boxSizing: 'border-box', background: 'white', color: '#0D1B2A', colorScheme: 'light' }}
+            />
+            <div style={{ fontFamily: 'Inter', fontSize: '11px', color: '#9CA3AF', marginTop: '4px' }}>
+              Each line displays as a separate note on Card Detail and Compare pages. Use for tier information, special conditions, or disclaimers.
+            </div>
           </div>
 
           {/* Cashback setup */}

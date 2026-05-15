@@ -8,7 +8,11 @@ const RANK_LABELS = ['#1 Best Pick', '#2 Runner Up', '#3 Third Place'];
 
 function getBenefits(card) {
   if (card.key_benefits) {
-    return card.key_benefits.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 3);
+    const kb = card.key_benefits;
+    const items = kb.includes('\n')
+      ? kb.split('\n').map((s) => s.trim()).filter(Boolean)
+      : kb.split(',').map((s) => s.trim()).filter(Boolean);
+    return items.slice(0, 3);
   }
   if (card.cashback_breakdown) {
     return Object.entries(card.cashback_breakdown)

@@ -262,7 +262,7 @@ const compareHandler = async (req, res) => {
     }
 
     let query = `
-      SELECT c.id, c.name, c.bank, c.card_category, c.annual_fee, c.fee_notes, c.min_salary, c.max_cap, c.key_benefits, c.image_url, c.apply_link, c.updated_at,
+      SELECT c.id, c.name, c.bank, c.card_category, c.annual_fee, c.fee_notes, c.min_salary, c.max_cap, c.key_benefits, c.card_notes, c.image_url, c.apply_link, c.updated_at,
         cc.name AS category_name,
         json_agg(
           json_build_object(
@@ -328,6 +328,7 @@ const compareHandler = async (req, res) => {
         fee_notes: card.fee_notes,
         min_salary: card.min_salary,
         key_benefits: card.key_benefits,
+        card_notes: card.card_notes,
         image_url: card.image_url,
         apply_link: card.apply_link,
         updated_at: card.updated_at,

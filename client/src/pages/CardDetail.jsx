@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import axios from 'axios'
-import { Check, Calculator } from 'lucide-react'
+import { Check, Calculator, Info } from 'lucide-react'
 import API_BASE from '../utils/api'
 import DashboardNavbar from '../components/DashboardNavbar'
 import CardImage from '../components/CardImage'
@@ -80,7 +80,7 @@ export default function CardDetail() {
   }
 
   const benefits = card.key_benefits
-    ? card.key_benefits.split(/[,;\n]/).map(b => b.trim()).filter(Boolean)
+    ? card.key_benefits.split('\n').map(b => b.trim()).filter(Boolean)
     : []
 
   const TH_STYLE = {
@@ -309,7 +309,33 @@ export default function CardDetail() {
         </div>
       </section>
 
-      {/* SECTION 2 — Cashback and Rewards */}
+      {/* SECTION 2 — Important Notes (only when card_notes is present) */}
+      {(() => {
+        const notes = (card.card_notes || '').split('\n').map((s) => s.trim()).filter(Boolean);
+        if (notes.length === 0) return null;
+        return (
+          <section className="card-detail-section-padding" style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px 24px' }}>
+            <div style={{ background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: '12px', padding: '20px 24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                <Info size={18} color="#92400E" />
+                <h3 style={{ fontFamily: 'Manrope', fontSize: '15px', fontWeight: 700, color: '#92400E', margin: 0 }}>
+                  Important Notes
+                </h3>
+              </div>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                {notes.map((note, idx) => (
+                  <li key={idx} style={{ fontFamily: 'Inter', fontSize: '13px', color: '#92400E', lineHeight: 1.5, paddingLeft: '20px', position: 'relative', marginBottom: idx < notes.length - 1 ? '8px' : 0 }}>
+                    <span style={{ position: 'absolute', left: 0, top: '8px', width: '6px', height: '6px', borderRadius: '50%', background: '#92400E' }} />
+                    {note}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        );
+      })()}
+
+      {/* SECTION 3 — Cashback and Rewards */}
       <section className="card-detail-section-padding" style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px 40px' }}>
         <div className="card-detail-cashback-section" style={{ background: 'white', borderRadius: '20px', padding: '40px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
 
@@ -390,7 +416,7 @@ export default function CardDetail() {
         </div>
       </section>
 
-      {/* SECTION 3 — CTA Banner */}
+      {/* SECTION 4 — CTA Banner */}
       <section className="card-detail-section-padding" style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px 60px' }}>
         <div className="card-detail-cta" style={{
           background: '#001A3D',

@@ -23,7 +23,7 @@ const fmtAED = (val) =>
   val != null ? `AED ${Number(val).toLocaleString()}` : '—';
 const fmtFee = (val) => (Number(val) === 0 ? 'Free' : fmtAED(val));
 const parseBenefits = (str) =>
-  (str || '').split(',').map((s) => s.trim()).filter(Boolean);
+  (str || '').split('\n').map((s) => s.trim()).filter(Boolean);
 
 export default function CompareCards() {
   const location = useLocation();
@@ -480,6 +480,30 @@ export default function CompareCards() {
                   </div>
                 )}
 
+                {/* Card Notes */}
+                {(() => {
+                  const notes = (card?.card_notes || '').split('\n').map((s) => s.trim()).filter(Boolean);
+                  if (notes.length === 0) return null;
+                  return (
+                    <div style={{ background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: '8px', padding: '12px 16px', marginTop: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                        <Info size={14} color="#92400E" />
+                        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', fontWeight: 700, color: '#92400E', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                          Important Notes
+                        </span>
+                      </div>
+                      <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                        {notes.map((note, idx) => (
+                          <li key={idx} style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#92400E', lineHeight: 1.4, paddingLeft: '12px', position: 'relative', marginBottom: idx < notes.length - 1 ? '6px' : 0 }}>
+                            <span style={{ position: 'absolute', left: 0, top: '6px', width: '4px', height: '4px', borderRadius: '50%', background: '#92400E' }} />
+                            {note}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })()}
+
                 {/* Action buttons */}
                 <div className="cc-mobile-actions">
                   <button
@@ -921,6 +945,30 @@ export default function CompareCards() {
                     </ul>
                   ) : (
                     '—'
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Notes */}
+          <div className="cc-trow cc-trow-benefits">
+            <div className="cc-td-label">Notes</div>
+            {[0, 1, 2].map((i) => {
+              const notes = (slots[i]?.card_notes || '').split('\n').map((s) => s.trim()).filter(Boolean);
+              return (
+                <div key={i} className="cc-td" style={{ alignItems: 'flex-start' }}>
+                  {notes.length === 0 ? (
+                    <span style={{ color: '#9CA3AF', fontFamily: 'Inter, sans-serif', fontSize: '13px' }}>—</span>
+                  ) : (
+                    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                      {notes.map((note, idx) => (
+                        <li key={idx} style={{ fontFamily: 'Inter, sans-serif', fontSize: '12px', color: '#92400E', lineHeight: 1.4, paddingLeft: '12px', position: 'relative', marginBottom: idx < notes.length - 1 ? '6px' : 0 }}>
+                          <span style={{ position: 'absolute', left: 0, top: '6px', width: '4px', height: '4px', borderRadius: '50%', background: '#92400E' }} />
+                          {note}
+                        </li>
+                      ))}
+                    </ul>
                   )}
                 </div>
               );
