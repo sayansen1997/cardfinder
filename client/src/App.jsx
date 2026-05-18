@@ -31,6 +31,7 @@ function Layout() {
     !location.pathname.startsWith('/admin') &&
     !location.pathname.startsWith('/signup') &&
     !location.pathname.startsWith('/dashboard') &&
+    location.pathname !== '/cards' &&
     !location.pathname.startsWith('/cards/') &&
     location.pathname !== '/login' &&
     location.pathname !== '/compare' &&

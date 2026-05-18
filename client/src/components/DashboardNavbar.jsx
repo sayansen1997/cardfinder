@@ -112,6 +112,12 @@ export default function DashboardNavbar({ firstName }) {
             Calculator
           </button>
           <Link
+            to="/cards"
+            className={`db-nav-link${location.pathname === '/cards' ? ' active' : ''}`}
+          >
+            Cards
+          </Link>
+          <Link
             to="/compare"
             className={`db-nav-link${location.pathname === '/compare' ? ' active' : ''}`}
           >
@@ -235,6 +241,13 @@ export default function DashboardNavbar({ firstName }) {
             >
               Calculator
             </button>
+            <Link
+              to="/cards"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 600, color: '#001A3D', textDecoration: 'none', padding: '12px 0', borderBottom: '1px solid #F3F4F5' }}
+            >
+              Cards
+            </Link>
             <Link
               to="/compare"
               onClick={() => setMobileMenuOpen(false)}

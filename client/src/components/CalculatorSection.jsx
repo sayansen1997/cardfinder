@@ -258,7 +258,7 @@ export default function CalculatorSection({ ref, onResults, onRankingUpdate, ini
   const totalAnnual = totalMonthly * 12;
 
   return (
-    <section className="cf-calculator" id="calculator" ref={ref}>
+    <section className="cf-calculator" id="calculator-section" ref={ref}>
       <div className="cf-container">
         <div className="cf-section-header">
           <h2>Stop Guessing &amp; Start Saving</h2>

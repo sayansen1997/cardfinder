@@ -79,7 +79,10 @@
       "PowerShell(curl *)",
       "PowerShell(Invoke-RestMethod -Uri \"http://localhost:5000/api/categories\" | Select-Object slug, tooltip | Format-Table -AutoSize)",
       "PowerShell(Start-Process -FilePath \"node\" -ArgumentList \"index.js\" -WorkingDirectory \"C:\\\\Users\\\\sensa\\\\cardfiner\\\\server\" -RedirectStandardOutput \"C:\\\\Users\\\\sensa\\\\cardfiner\\\\server\\\\server.log\" -RedirectStandardError \"C:\\\\Users\\\\sensa\\\\cardfiner\\\\server\\\\server.err\" -WindowStyle Hidden; Start-Sleep -Seconds 3; Get-Content \"C:\\\\Users\\\\sensa\\\\cardfiner\\\\server\\\\server.log\")",
-      "PowerShell(Invoke-RestMethod -Uri \"http://localhost:5000/api/categories\" | Select-Object slug, label, tooltip | Format-Table -AutoSize)"
+      "PowerShell(Invoke-RestMethod -Uri \"http://localhost:5000/api/categories\" | Select-Object slug, label, tooltip | Format-Table -AutoSize)",
+      "PowerShell(git *)",
+      "Bash(psql *)",
+      "Bash(git restore *)"
     ]
   }
 }

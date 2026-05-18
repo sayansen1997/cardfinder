@@ -1,53 +1,8 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ChevronDown, ChevronUp, ArrowRight } from 'lucide-react';
 import CardImage from './CardImage';
-
-const LIFESTYLE_CATEGORIES = [
-  { id: 'groceries',  label: 'Best for Groceries',      sortKey: 'groceries' },
-  { id: 'family',     label: 'Everyday Family Saver',   sortKeys: ['groceries', 'dining', 'utilities'] },
-  { id: 'travel',     label: 'Travel & Air Miles',       sortKey: 'travel' },
-  { id: 'premium',    label: 'Premium Lifestyle',        sortKeys: ['dining', 'shopping', 'travel'] },
-  { id: 'minimalist', label: 'Minimalist Cards',         sortByFee: true },
-];
-
-const CARD_ART_GRADIENTS = [
-  ['#1a3c5e', '#2d6a9f'],
-  ['#1b4332', '#2d6a4f'],
-  ['#7b1e1e', '#c0392b'],
-  ['#1a237e', '#3949ab'],
-  ['#4a148c', '#7b1fa2'],
-  ['#004d40', '#00695c'],
-];
-
-function getGradient(index) {
-  const [a, b] = CARD_ART_GRADIENTS[index % CARD_ART_GRADIENTS.length];
-  return `linear-gradient(135deg, ${a}, ${b})`;
-}
-
-function sortCards(cards, category) {
-  if (!cards?.length) return [];
-  const arr = [...cards];
-
-  if (category.sortByFee) {
-    arr.sort((a, b) => Number(a.annual_fee) - Number(b.annual_fee));
-  } else if (category.sortKey) {
-    arr.sort((a, b) => {
-      const ra = a.rates?.find((r) => r.category_name === category.sortKey);
-      const rb = b.rates?.find((r) => r.category_name === category.sortKey);
-      return (Number(rb?.cashback_rate) || 0) - (Number(ra?.cashback_rate) || 0);
-    });
-  } else if (category.sortKeys) {
-    const score = (card) =>
-      category.sortKeys.reduce((sum, key) => {
-        const r = card.rates?.find((r) => r.category_name === key);
-        return sum + (Number(r?.cashback_rate) || 0);
-      }, 0);
-    arr.sort((a, b) => score(b) - score(a));
-  }
-
-  return arr.slice(0, 3);
-}
+import { CARD_CATEGORY_FILTERS, getCardsForCategory } from '../utils/cardFilters';
 
 function parseBenefits(raw) {
   if (!raw) return [];
@@ -192,28 +147,55 @@ function CuratedCardTile({ card, index }) {
 
 export default function CuratedSection({ cards, loading }) {
   const navigate = useNavigate();
-  const [activeCat, setActiveCat] = useState(LIFESTYLE_CATEGORIES[0]);
-  const topCards = sortCards(cards, activeCat);
+  const [activeCat, setActiveCat] = useState(CARD_CATEGORY_FILTERS[0].id);
+  const topCards = getCardsForCategory(cards || [], activeCat, 3);
 
   return (
     <section className="cf-curated" id="curated-section">
       <div className="cf-container">
-        <div className="cf-section-header">
-          <h2>Curated for Your Lifestyle</h2>
-          <p>
-            Expertly segmented categories to match the different financial needs of the UAE&apos;s
-            high-performing expat community.
-          </p>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-end',
+          marginBottom: '32px',
+          flexWrap: 'wrap',
+          gap: '16px',
+        }}>
+          <div className="cf-section-header" style={{ flex: 1, minWidth: '280px', marginBottom: 0 }}>
+            <h2>Curated for Your Lifestyle</h2>
+            <p>
+              Expertly segmented categories to match the different financial needs of the UAE&apos;s
+              high-performing expat community.
+            </p>
+          </div>
+
+          <Link
+            to="/cards"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '14px',
+              fontWeight: 600,
+              color: '#C9920A',
+              textDecoration: 'none',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            View All Cards
+            <ArrowRight size={16} />
+          </Link>
         </div>
 
         <div className="cf-curated-layout">
           <div className="cf-category-sidebar">
-            {LIFESTYLE_CATEGORIES.map((cat) => {
-              const isActive = activeCat.id === cat.id;
+            {CARD_CATEGORY_FILTERS.map((cat) => {
+              const isActive = activeCat === cat.id;
               return (
                 <button
                   key={cat.id}
-                  onClick={() => setActiveCat(cat)}
+                  onClick={() => setActiveCat(cat.id)}
                   style={{
                     width: '100%',
                     background: isActive ? 'white' : 'transparent',
@@ -259,6 +241,20 @@ export default function CuratedSection({ cards, loading }) {
               <div className="cf-loading" style={{ gridColumn: '1 / -1' }}>
                 <div className="cf-spinner" />
                 <p>Loading cards…</p>
+              </div>
+            ) : topCards.length === 0 ? (
+              <div style={{
+                gridColumn: '1 / -1',
+                padding: '40px 24px',
+                textAlign: 'center',
+                background: 'white',
+                borderRadius: '12px',
+                border: '1px dashed #E5E7EB',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '14px',
+                color: '#6B7280',
+              }}>
+                No cards currently match this category
               </div>
             ) : (
               topCards.map((card, i) => (

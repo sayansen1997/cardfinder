@@ -21,6 +21,7 @@ router.get('/', async (req, res) => {
         json_agg(
           json_build_object(
             'category_id', cr.category_id,
+            'category_slug', cat.slug,
             'category_name', cat.name,
             'cashback_rate', cr.cashback_rate,
             'monthly_cap', cr.monthly_cap
