@@ -1,23 +1,28 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Trash2, RotateCw, ArrowRight, ClipboardList } from 'lucide-react';
+import {
+  Trash2, RotateCw, ArrowRight, ClipboardList, BarChart3, Star,
+  ShoppingCart, UtensilsCrossed, Plane, Fuel, ShoppingBag,
+  Zap, Car, Globe, GraduationCap,
+} from 'lucide-react';
+
+const CATEGORY_ICONS = {
+  groceries: ShoppingCart,
+  dining: UtensilsCrossed,
+  travel: Plane,
+  fuel: Fuel,
+  shopping: ShoppingBag,
+  utilities: Zap,
+  car_rental: Car,
+  online: Globe,
+  education: GraduationCap,
+};
 import API_BASE from '../utils/api';
 import DashboardNavbar from '../components/DashboardNavbar';
 import Footer from '../components/Footer';
 import './saved.css';
 
-const BADGE_COLORS = [
-  ['#1a3c5e', '#2d6a9f'],
-  ['#1b4332', '#2d6a4f'],
-  ['#4a148c', '#7b1fa2'],
-];
-
-const badgeBg = (i) =>
-  `linear-gradient(135deg, ${BADGE_COLORS[i % 3][0]}, ${BADGE_COLORS[i % 3][1]})`;
-
-const abbr = (name = '') =>
-  name.split(' ').map((w) => w[0]).join('').slice(0, 3).toUpperCase();
 
 const fmtDate = (iso) => {
   const d = new Date(iso);
@@ -39,7 +44,7 @@ const topCatSubtitle = (breakdown) => {
   return entries.length ? `Best for ${entries.join(' & ')}` : '';
 };
 
-function CalcCard({ calc, categories, onDelete }) {
+function CalcCard({ calc, categories, cardById, onDelete }) {
   const [open, setOpen] = useState(false);
 
   const income = Number(calc.monthly_income) || 0;
@@ -62,7 +67,9 @@ function CalcCard({ calc, categories, onDelete }) {
   return (
     <div className="sc-card">
       <div className="sc-card-header" onClick={() => setOpen((v) => !v)}>
-        <div className="sc-icon-box">📊</div>
+        <div className="sc-icon-box">
+          <BarChart3 size={20} color="#C9920A" />
+        </div>
 
         <div className="sc-card-meta">
           <div className="sc-card-date">{fmtDate(calc.created_at)}</div>
@@ -106,11 +113,15 @@ function CalcCard({ calc, categories, onDelete }) {
             <div className="sc-spend-grid">
               {Object.entries(spending).map(([key, val]) => {
                 const cat = catMap[key];
+                const IconComp = CATEGORY_ICONS[key];
+                const label = cat?.label || key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
                 return (
                   <div key={key} className="sc-spend-item">
                     <div className="sc-spend-cat">
-                      {cat?.icon && <span>{cat.icon}</span>}
-                      {cat?.label || key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ')}
+                      {IconComp
+                        ? <IconComp size={14} color="#6B7280" style={{ flexShrink: 0 }} />
+                        : null}
+                      {label}
                     </div>
                     <div className="sc-spend-amt">
                       AED {Number(val).toLocaleString()}
@@ -125,16 +136,23 @@ function CalcCard({ calc, categories, onDelete }) {
 
           {/* Right: top recommendations */}
           <div className="sc-col">
-            <div className="sc-col-title">⭐ Top Recommendations</div>
+            <div className="sc-col-title"><Star size={14} color="#C9920A" fill="#C9920A" /> Top Recommendations</div>
             <div className="sc-rec-list">
               {topCards.slice(0, 3).map((card, i) => (
                 <div key={card.id} className={`sc-rec-row${i === 0 ? ' top' : ''}`}>
-                  <div
-                    className="sc-rec-badge"
-                    style={{ background: badgeBg(i) }}
-                  >
-                    {abbr(card.name)}
-                  </div>
+                  <img
+                    src={card.image_url || cardById[card.id]?.image_url || '/placeholder-card.svg'}
+                    alt={card.name}
+                    onError={(e) => { e.target.src = '/placeholder-card.svg'; }}
+                    style={{
+                      width: '48px',
+                      height: '32px',
+                      objectFit: 'contain',
+                      borderRadius: '4px',
+                      flexShrink: 0,
+                      background: '#F8FAFC',
+                    }}
+                  />
                   <div className="sc-rec-info">
                     <div className="sc-rec-name">{card.name}</div>
                     <div className="sc-rec-subtitle">
@@ -161,6 +179,7 @@ export default function SavedCalculations() {
   const navigate = useNavigate();
   const [calculations, setCalculations] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [cardById, setCardById] = useState({});
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState('');
 
@@ -177,11 +196,15 @@ export default function SavedCalculations() {
       axios.get(`${API_BASE}/users/calculations`, { headers }),
       axios.get(`${API_BASE}/categories`),
       axios.get(`${API_BASE}/users/me`, { headers }),
+      axios.get(`${API_BASE}/cards`),
     ])
-      .then(([calcRes, catsRes, meRes]) => {
+      .then(([calcRes, catsRes, meRes, cardsRes]) => {
         setCalculations(calcRes.data || []);
         setCategories(catsRes.data || []);
         setUserName(meRes.data.name || meRes.data.first_name || '');
+        const map = {};
+        (cardsRes.data || []).forEach((c) => { map[c.id] = c; });
+        setCardById(map);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -204,7 +227,7 @@ export default function SavedCalculations() {
   const handleStartNew = () => {
     navigate('/dashboard');
     setTimeout(() => {
-      document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' });
+      document.getElementById('calculator-section')?.scrollIntoView({ behavior: 'smooth' });
     }, 300);
   };
 
@@ -248,7 +271,7 @@ export default function SavedCalculations() {
         ) : (
           <div className="sc-list">
             {calculations.map((calc) => (
-              <CalcCard key={calc.id} calc={calc} categories={categories} onDelete={handleDelete} />
+              <CalcCard key={calc.id} calc={calc} categories={categories} cardById={cardById} onDelete={handleDelete} />
             ))}
           </div>
         )}

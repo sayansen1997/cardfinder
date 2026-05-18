@@ -184,7 +184,7 @@ export default function Profile() {
       {/* Dark top section */}
       <div className="pr-top">
         <div className="pr-inner">
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '20px' }}>
+          <div className="pr-header-row">
 
             {/* Left: Profile label stacked above avatar + name */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '12px' }}>

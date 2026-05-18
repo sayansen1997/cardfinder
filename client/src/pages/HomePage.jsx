@@ -55,6 +55,7 @@ export default function HomePage() {
       id: c.id,
       name: c.name,
       bank: c.bank,
+      image_url: c.image_url || null,
       net_annual_savings: c.net_annual_savings,
       cashback_breakdown: c.cashback_breakdown,
     }));

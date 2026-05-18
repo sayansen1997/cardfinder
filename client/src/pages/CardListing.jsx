@@ -9,64 +9,20 @@ import { CARD_CATEGORY_FILTERS, getCardsForCategory } from '../utils/cardFilters
 import { useNavigateToCalculator } from '../utils/navigation';
 import '../styles/card-listing.css';
 
-const BANK_COLORS = {
-  'ADCB': '#0D1B2A',
-  'Emirates NBD': '#8B0000',
-  'HSBC': '#DB0011',
-  'Dubai First': '#003C2D',
-  'Liv': '#FFD100',
-  'Rakbank': '#C8102E',
-  'Emirates Islamic': '#003E2A',
-  'Mashreq': '#FF6B35',
-  'FAB': '#00284C',
-  'Ajman Bank': '#005EB8',
-  'Al Hilal Bank': '#0066B3',
-  'CBD': '#003366',
-  'ADIB': '#8B0000',
-};
-
-const getBankColor = (bank) => BANK_COLORS[bank] || '#001A3D';
-
-const getBankInitials = (bank) => {
-  if (!bank) return 'CC';
-  const parts = bank.split(' ');
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return bank.substring(0, 2).toUpperCase();
-};
-
 const CardTile = ({ card }) => {
   const navigate = useNavigate();
-  const bankColor = getBankColor(card.bank);
-  const initials = getBankInitials(card.bank);
   const raw = card.card_category || 'Cashback';
   const cardCategoryLabel = raw.charAt(0).toUpperCase() + raw.slice(1);
 
   return (
     <div className="cl-card-tile">
       <div className="cl-card-image-wrapper">
-        {card.image_url ? (
-          <img
-            src={card.image_url}
-            alt={card.name}
-            style={{ maxWidth: '100%', objectFit: 'contain' }}
-          />
-        ) : (
-          <div style={{
-            width: '100%',
-            height: '112px',
-            background: bankColor,
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            fontFamily: 'Manrope',
-            fontSize: '32px',
-            fontWeight: 800,
-          }}>
-            {initials}
-          </div>
-        )}
+        <img
+          src={card.image_url || '/placeholder-card.svg'}
+          alt={card.name}
+          onError={(e) => { e.target.src = '/placeholder-card.svg'; }}
+          style={{ maxWidth: '100%', objectFit: 'contain' }}
+        />
       </div>
 
       <div className="cl-card-body">

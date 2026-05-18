@@ -86,14 +86,12 @@
 .sc-icon-box {
   width: 44px;
   height: 44px;
-  background: #F3F4F5;
+  background: #FEF3C7;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-size: 20px;
-  color: #C9920A;
 }
 
 .sc-card-meta {
@@ -349,9 +347,42 @@
 }
 
 @media (max-width: 700px) {
+  .sc-inner { padding: 32px 16px; }
+  .sc-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .sc-btn-new { width: 100%; }
+  .sc-title { font-size: 26px; }
   .sc-card-body { grid-template-columns: 1fr; }
   .sc-divider { display: none; }
   .sc-col:first-child { border-bottom: 1px solid #F3F4F6; }
-  .sc-card-header { padding: 16px 20px; }
-  .sc-col { padding: 20px; }
+  .sc-col { padding: 16px; }
+  .sc-spend-grid { grid-template-columns: 1fr; }
+  .sc-rec-name { white-space: normal; }
+}
+
+@media (max-width: 639px) {
+  .sc-card-header {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    gap: 8px 12px;
+    align-items: center;
+    padding: 16px;
+  }
+  .sc-icon-box { grid-row: span 2; align-self: start; margin-top: 2px; }
+  .sc-card-meta { grid-column: 2; min-width: 0; }
+  .sc-card-sub { white-space: normal; word-break: break-word; }
+  .sc-card-right {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 10px;
+    border-top: 1px solid #F1F5F9;
+    margin-top: 2px;
+    gap: 8px;
+  }
+  .sc-savings-block { align-items: flex-start; }
+  .sc-savings-label, .sc-savings-val { text-align: left; }
+  .sc-savings-val { font-size: 16px; }
+  .sc-card-date { font-size: 15px; }
 }

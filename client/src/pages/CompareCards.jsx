@@ -8,17 +8,8 @@ import CardImage from '../components/CardImage';
 import CardRankingTable from '../components/CardRankingTable';
 import CategoryIcon from '../components/CategoryIcon';
 import Footer from '../components/Footer';
+import { getBankColor, getBankInitials } from '../utils/bankBranding';
 import './compare.css';
-
-const SLOT_COLORS = [
-  ['#1a3c5e', '#2d6a9f'],
-  ['#1b4332', '#2d6a4f'],
-  ['#4a148c', '#7b1fa2'],
-];
-const gradient = (i) =>
-  `linear-gradient(135deg, ${SLOT_COLORS[i % 3][0]}, ${SLOT_COLORS[i % 3][1]})`;
-const abbr = (name = '') =>
-  name.split(' ').map((w) => w[0]).join('').slice(0, 3).toUpperCase();
 const fmtAED = (val) =>
   val != null ? `AED ${Number(val).toLocaleString()}` : '—';
 const fmtFee = (val) => (Number(val) === 0 ? 'Free' : fmtAED(val));
@@ -49,6 +40,7 @@ export default function CompareCards() {
   const [autoLoadedCards, setAutoLoadedCards] = useState(null);
   const [showAnonymousPrompt, setShowAnonymousPrompt] = useState(false);
   const [hasPersonalizedData, setHasPersonalizedData] = useState(false);
+  const [imageError, setImageError] = useState({});
 
   const slotRowRef = useRef(null);
 
@@ -551,9 +543,21 @@ export default function CompareCards() {
                             className="cc-dd-item"
                             onClick={() => { handleSwap(activeMobileTab, ac); setMobileSwapOpen(false); }}
                           >
-                            <span className="cc-dd-thumb" style={{ background: gradient(allCards.indexOf(ac)) }}>
-                              {abbr(ac.name)}
-                            </span>
+                            {ac.image_url && !imageError[ac.id] ? (
+                              <img
+                                src={ac.image_url}
+                                alt={ac.name}
+                                className="cc-dd-thumb"
+                                onError={() => setImageError((prev) => ({ ...prev, [ac.id]: true }))}
+                              />
+                            ) : (
+                              <div
+                                className="cc-dd-thumb"
+                                style={{ background: getBankColor(ac.bank) }}
+                              >
+                                {getBankInitials(ac.bank)}
+                              </div>
+                            )}
                             <span>
                               {ac.name}
                               <br />
@@ -753,12 +757,21 @@ export default function CompareCards() {
                               className="cc-dd-item"
                               onClick={() => handleSwap(i, ac)}
                             >
-                              <span
-                                className="cc-dd-thumb"
-                                style={{ background: gradient(allCards.indexOf(ac)) }}
-                              >
-                                {abbr(ac.name)}
-                              </span>
+                              {ac.image_url && !imageError[ac.id] ? (
+                                <img
+                                  src={ac.image_url}
+                                  alt={ac.name}
+                                  className="cc-dd-thumb"
+                                  onError={() => setImageError((prev) => ({ ...prev, [ac.id]: true }))}
+                                />
+                              ) : (
+                                <div
+                                  className="cc-dd-thumb"
+                                  style={{ background: getBankColor(ac.bank) }}
+                                >
+                                  {getBankInitials(ac.bank)}
+                                </div>
+                              )}
                               <span>
                                 {ac.name}
                                 <br />

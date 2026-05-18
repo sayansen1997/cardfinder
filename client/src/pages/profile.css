@@ -20,6 +20,13 @@
   margin: 0 auto;
 }
 
+.pr-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
 .pr-breadcrumb {
   font-family: 'Inter', sans-serif;
   font-size: 11px;
@@ -384,7 +391,11 @@
 }
 
 @media (max-width: 600px) {
+  .pr-top { padding: 24px 16px 0; }
+  .pr-header-row { flex-direction: column; align-items: flex-start; }
+  .pr-btn-new { width: 100%; margin-left: 0; }
   .pr-two-col { grid-template-columns: 1fr; }
   .pr-user-row { flex-wrap: wrap; }
-  .pr-btn-new { margin-left: 0; }
+  .pr-user-name { font-size: 20px; }
+  .pr-content { padding: 16px; }
 }

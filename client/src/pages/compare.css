@@ -211,17 +211,19 @@
 .cc-dd-item.active { background: #FEF9EC; color: #C9920A; font-weight: 600; }
 
 .cc-dd-thumb {
-  width: 32px;
-  height: 21px;
+  width: 48px;
+  height: 32px;
   border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: 'Manrope', sans-serif;
-  font-size: 7px;
+  font-size: 8px;
   font-weight: 800;
   color: white;
   flex-shrink: 0;
+  object-fit: contain;
+  background: #F8FAFC;
 }
 
 /* ——— Apply Now (slot) ——— */
