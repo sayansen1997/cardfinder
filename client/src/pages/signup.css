@@ -295,6 +295,7 @@
   cursor: pointer;
   transition: border-color 0.2s, box-shadow 0.2s;
   box-sizing: border-box;
+  color-scheme: light;
 }
 
 .su-field-select:focus {
@@ -329,6 +330,7 @@
   flex-shrink: 0;
   margin-top: 2px;
   accent-color: #C9920A;
+  color-scheme: light;
   cursor: pointer;
 }
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, User, LogOut } from 'lucide-react';
+import { useNavigateToCalculator } from '../utils/navigation';
 import '../pages/dashboard.css';
 
 export default function DashboardNavbar({ firstName }) {
@@ -75,17 +76,7 @@ export default function DashboardNavbar({ firstName }) {
     window.location.reload();
   };
 
-  const handleCalculatorClick = (e) => {
-    e.preventDefault();
-    if (location.pathname === '/dashboard') {
-      document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' });
-    } else {
-      navigate('/dashboard');
-      setTimeout(() => {
-        document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth' });
-      }, 200);
-    }
-  };
+  const navigateToCalculator = useNavigateToCalculator();
 
   return (
     <nav className={`db-navbar${scrolled ? ' db-navbar-scrolled' : ''}`}>
@@ -107,7 +98,7 @@ export default function DashboardNavbar({ firstName }) {
           )}
           <button
             className="db-nav-link db-nav-btn"
-            onClick={handleCalculatorClick}
+            onClick={navigateToCalculator}
           >
             Calculator
           </button>
@@ -236,7 +227,7 @@ export default function DashboardNavbar({ firstName }) {
               </Link>
             )}
             <button
-              onClick={(e) => { setMobileMenuOpen(false); handleCalculatorClick(e); }}
+              onClick={() => { setMobileMenuOpen(false); navigateToCalculator(); }}
               style={{ background: 'none', border: 'none', fontFamily: 'Inter', fontSize: '15px', fontWeight: 600, color: '#001A3D', textAlign: 'left', padding: '12px 0', borderBottom: '1px solid #F3F4F5', cursor: 'pointer' }}
             >
               Calculator

@@ -240,6 +240,7 @@
   transition: border-color 0.15s;
   box-sizing: border-box;
   margin-bottom: 4px;
+  color-scheme: light;
 }
 .pr-input::placeholder { color: rgba(255,255,255,0.35); }
 .pr-input:focus { border-color: #C9920A; }
@@ -261,6 +262,7 @@
   outline: none;
   transition: border-color 0.15s;
   box-sizing: border-box;
+  color-scheme: light;
 }
 .pr-select:focus { border-color: #C9920A; }
 .pr-select option { background: #001C42; color: white; }

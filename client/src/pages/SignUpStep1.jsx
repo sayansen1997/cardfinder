@@ -299,7 +299,7 @@ export default function SignUpStep1() {
                 type="checkbox"
                 checked={form.consent}
                 onChange={set('consent')}
-                style={{ marginTop: '2px' }}
+                style={{ marginTop: '2px', accentColor: '#C9920A', colorScheme: 'light' }}
               />
               <span>
                 I agree to the{' '}

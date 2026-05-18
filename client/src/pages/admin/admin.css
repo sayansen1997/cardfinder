@@ -112,6 +112,7 @@
   outline: none;
   transition: border-color 0.2s;
   background: white;
+  color-scheme: light;
 }
 
 .adm-input:focus {

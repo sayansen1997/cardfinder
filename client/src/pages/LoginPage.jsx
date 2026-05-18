@@ -92,6 +92,7 @@ export default function LoginPage() {
                   width: '100%', padding: '12px 14px', border: '1.5px solid #E5E7EB',
                   borderRadius: '8px', fontSize: '14px', outline: 'none',
                   fontFamily: 'Inter, sans-serif', boxSizing: 'border-box',
+                  background: 'white', color: '#0D1B2A', colorScheme: 'light',
                 }}
               />
             </div>
@@ -109,6 +110,7 @@ export default function LoginPage() {
                   padding: '12px 14px', border: '1.5px solid #E5E7EB',
                   borderRadius: '8px', fontSize: '14px', outline: 'none',
                   fontFamily: 'Inter, sans-serif', boxSizing: 'border-box',
+                  background: 'white', color: '#0D1B2A', colorScheme: 'light',
                 }}
               />
             </div>

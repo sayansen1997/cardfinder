@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
+import { useNavigateToCalculator } from '../utils/navigation';
 
 export default function HomeNavbar() {
   const navigate = useNavigate();
@@ -30,6 +31,8 @@ export default function HomeNavbar() {
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
+  const navigateToCalculator = useNavigateToCalculator();
+
   useEffect(() => {
     if (!mobileMenuOpen) return;
     const handleClickOutside = (e) => {
@@ -50,14 +53,9 @@ export default function HomeNavbar() {
 
         {/* Desktop links — hidden on mobile via CSS */}
         <div className="cf-nav-links hn-links-desktop">
-          <a href="#calculator">Calculator</a>
+          <a href="#calculator-section" onClick={(e) => { e.preventDefault(); navigateToCalculator(); }}>Calculator</a>
           <a href="#about">About</a>
-          <Link
-            to="/cards"
-            style={{ fontFamily: 'Inter', fontSize: '14px', fontWeight: 600, color: '#FFFFFF', textDecoration: 'none' }}
-          >
-            Cards
-          </Link>
+          <Link to="/cards">Cards</Link>
           {isLoggedIn ? (
             <button className="cf-btn-login" onClick={() => navigate('/dashboard')}>
               My Dashboard
@@ -96,8 +94,8 @@ export default function HomeNavbar() {
             gap: '4px',
           }}>
             <a
-              href="#calculator"
-              onClick={() => setMobileMenuOpen(false)}
+              href="#calculator-section"
+              onClick={(e) => { e.preventDefault(); setMobileMenuOpen(false); navigateToCalculator(); }}
               style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 600, color: '#001A3D', textDecoration: 'none', padding: '12px 0', borderBottom: '1px solid #F3F4F5' }}
             >
               Calculator
@@ -112,7 +110,7 @@ export default function HomeNavbar() {
             <Link
               to="/cards"
               onClick={() => setMobileMenuOpen(false)}
-              style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 600, color: '#001A3D', textDecoration: 'none', padding: '12px 0', borderBottom: '1px solid #F3F4F5' }}
+              style={{ fontFamily: 'Inter', fontSize: '15px', fontWeight: 600, color: '#001A3D', textDecoration: 'none', padding: '12px 0', borderBottom: '1px solid #F3F4F5', display: 'block' }}
             >
               Cards
             </Link>

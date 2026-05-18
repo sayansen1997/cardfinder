@@ -29,7 +29,7 @@ export default function PasswordInput({
         autoComplete={autoComplete}
         disabled={disabled}
         className={className}
-        style={{ width: '100%', paddingRight: '44px', ...style }}
+        style={{ width: '100%', paddingRight: '44px', background: 'white', color: '#0D1B2A', colorScheme: 'light', ...style }}
         {...rest}
       />
       <button

@@ -6,6 +6,7 @@ import DashboardNavbar from '../components/DashboardNavbar';
 import Footer from '../components/Footer';
 import API_BASE from '../utils/api';
 import { CARD_CATEGORY_FILTERS, getCardsForCategory } from '../utils/cardFilters';
+import { useNavigateToCalculator } from '../utils/navigation';
 import '../styles/card-listing.css';
 
 const BANK_COLORS = {
@@ -101,6 +102,7 @@ const CardTile = ({ card }) => {
 
 export default function CardListing() {
   const navigate = useNavigate();
+  const navigateToCalculator = useNavigateToCalculator();
   const token = localStorage.getItem('userToken');
 
   const [allCards, setAllCards] = useState([]);
@@ -293,16 +295,7 @@ export default function CardListing() {
           </h3>
 
           <button
-            onClick={() => {
-              navigate('/');
-              setTimeout(() => {
-                const calcSection = document.getElementById('calculator-section')
-                  || document.querySelector('.cf-calculator');
-                if (calcSection) {
-                  calcSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-              }, 100);
-            }}
+            onClick={navigateToCalculator}
             style={{
               background: '#C9920A',
               color: 'white',

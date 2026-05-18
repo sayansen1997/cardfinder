@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import axios from 'axios'
 import { Check, Calculator, Info } from 'lucide-react'
 import API_BASE from '../utils/api'
+import { useNavigateToCalculator } from '../utils/navigation'
 import DashboardNavbar from '../components/DashboardNavbar'
 import CardImage from '../components/CardImage'
 import CategoryIcon from '../components/CategoryIcon'
@@ -11,6 +12,7 @@ import Footer from '../components/Footer'
 export default function CardDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const navigateToCalculator = useNavigateToCalculator()
   const [searchParams] = useSearchParams()
   const [card, setCard] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -441,13 +443,7 @@ export default function CardDetail() {
             Calculate the exact cashback you could earn in 60 seconds
           </h3>
           <button
-            onClick={() => {
-              navigate('/')
-              setTimeout(() => {
-                const calc = document.getElementById('calculator')
-                if (calc) calc.scrollIntoView({ behavior: 'smooth', block: 'start' })
-              }, 100)
-            }}
+            onClick={navigateToCalculator}
             style={{
               background: '#C9920A',
               color: 'white',
